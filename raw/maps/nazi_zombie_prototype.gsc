@@ -14,10 +14,16 @@ main()
 		level.startInvulnerableTime = GetDvarInt( "player_deathInvulnerableTime" );
 
 	maps\nazi_zombie_prototype_fx::main();
-	maps\_zombiemode_prototype::main();
-	
-	init_sounds();
-	
+
+	level.zm_custom_map_precache = ::prototype_precache_func;
+	level.custom_introscreen = ::prototype_custom_intro_screen;
+	level.zm_custom_map_fx_init = ::init_fx;
+	level.zm_custom_map_anim_init = ::init_anims;
+	level.zm_custom_map_leaderboard_init = ::prototype_init_zombie_leaderboard_data;
+	maps\so\zm_common\_zm::init();
+
+	maps\_zombiemode_utility::add_sound( "break_stone", "break_stone" );
+
 	thread bad_area_fixes();
 
 	thread above_couches_death();
@@ -39,15 +45,15 @@ bad_area_fixes()
 // do point->distance checks and volume checks
 disable_stances_in_zones()
 { 	
- 	players = get_players();
- 	
- 	for (i = 0; i < players.size; i++)
- 	{
- 		players[i] thread fix_hax();
+	players = get_players();
+	
+	for (i = 0; i < players.size; i++)
+	{
+		players[i] thread fix_hax();
 		players[i] thread fix_couch_stuckspot();
- 		//players[i] thread in_bad_zone_watcher();	
- 		players[i] thread out_of_bounds_watcher();
- 	}
+		//players[i] thread in_bad_zone_watcher();	
+		players[i] thread out_of_bounds_watcher();
+	}
 }
 
 
@@ -155,23 +161,23 @@ in_bad_zone_watcher()
 	level endon ("fake_death");
 	
 	no_prone_and_crouch_zones = [];
- 	
- 	// grenade wall
- 	no_prone_and_crouch_zones[0]["min"] = (-205, -128, 144);
- 	no_prone_and_crouch_zones[0]["max"] = (-89, -90, 269);
- 
-  	no_prone_zones = [];
-  	
-  	// grenade wall
-  	no_prone_zones[0]["min"] = (-205, -128, 144);
- 	no_prone_zones[0]["max"] = (-55, 30, 269);
+	
+	// grenade wall
+	no_prone_and_crouch_zones[0]["min"] = (-205, -128, 144);
+	no_prone_and_crouch_zones[0]["max"] = (-89, -90, 269);
+
+	no_prone_zones = [];
+	
+	// grenade wall
+	no_prone_zones[0]["min"] = (-205, -128, 144);
+	no_prone_zones[0]["max"] = (-55, 30, 269);
 
 	// near the sawed off
-  	no_prone_zones[1]["min"] = (88, 305, 144);
- 	no_prone_zones[1]["max"] = (245, 405, 269);
- 	
+	no_prone_zones[1]["min"] = (88, 305, 144);
+	no_prone_zones[1]["max"] = (245, 405, 269);
+	
 	while (1)
- 	{	
+	{	
 		array_check = 0;
 		
 		if ( no_prone_and_crouch_zones.size > no_prone_zones.size)
@@ -183,35 +189,35 @@ in_bad_zone_watcher()
 			array_check = no_prone_zones.size;
 		}
 		
- 		for(i = 0; i < array_check; i++)
- 		{
- 			if (isdefined(no_prone_and_crouch_zones[i]) && 
- 				self is_within_volume(no_prone_and_crouch_zones[i]["min"][0], no_prone_and_crouch_zones[i]["max"][0], 
- 											no_prone_and_crouch_zones[i]["min"][1], no_prone_and_crouch_zones[i]["max"][1],
- 											no_prone_and_crouch_zones[i]["min"][2], no_prone_and_crouch_zones[i]["max"][2]))
- 			{
- 				self allowprone(false);
- 				self allowcrouch(false);	
- 				break;
- 			}
- 			else if (isdefined(no_prone_zones[i]) && 
- 				self is_within_volume(no_prone_zones[i]["min"][0], no_prone_zones[i]["max"][0], 
- 											no_prone_zones[i]["min"][1], no_prone_zones[i]["max"][1],
- 											no_prone_zones[i]["min"][2], no_prone_zones[i]["max"][2]))
- 			{
- 				self allowprone(false);
- 				break;
- 			}
- 			else
- 			{
- 				self allowprone(true);
- 				self allowcrouch(true);
- 			}
- 			
- 			
- 		}		
- 		wait 0.05;
- 	}	
+		for(i = 0; i < array_check; i++)
+		{
+			if (isdefined(no_prone_and_crouch_zones[i]) && 
+				self is_within_volume(no_prone_and_crouch_zones[i]["min"][0], no_prone_and_crouch_zones[i]["max"][0], 
+											no_prone_and_crouch_zones[i]["min"][1], no_prone_and_crouch_zones[i]["max"][1],
+											no_prone_and_crouch_zones[i]["min"][2], no_prone_and_crouch_zones[i]["max"][2]))
+			{
+				self allowprone(false);
+				self allowcrouch(false);	
+				break;
+			}
+			else if (isdefined(no_prone_zones[i]) && 
+				self is_within_volume(no_prone_zones[i]["min"][0], no_prone_zones[i]["max"][0], 
+											no_prone_zones[i]["min"][1], no_prone_zones[i]["max"][1],
+											no_prone_zones[i]["min"][2], no_prone_zones[i]["max"][2]))
+			{
+				self allowprone(false);
+				break;
+			}
+			else
+			{
+				self allowprone(true);
+				self allowcrouch(true);
+			}
+			
+			
+		}		
+		wait 0.05;
+	}	
 }
 
 
@@ -231,14 +237,6 @@ is_within_volume(min_x, max_x, min_y, max_y, min_z, max_z)
 	}	
 	
 	return true;
-}
-
-
-
-
-init_sounds()
-{
-	maps\_zombiemode_utility::add_sound( "break_stone", "break_stone" );
 }
 
 // Include the weapons that are only inr your level so that the cost/hints are accurate
@@ -389,42 +387,131 @@ out_of_bounds_watcher()
 	self endon ("disconnect");
 	
 	outside_of_map = [];
- 	
- 	outside_of_map[0]["min"] = (361, 591, -11);
- 	outside_of_map[0]["max"] = (1068, 1031, 235);
- 	
- 	outside_of_map[1]["min"] = (-288, 591, -11);
- 	outside_of_map[1]["max"] = (361, 1160, 235);
- 	
- 	outside_of_map[2]["min"] = (-272, 120, -11);
- 	outside_of_map[2]["max"] = (370, 591, 235);
+	
+	outside_of_map[0]["min"] = (361, 591, -11);
+	outside_of_map[0]["max"] = (1068, 1031, 235);
+	
+	outside_of_map[1]["min"] = (-288, 591, -11);
+	outside_of_map[1]["max"] = (361, 1160, 235);
+	
+	outside_of_map[2]["min"] = (-272, 120, -11);
+	outside_of_map[2]["max"] = (370, 591, 235);
 
- 	outside_of_map[3]["min"] = (-272, -912, -11);
- 	outside_of_map[3]["max"] = (273, 120, 235);
- 	 	
+	outside_of_map[3]["min"] = (-272, -912, -11);
+	outside_of_map[3]["max"] = (273, 120, 235);
+		
 	while (1)
- 	{	
+	{	
 		array_check = outside_of_map.size;
 		
 		kill_player = true;
- 		for(i = 0; i < array_check; i++)
- 		{
- 			if (self is_within_volume(	outside_of_map[i]["min"][0], outside_of_map[i]["max"][0], 
- 										outside_of_map[i]["min"][1], outside_of_map[i]["max"][1],
- 										outside_of_map[i]["min"][2], outside_of_map[i]["max"][2]))
- 			{
- 				kill_player = false;
+		for(i = 0; i < array_check; i++)
+		{
+			if (self is_within_volume(	outside_of_map[i]["min"][0], outside_of_map[i]["max"][0], 
+										outside_of_map[i]["min"][1], outside_of_map[i]["max"][1],
+										outside_of_map[i]["min"][2], outside_of_map[i]["max"][2]))
+			{
+				kill_player = false;
 
- 			} 			
- 		}		
- 		
- 		if (kill_player)
- 		{
- 			setsaveddvar("player_deathInvulnerableTime", 0);
+			} 			
+		}		
+		
+		if (kill_player)
+		{
+			setsaveddvar("player_deathInvulnerableTime", 0);
 			self DoDamage( self.health + 1000, self.origin, undefined, undefined, "riflebullet" );
 			setsaveddvar("player_deathInvulnerableTime", level.startInvulnerableTime);	
- 		}
- 		
- 		wait 0.2;
- 	}	
+		}
+		
+		wait 0.2;
+	}	
+}
+
+prototype_precache_func()
+{
+	precacheshader( "nazi_intro" ); 
+	precacheshader( "zombie_intro" );	
+}
+
+// Handles the intro screen
+prototype_custom_intro_screen( string1, string2, string3, string4, string5 )
+{
+	flag_wait( "all_players_connected" );
+
+	wait( 1 );
+
+	//TUEY Set music state to Splash Screencompass
+	setmusicstate( "SPLASH_SCREEN" );
+	wait (0.2);
+	//TUEY Set music state to WAVE_1
+	setmusicstate("WAVE_1");
+}
+
+init_fx()
+{
+	level._effect["wood_chunk_destory"]	 	= loadfx( "impacts/large_woodhit" );
+
+	level._effect["edge_fog"]			 	= LoadFx( "env/smoke/fx_fog_zombie_amb" ); 
+	level._effect["chest_light"]		 	= LoadFx( "env/light/fx_ray_sun_sm_short" ); 
+
+	level._effect["eye_glow"]			 	= LoadFx( "misc/fx_zombie_eye_single" ); 
+	
+	level._effect["zombie_grain"]			= LoadFx( "misc/fx_zombie_grain_cloud" );
+	
+	level._effect["headshot"] 				= LoadFX( "impacts/flesh_hit_head_fatal_lg_exit" );
+	level._effect["headshot_nochunks"] 		= LoadFX( "misc/fx_zombie_bloodsplat" );
+	level._effect["bloodspurt"] 			= LoadFX( "misc/fx_zombie_bloodspurt" );
+	
+	// Flamethrower
+	level._effect["character_fire_pain_sm"]              		= loadfx( "env/fire/fx_fire_player_sm_1sec" );
+	level._effect["character_fire_death_sm"]             		= loadfx( "env/fire/fx_fire_player_md" );
+	level._effect["character_fire_death_torso"] 				= loadfx( "env/fire/fx_fire_player_torso" );
+}
+
+#using_animtree( "generic_human" ); 
+
+init_anims()
+{
+	// deaths
+	level.scr_anim["zombie"]["death1"] 	= %ai_zombie_death_v1; 
+	level.scr_anim["zombie"]["death2"] 	= %ai_zombie_death_v2; 
+	level.scr_anim["zombie"]["death3"] 	= %ai_zombie_crawl_death_v1; 
+	level.scr_anim["zombie"]["death4"] 	= %ai_zombie_crawl_death_v2; 
+
+	// run cycles
+	level.scr_anim["zombie"]["walk1"] 	= %ai_zombie_walk_v1; 	
+	level.scr_anim["zombie"]["walk2"] 	= %ai_zombie_walk_v2; 
+	level.scr_anim["zombie"]["walk3"] 	= %ai_zombie_walk_v3; 
+	level.scr_anim["zombie"]["walk4"] 	= %ai_zombie_walk_v4; 
+	level.scr_anim["zombie"]["run1"] 	= %ai_zombie_walk_fast_v1; 
+	level.scr_anim["zombie"]["run2"] 	= %ai_zombie_walk_fast_v2; 
+	level.scr_anim["zombie"]["run3"] 	= %ai_zombie_walk_fast_v3; 
+	level.scr_anim["zombie"]["sprint1"] = %ai_zombie_sprint_v1; 
+	level.scr_anim["zombie"]["sprint2"] = %ai_zombie_sprint_v2; 	
+	
+	// run cycles in prone
+	level.scr_anim["zombie"]["crawl1"] 	= %ai_zombie_crawl; 
+	level.scr_anim["zombie"]["crawl2"] 	= %ai_zombie_crawl_v1; 
+	level.scr_anim["zombie"]["crawl3"] 	= %ai_zombie_crawl_sprint; 
+		
+	level._zombie_melee = []; 
+	level._zombie_melee[0] 				= %ai_zombie_attack_forward_v1; 
+	level._zombie_melee[1] 				= %ai_zombie_attack_forward_v2; 
+	level._zombie_melee[2] 				= %ai_zombie_attack_v1; 
+	level._zombie_melee[3] 				= %ai_zombie_attack_v2; 
+
+	// melee in crawl
+	level._zombie_melee_crawl[0] 		= %ai_zombie_attack_crawl; 
+	level._zombie_melee_crawl[1] 		= %ai_zombie_attack_crawl_lunge; 
+}
+
+prototype_init_zombie_leaderboard_data()
+{
+	// Initializing Leaderboard Stat Variables
+	level.zombieLeaderboardStatVariable["nazi_zombie_prototype"]["highestwave"] = "nz_prototype_highestwave";
+	level.zombieLeaderboardStatVariable["nazi_zombie_prototype"]["timeinwave"] = "nz_prototype_timeinwave";
+	level.zombieLeaderboardStatVariable["nazi_zombie_prototype"]["totalpoints"] = "nz_prototype_totalpoints";
+	// Initializing Leaderboard Number
+	level.zombieLeaderboardNumber["nazi_zombie_prototype"]["waves"] = 13;
+	level.zombieLeaderboardNumber["nazi_zombie_prototype"]["points"] = 14;
 }
