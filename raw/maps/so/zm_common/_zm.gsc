@@ -1,9 +1,11 @@
 #include maps\_utility; 
 #include common_scripts\utility;
+#include maps\_music; 
+#include maps\so\zm_common\_zm_utility;
 
 #using_animtree( "generic_human" ); 
 
-init()
+init_zm()
 {
 	common_precache();
 
@@ -44,7 +46,9 @@ init()
 
 	level.hudelem_count = 0;
 
-	maps\_zombiemode_weapons::init();
+	maps\so\zm_common\_zm_weapons::init_zm_weapons();
+	maps\so\zm_common\_zm_magicbox::init_zm_magicbox();
+	//maps\_zombiemode_perks::init();
 	maps\_zombiemode_blockers::init();
 	maps\_zombiemode_spawner::init();
 	maps\_zombiemode_powerups::init();
@@ -95,6 +99,7 @@ init()
 	level thread onPlayerConnect(); 
 
 	init_dvars();
+	init_flags();
 	
 	if ( isDefined( level.zm_custom_map_leaderboard_init ) )
 	{
@@ -108,6 +113,9 @@ on_all_players_ready()
 {
 	flag_wait( "all_players_connected" );
 	bbPrint( "sessions: mapname %s gametype zom isserver 1", level.script );
+
+	DisableGrenadeSuicide(); //Works here though ???
+
 	level thread end_game();
 	level thread round_start();
 	level thread players_playing();
@@ -118,9 +126,7 @@ on_all_players_ready()
 	//add ammo tracker for VO
 	level thread track_players_ammo_count();
 
-	//level thread prevent_near_origin();
-
-	DisableGrenadeSuicide();
+	//DisableGrenadeSuicide(); //Doesn't work here???
 
 	level.startInvulnerableTime = GetDvarInt( "player_deathInvulnerableTime" );
 
@@ -491,17 +497,12 @@ player_laststand()
 
 player_killed_override()
 {
+	self iPrintLn( "player killed" );
+	level waittill( "forever" );
 }
 
 player_damage_override( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, modelIndex, psOffsetTime )
 {
-	/*	
-	if(self hasperk("specialty_armorvest") && eAttacker != self)
-	{
-			iDamage = iDamage * 0.75;
-			iprintlnbold(idamage);
-	}*/
-	
 	if( sMeansOfDeath == "MOD_FALLING" )
 	{
 		sMeansOfDeath = "MOD_EXPLOSIVE";
@@ -655,6 +656,105 @@ zombify_player()
 	}
 }
 
+spawnSpectator()
+{
+	self endon( "disconnect" ); 
+	self endon( "spawned_spectator" ); 
+	self notify( "spawned" ); 
+	self notify( "end_respawn" );
+
+	if( level.intermission )
+	{
+		return;
+	}
+
+	// The check_for_level_end looks for this
+	self.is_zombie = true;
+
+	// Remove all reviving abilities
+	self notify ( "zombified" );
+
+	if( IsDefined( self.revivetrigger ) )
+	{
+		self.revivetrigger delete();
+		self.revivetrigger = undefined;
+	}
+
+	self.zombification_time = getTime(); //set time when player died
+
+	resetTimeout(); 
+
+	// Stop shellshock and rumble
+	self StopShellshock(); 
+	self StopRumble( "damage_heavy" ); 
+
+	self.sessionstate = "spectator"; 
+	self.spectatorclient = -1;
+
+	self remove_from_spectate_list();
+
+	self.maxhealth = self.health;
+	self.shellshocked = false; 
+	self.inWater = false; 
+	self.friendlydamage = undefined; 
+	self.hasSpawned = true; 
+	self.spawnTime = getTime(); 
+	self.afk = false; 
+
+	println( "*************************Zombie Spectator***" );
+	self detachAll();
+
+	self setSpectatePermissions( true );
+	self thread spectator_thread();
+
+	self Spawn( self.origin, self.angles );
+	self notify( "spawned_spectator" );
+}
+
+setSpectatePermissions( isOn )
+{
+	self AllowSpectateTeam( "allies", isOn );
+	self AllowSpectateTeam( "axis", false );
+	self AllowSpectateTeam( "freelook", false );
+	self AllowSpectateTeam( "none", false );	
+}
+
+spectator_thread()
+{
+	self endon( "disconnect" ); 
+	self endon( "spawned_player" );
+
+	self thread spectator_toggle_3rd_person();
+}
+
+spectator_toggle_3rd_person()
+{
+	self endon( "disconnect" ); 
+	self endon( "spawned_player" );
+
+	self set_third_person( true );
+}
+
+set_third_person( value )
+{
+	if( value )
+	{
+		self SetClientDvars( "cg_thirdPerson", "1",
+			"cg_fov", "40",
+			"cg_thirdPersonAngle", "354" );
+
+		self setDepthOfField( 0, 128, 512, 4000, 6, 1.8 );
+	}
+	else
+	{
+		self SetClientDvars( "cg_thirdPerson", "0",
+			"cg_fov", "65",
+			"cg_thirdPersonAngle", "0" );
+
+		self setDepthOfField( 0, 0, 512, 4000, 4, 0 );
+	}
+}
+
 onPlayerConnect()
 {
 	for( ;; )
@@ -689,11 +789,11 @@ onPlayerSpawned()
 		
 
 		self SetClientDvars( "cg_thirdPerson", "0", 
-							 "cg_thirdPersonAngle", "0" );
+							"cg_thirdPersonAngle", "0" );
 
 		self SetDepthOfField( 0, 0, 512, 4000, 4, 0 );
 
-		self maps\_zombiemode_utility::add_to_spectate_list();
+		self maps\so\zm_common\_zm_utility::add_to_spectate_list();
 
 		if( isdefined( self.initialized ) )
 		{
@@ -821,7 +921,7 @@ store_crumb( origin )
 onPlayerDisconnect()
 {
 	self waittill( "disconnect" ); 
-	self maps\_zombiemode_utility::remove_from_spectate_list();
+	self maps\so\zm_common\_zm_utility::remove_from_spectate_list();
 }
 
 player_revive_monitor()
@@ -882,18 +982,19 @@ init_dvars()
 
 init_flags()
 {
-    flag_init( "solo_game" );
-    flag_init( "start_zombie_round_logic" );
-    flag_init( "spawn_point_override" );
-    flag_init( "power_on" );
-    flag_init( "spawn_zombies", 1 );
-    flag_init( "dog_round" );
-    flag_init( "begin_spawning" );
-    flag_init( "end_round_wait" );
-    flag_init( "wait_and_revive" );
-    flag_init( "instant_revive" );
-    flag_init( "initial_blackscreen_passed" );
-    flag_init( "initial_players_connected" );
+	flag_init( "solo_game" );
+	flag_init( "start_zombie_round_logic" );
+	flag_init( "spawn_point_override" );
+	flag_init( "power_on" );
+	flag_init( "spawn_zombies" );
+	flag_set( "spawn_zombies" );
+	flag_init( "dog_round" );
+	flag_init( "begin_spawning" );
+	flag_init( "end_round_wait" );
+	flag_init( "wait_and_revive" );
+	flag_init( "instant_revive" );
+	flag_init( "initial_blackscreen_passed" );
+	flag_init( "initial_players_connected" );
 }
 
 end_game()
@@ -946,8 +1047,11 @@ end_game()
 	survived.alpha = 1;
 
 	wait( 1 );
+	if ( is_true( level.use_legacy_sound_playing ) )
+	{
+		play_sound_at_pos( "end_of_game", ( 0, 0, 0 ) );
+	}
 
-	//play_sound_at_pos( "end_of_game", ( 0, 0, 0 ) );
 	wait( 2 );
 	intermission();
 
@@ -964,6 +1068,21 @@ end_game()
 
 	// Let's not exit the function
 	wait( 666 );
+}
+
+player_exit_level()
+{
+	self AllowStand( true );
+	self AllowCrouch( false );
+	self AllowProne( false );
+
+	if( IsDefined( self.game_over_bg ) )
+	{
+		self.game_over_bg.foreground = true;
+		self.game_over_bg.sort = 100;
+		self.game_over_bg FadeOverTime( 1 );
+		self.game_over_bg.alpha = 1;
+	}
 }
 
 update_leaderboards()
@@ -1248,21 +1367,21 @@ round_start()
 	level.chalk_hud1 = create_chalk_hud();
 	level.chalk_hud2 = create_chalk_hud( 64 );
 
-    flag_set( "begin_spawning" );
+	flag_set( "begin_spawning" );
 
-    if ( !isdefined( level.round_spawn_func ) )
-        level.round_spawn_func = ::round_spawning;
+	if ( !isdefined( level.round_spawn_func ) )
+		level.round_spawn_func = ::round_spawning;
 /#
-    if ( getdvarint( "zombie_rise_test" ) )
-        level.round_spawn_func = ::round_spawning_test;
+	if ( getdvarint( "zombie_rise_test" ) )
+		level.round_spawn_func = ::round_spawning_test;
 #/
-    if ( !isdefined( level.round_wait_func ) )
-        level.round_wait_func = ::round_wait;
+	if ( !isdefined( level.round_wait_func ) )
+		level.round_wait_func = ::round_wait;
 
-    if ( !isdefined( level.round_think_func ) )
-        level.round_think_func = ::round_think;
+	if ( !isdefined( level.round_think_func ) )
+		level.round_think_func = ::round_think;
 
-    level thread [[ level.round_think_func ]]();
+	level thread [[ level.round_think_func ]]();
 }
 
 round_spawning_test()
@@ -1285,7 +1404,7 @@ create_chalk_hud( x )
 		x = 0;
 	}
 
-	hud = maps\_zombiemode_utility::create_simple_hud();
+	hud = maps\so\zm_common\_zm_utility::create_simple_hud();
 	hud.alignX = "left"; 
 	hud.alignY = "bottom";
 	hud.horzAlign = "left"; 
@@ -1473,8 +1592,8 @@ round_spawning()
 						for ( k=0; k<akeys.size; k++ )
 						{
 							if ( level.zones[ akeys[k] ].is_active &&
-								 !level.zones[ akeys[k] ].is_occupied &&
-								 level.zones[ akeys[k] ].dog_locations.size > 0 )
+								!level.zones[ akeys[k] ].is_occupied &&
+								level.zones[ akeys[k] ].dog_locations.size > 0 )
 							{
 								level [[ level._custom_func_table[ "special_dog_spawn" ] ]]( undefined, 1 );
 								level.zombie_total--;
@@ -1628,7 +1747,7 @@ round_think()
 
 		level.round_timer = level.zombie_vars["zombie_round_time"]; 
 
-		maps\_zombiemode_utility::add_later_round_spawners();
+		maps\so\zm_common\_zm_utility::add_later_round_spawners();
 
 		chalk_one_up();
 		//		round_text( &"ZOMBIE_ROUND_BEGIN" );
@@ -1636,7 +1755,7 @@ round_think()
 		maps\_zombiemode_powerups::powerup_round_start();
 
 		players = get_players();
-		array_thread( players, maps\_zombiemode_blockers_new::rebuild_barrier_reward_reset );
+		array_thread( players, maps\_zombiemode_blockers::rebuild_barrier_reward_reset );
 
 		level thread award_grenades_for_survivors();
 
@@ -1685,7 +1804,7 @@ chalk_one_up()
 	{
 		intro = true;
 		//Play the intro sound at the beginning of the round
-	 	//level thread play_intro_VO(); (commented out for Corky)
+		//level thread play_intro_VO(); (commented out for Corky)
 
 	}
 	else
@@ -1696,7 +1815,7 @@ chalk_one_up()
 	round = undefined;	
 	if( intro )
 	{
-		round = maps\_zombiemode_utility::create_simple_hud();
+		round = maps\so\zm_common\_zm_utility::create_simple_hud();
 		round.alignX = "center"; 
 		round.alignY = "bottom";
 		round.horzAlign = "center"; 
@@ -1747,15 +1866,17 @@ chalk_one_up()
 
 	wait( 0.5 );
 
-	//	play_sound_at_pos( "chalk_one_up", ( 0, 0, 0 ) );
-
 	if(IsDefined(level.eggs) && level.eggs !=1 )
 	{
-		if(level.doground_nomusic ==0 )
-	{
-		setmusicstate("round_begin");
+		if(level.doground_nomusic == 0 )
+		{
+			setmusicstate("round_begin");
+		}
 	}
 
+	if ( is_true( level.use_legacy_sound_playing ) )
+	{
+		play_sound_at_pos( "chalk_one_up", ( 0, 0, 0 ) );
 	}
 
 	if( level.round_number == 11 && IsDefined( level.chalk_hud2 ) )
@@ -2025,20 +2146,20 @@ chalk_round_hint()
 	{
 		if(IsDefined(level.doground_nomusic  && level.doground_nomusic == 0 ))
 		{
-		setmusicstate("round_end");
-		wait( time * 0.25 );
-	}
+			setmusicstate("round_end");
+			wait( time * 0.25 );
+			if ( is_true( level.use_legacy_sound_playing ) )
+			{
+				play_sound_at_pos( "end_of_round", ( 0, 0, 0 ) );
+			}
+		}
 		else if(IsDefined(level.doground_nomusic  && level.doground_nomusic == 1 ))
 		{
 			play_sound_2D( "bright_sting" );
 				
 		}
 	}
-	//	play_sound_at_pos( "end_of_round", ( 0, 0, 0 ) );
 
-
-
-	// Pulse
 	fade_time = 0.5;
 	steps =  ( time * 0.5 ) / fade_time;
 	for( q = 0; q < steps; q++ )
@@ -2107,7 +2228,7 @@ spawn_vo()
 	if(players.size > 1)
 	{
 		player = random(players);
-		index = maps\_zombiemode_weapons::get_player_index(player);
+		index = maps\so\zm_common\_zm_weapons::get_player_index(player);
 		player thread spawn_vo_player(index,players.size);
 	}
 
@@ -2193,11 +2314,12 @@ ammo_dialog_timer()
 }
 add_low_ammo_dialog()
 {
-	index = maps\_zombiemode_weapons::get_player_index(self);	
+	index = maps\so\zm_common\_zm_weapons::get_player_index(self);	
 	player_index = "plr_" + index + "_";
 	if(!IsDefined (self.vox_ammo_low))
 	{
-		num_variants = maps\_zombiemode_spawner::get_number_variants(player_index + "vox_ammo_low");
+		//num_variants = maps\_zombiemode_spawner::get_number_variants(player_index + "vox_ammo_low");
+		num_variants = 0;
 		self.vox_ammo_low = [];
 		for(i=0;i<num_variants;i++)
 		{
@@ -2205,6 +2327,11 @@ add_low_ammo_dialog()
 		}
 		self.vox_ammo_low_available = self.vox_ammo_low;		
 	}	
+
+	if ( !isDefined( self.vox_ammo_low_available ) || self.vox_ammo_low_available.size <= 0 )
+	{
+		return;
+	}
 	sound_to_play = random(self.vox_ammo_low_available);
 	
 	self.vox_ammo_low_available = array_remove(self.vox_ammo_low_available,sound_to_play);
@@ -2214,10 +2341,8 @@ add_low_ammo_dialog()
 		self.vox_ammo_low_available = self.vox_ammo_low;
 	}
 			
-	self maps\_zombiemode_spawner::do_player_playdialog(player_index, sound_to_play, 0.25);	
-	
-	
-	
+	//self maps\_zombiemode_spawner::do_player_playdialog(player_index, sound_to_play, 0.25);	
+
 }
 add_no_ammo_dialog( weap )
 {
@@ -2236,11 +2361,12 @@ add_no_ammo_dialog( weap )
 	}
 
 
-	index = maps\_zombiemode_weapons::get_player_index(self);	
+	index = maps\so\zm_common\_zm_weapons::get_player_index(self);	
 	player_index = "plr_" + index + "_";
 	if(!IsDefined (self.vox_ammo_out))
 	{
-		num_variants = maps\_zombiemode_spawner::get_number_variants(player_index + "vox_ammo_out");
+		//num_variants = maps\_zombiemode_spawner::get_number_variants(player_index + "vox_ammo_out");
+		num_variants = 0;
 		self.vox_ammo_out = [];
 		for(i=0;i<num_variants;i++)
 		{
@@ -2257,10 +2383,8 @@ add_no_ammo_dialog( weap )
 		self.vox_ammo_out_available = self.vox_ammo_out;
 	}
 
-	self maps\_zombiemode_spawner::do_player_playdialog(player_index, sound_to_play, 0.25);	
-	
-	
-	
+	//self maps\_zombiemode_spawner::do_player_playdialog(player_index, sound_to_play, 0.25);	
+
 }
 
 get_safe_breadcrumb_pos( player )

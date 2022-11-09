@@ -65,7 +65,13 @@ main()
 	include_weapons();
 	include_powerups();
 	level.use_zombie_heroes = true;
-	maps\_zombiemode::main("receiver_zone_spawners");
+	level.zm_custom_map_weapon_add_func = ::factory_add_weapons;
+	level.zm_custom_map_fx_init = ::init_fx;
+	level.zm_custom_map_anim_init = ::init_anims;
+	level.zm_custom_map_leaderboard_init = ::factory_init_zombie_leaderboard_data;
+	level.zm_custom_map_weapon_add_func = ::factory_add_weapons;
+	level.init_zombie_spawner_name = "receiver_zone_spawners";
+	maps\so\zm_common\_zm::init_zm();
 	
 	init_sounds();
 	init_achievement();
@@ -445,6 +451,143 @@ init_sounds()
 	maps\_zombiemode_utility::add_sound( "heavy_door",	"open_door" );
 }
 
+
+factory_add_weapons()
+{
+	// Zombify
+	PrecacheItem( "zombie_melee" );
+
+
+	// Pistols
+	add_zombie_weapon( "colt", 									&"ZOMBIE_WEAPON_COLT_50", 					50,		"vox_crappy",	8 );
+	add_zombie_weapon( "colt_dirty_harry", 						&"ZOMBIE_WEAPON_COLT_DH_100", 				100,	"vox_357",		5 );
+	add_zombie_weapon( "nambu", 								&"ZOMBIE_WEAPON_NAMBU_50", 					50, 	"vox_crappy",	8 );
+	add_zombie_weapon( "sw_357", 								&"ZOMBIE_WEAPON_SW357_100", 				100, 	"vox_357",		5 );
+	add_zombie_weapon( "zombie_sw_357", 						&"ZOMBIE_WEAPON_SW357_100", 				100, 	"vox_357",		5 );
+	add_zombie_weapon( "zombie_sw_357_upgraded", 				&"ZOMBIE_WEAPON_SW357_100", 				100, 	"vox_357",		5 );
+	add_zombie_weapon( "tokarev", 								&"ZOMBIE_WEAPON_TOKAREV_50", 				50, 	"vox_crappy",	8 );
+	add_zombie_weapon( "walther", 								&"ZOMBIE_WEAPON_WALTHER_50", 				50, 	"vox_crappy",	8 );
+	add_zombie_weapon( "zombie_colt", 							&"ZOMBIE_WEAPON_ZOMBIECOLT_25", 			25, 	"vox_crappy",	8 );
+	add_zombie_weapon( "zombie_colt_upgraded", 					&"ZOMBIE_WEAPON_ZOMBIECOLT_25", 			25, 	"vox_crappy",	8 );
+
+	// Bolt Action                                      		
+	add_zombie_weapon( "kar98k", 								&"ZOMBIE_WEAPON_KAR98K_200", 				200,	"",				0);
+	add_zombie_weapon( "zombie_kar98k", 						&"ZOMBIE_WEAPON_KAR98K_200", 				200,	"",				0);
+	add_zombie_weapon( "zombie_kar98k_upgraded", 				&"ZOMBIE_WEAPON_KAR98K_200", 				200,	"",				0);
+	add_zombie_weapon( "kar98k_bayonet", 						&"ZOMBIE_WEAPON_KAR98K_B_200", 				200,	"",				0);
+	add_zombie_weapon( "mosin_rifle", 							&"ZOMBIE_WEAPON_MOSIN_200", 				200,	"",				0); 
+	add_zombie_weapon( "mosin_rifle_bayonet", 					&"ZOMBIE_WEAPON_MOSIN_B_200", 				200,	"",				0 );
+	add_zombie_weapon( "springfield", 							&"ZOMBIE_WEAPON_SPRINGFIELD_200", 			200,	"",				0 );
+	add_zombie_weapon( "zombie_springfield", 					&"ZOMBIE_WEAPON_SPRINGFIELD_200", 			200,	"",				0 );
+	add_zombie_weapon( "springfield_bayonet", 					&"ZOMBIE_WEAPON_SPRINGFIELD_B_200", 		200,	"",				0 );
+	add_zombie_weapon( "zombie_type99_rifle", 					&"ZOMBIE_WEAPON_TYPE99_200", 				200,	"",				0 );
+	add_zombie_weapon( "zombie_type99_rifle_upgraded", 			&"ZOMBIE_WEAPON_TYPE99_200", 				200,	"",				0 );
+	add_zombie_weapon( "type99_rifle_bayonet", 					&"ZOMBIE_WEAPON_TYPE99_B_200", 				200,	"",				0 );
+
+	// Semi Auto                                        		
+	add_zombie_weapon( "zombie_gewehr43", 						&"ZOMBIE_WEAPON_GEWEHR43_600", 				600,	"" ,			0 );
+	add_zombie_weapon( "zombie_gewehr43_upgraded", 				&"ZOMBIE_WEAPON_GEWEHR43_600", 				600,	"" ,			0 );
+	add_zombie_weapon( "zombie_m1carbine", 						&"ZOMBIE_WEAPON_M1CARBINE_600",				600,	"" ,			0 );
+	add_zombie_weapon( "zombie_m1carbine_upgraded", 			&"ZOMBIE_WEAPON_M1CARBINE_600",				600,	"" ,			0 );
+	add_zombie_weapon( "m1carbine_bayonet", 					&"ZOMBIE_WEAPON_M1CARBINE_B_600", 			600,	"" ,			0 );
+	add_zombie_weapon( "zombie_m1garand", 						&"ZOMBIE_WEAPON_M1GARAND_600", 				600,	"" ,			0 );
+	add_zombie_weapon( "zombie_m1garand_upgraded", 				&"ZOMBIE_WEAPON_M1GARAND_600", 				600,	"" ,			0 );
+	add_zombie_weapon( "m1garand_bayonet", 						&"ZOMBIE_WEAPON_M1GARAND_B_600", 			600,	"" ,			0 );
+	add_zombie_weapon( "svt40", 								&"ZOMBIE_WEAPON_SVT40_600", 				600,	"" ,			0 );
+
+	// Grenades                                         		
+	add_zombie_weapon( "fraggrenade", 							&"ZOMBIE_WEAPON_FRAGGRENADE_250", 			250,	"" ,			0 );
+	add_zombie_weapon( "molotov", 								&"ZOMBIE_WEAPON_MOLOTOV_200", 				200,	"vox_crappy",	8 );
+	add_zombie_weapon( "molotov_zombie", 						&"ZOMBIE_WEAPON_MOLOTOV_200", 				200,	"vox_crappy",	8 );
+	add_zombie_weapon( "stick_grenade", 						&"ZOMBIE_WEAPON_STICKGRENADE_250", 			250,	"" ,			0 );
+	add_zombie_weapon( "stielhandgranate", 						&"ZOMBIE_WEAPON_STIELHANDGRANATE_250", 		250,	"" ,			0, 250 );
+	add_zombie_weapon( "type97_frag", 							&"ZOMBIE_WEAPON_TYPE97FRAG_250", 			250,	"" ,			0 );
+
+	// Scoped
+	add_zombie_weapon( "kar98k_scoped_zombie", 					&"ZOMBIE_WEAPON_KAR98K_S_750", 				750,	"vox_ppsh",		5);
+	add_zombie_weapon( "kar98k_scoped_bayonet_zombie", 			&"ZOMBIE_WEAPON_KAR98K_S_B_750", 			750,	"vox_ppsh",		5);
+	add_zombie_weapon( "mosin_rifle_scoped_zombie", 			&"ZOMBIE_WEAPON_MOSIN_S_750", 				750,	"vox_ppsh",		5);
+	add_zombie_weapon( "mosin_rifle_scoped_bayonet_zombie", 	&"ZOMBIE_WEAPON_MOSIN_S_B_750", 			750,	"vox_ppsh",		5);
+	add_zombie_weapon( "ptrs41_zombie", 						&"ZOMBIE_WEAPON_PTRS41_750", 				750,	"vox_ppsh",		5);
+	add_zombie_weapon( "ptrs41_zombie_upgraded", 				&"ZOMBIE_WEAPON_PTRS41_750", 				750,	"vox_ppsh",		5);
+	add_zombie_weapon( "springfield_scoped_zombie", 			&"ZOMBIE_WEAPON_SPRINGFIELD_S_750", 		750,	"vox_ppsh",		5);
+	add_zombie_weapon( "springfield_scoped_bayonet_zombie", 	&"ZOMBIE_WEAPON_SPRINGFIELD_S_B_750", 		750,	"vox_ppsh",		5);
+	add_zombie_weapon( "type99_rifle_scoped_zombie", 			&"ZOMBIE_WEAPON_TYPE99_S_750", 				750,	"vox_ppsh",		5);
+	add_zombie_weapon( "type99_rifle_scoped_bayonet_zombie", 	&"ZOMBIE_WEAPON_TYPE99_S_B_750", 			750,	"vox_ppsh",		5);
+
+	// Full Auto                                                                                	
+	add_zombie_weapon( "zombie_mp40", 							&"ZOMBIE_WEAPON_MP40_1000", 				1000,	"vox_mp40",		2 ); 
+	add_zombie_weapon( "zombie_mp40_upgraded", 					&"ZOMBIE_WEAPON_MP40_1000", 				1000,	"vox_mp40",		2 ); 
+	add_zombie_weapon( "zombie_ppsh", 							&"ZOMBIE_WEAPON_PPSH_2000", 				2000,	"vox_ppsh",		5 );
+	add_zombie_weapon( "zombie_ppsh_upgraded", 					&"ZOMBIE_WEAPON_PPSH_2000", 				2000,	"vox_ppsh",		5 );
+	add_zombie_weapon( "zombie_stg44", 							&"ZOMBIE_WEAPON_STG44_1200", 				1200,	"vox_mg",		9 );
+	add_zombie_weapon( "zombie_stg44_upgraded", 				&"ZOMBIE_WEAPON_STG44_1200", 				1200,	"vox_mg",		9 );
+	add_zombie_weapon( "zombie_thompson", 						&"ZOMBIE_WEAPON_THOMPSON_1200", 			1200,	"",				0 );
+	add_zombie_weapon( "zombie_thompson_upgraded", 				&"ZOMBIE_WEAPON_THOMPSON_1200", 			1200,	"",				0 );
+	add_zombie_weapon( "zombie_type100_smg", 					&"ZOMBIE_WEAPON_TYPE100_1000", 				1000,	"",				0 );
+	add_zombie_weapon( "zombie_type100_smg_upgraded", 			&"ZOMBIE_WEAPON_TYPE100_1000", 				1000,	"",				0 );
+
+	// Shotguns                                         	
+	add_zombie_weapon( "zombie_doublebarrel", 					&"ZOMBIE_WEAPON_DOUBLEBARREL_1200", 		1200,	"vox_shotgun", 6);
+	add_zombie_weapon( "zombie_doublebarrel_upgraded", 			&"ZOMBIE_WEAPON_DOUBLEBARREL_1200", 		1200,	"vox_shotgun", 6);
+	add_zombie_weapon( "zombie_doublebarrel_sawed", 			&"ZOMBIE_WEAPON_DOUBLEBARREL_SAWED_1200", 	1200,	"vox_shotgun", 6);
+	add_zombie_weapon( "zombie_doublebarrel_sawed_upgraded",	&"ZOMBIE_WEAPON_DOUBLEBARREL_SAWED_1200", 	1200,	"vox_shotgun", 6);
+	add_zombie_weapon( "zombie_shotgun", 						&"ZOMBIE_WEAPON_SHOTGUN_1500", 				1500,	"vox_shotgun", 6);
+	add_zombie_weapon( "zombie_shotgun_upgraded", 				&"ZOMBIE_WEAPON_SHOTGUN_1500", 				1500,	"vox_shotgun", 6);
+
+	// Heavy Machineguns                                	
+	add_zombie_weapon( "zombie_30cal", 							&"ZOMBIE_WEAPON_30CAL_3000", 				3000,	"vox_mg",		9 );
+	add_zombie_weapon( "zombie_30cal_upgraded", 				&"ZOMBIE_WEAPON_30CAL_3000", 				3000,	"vox_mg",		9 );
+	add_zombie_weapon( "zombie_bar", 							&"ZOMBIE_WEAPON_BAR_1800", 					1800,	"vox_bar",		5 );
+	add_zombie_weapon( "zombie_bar_upgraded", 					&"ZOMBIE_WEAPON_BAR_1800", 					1800,	"vox_bar",		5 );
+	add_zombie_weapon( "dp28", 									&"ZOMBIE_WEAPON_DP28_2250", 				2250,	"vox_mg" ,		9 );
+	add_zombie_weapon( "zombie_fg42", 							&"ZOMBIE_WEAPON_FG42_1500", 				1500,	"vox_mg" ,		9 ); 
+	add_zombie_weapon( "zombie_fg42_upgraded", 					&"ZOMBIE_WEAPON_FG42_1500", 				1500,	"vox_mg" ,		9 ); 
+	add_zombie_weapon( "fg42_scoped", 							&"ZOMBIE_WEAPON_FG42_S_1500", 				1500,	"vox_mg" ,		9 ); 
+	add_zombie_weapon( "zombie_mg42", 							&"ZOMBIE_WEAPON_MG42_3000", 				3000,	"vox_mg" ,		9 ); 
+	add_zombie_weapon( "zombie_mg42_upgraded", 					&"ZOMBIE_WEAPON_MG42_3000", 				3000,	"vox_mg" ,		9 );
+	add_zombie_weapon( "type99_lmg", 							&"ZOMBIE_WEAPON_TYPE99_LMG_1750", 			1750,	"vox_mg" ,		9 ); 
+
+	// Grenade Launcher                                 	
+	add_zombie_weapon( "m1garand_gl_zombie", 					&"ZOMBIE_WEAPON_M1GARAND_GL_1500", 			1500,	"",				0 );
+	add_zombie_weapon( "m1garand_gl_zombie_upgraded", 			&"ZOMBIE_WEAPON_M1GARAND_GL_1500", 			1500,	"",				0 );
+	add_zombie_weapon( "mosin_launcher_zombie", 				&"ZOMBIE_WEAPON_MOSIN_GL_1200",				1200,	"",				0 );
+
+	// Bipods                               				
+	add_zombie_weapon( "30cal_bipod", 							&"ZOMBIE_WEAPON_30CAL_BIPOD_3500", 			3500,	"vox_mg",		5 ); 
+	add_zombie_weapon( "bar_bipod", 							&"ZOMBIE_WEAPON_BAR_BIPOD_2500", 			2500,	"vox_bar",		5 ); 
+	add_zombie_weapon( "dp28_bipod", 							&"ZOMBIE_WEAPON_DP28_BIPOD_2500", 			2500,	"vox_mg",		5 ); 
+	add_zombie_weapon( "fg42_bipod", 							&"ZOMBIE_WEAPON_FG42_BIPOD_2000", 			2000,	"vox_mg",		5 ); 
+	add_zombie_weapon( "mg42_bipod", 							&"ZOMBIE_WEAPON_MG42_BIPOD_3250", 			3250,	"vox_mg",		5 ); 
+	add_zombie_weapon( "type99_lmg_bipod", 						&"ZOMBIE_WEAPON_TYPE99_LMG_BIPOD_2250", 	2250,	"vox_mg",		5 ); 
+
+	// Rocket Launchers
+	add_zombie_weapon( "bazooka", 								&"ZOMBIE_WEAPON_BAZOOKA_2000", 				2000,	"",				0 ); 
+	add_zombie_weapon( "panzerschrek_zombie", 					&"ZOMBIE_WEAPON_PANZERSCHREK_2000", 		2000,	"vox_panzer",	5 ); 
+	add_zombie_weapon( "panzerschrek_zombie_upgraded", 			&"ZOMBIE_WEAPON_PANZERSCHREK_2000", 		2000,	"vox_panzer",	5 ); 
+
+	// Flamethrower                                     	
+	add_zombie_weapon( "m2_flamethrower_zombie", 				&"ZOMBIE_WEAPON_M2_FLAMETHROWER_3000", 		3000,	"vox_flame",	7);	
+	add_zombie_weapon( "m2_flamethrower_zombie_upgraded", 		&"ZOMBIE_WEAPON_M2_FLAMETHROWER_3000", 		3000,	"vox_flame",	7);	
+
+	// Special                                          	
+	add_zombie_weapon( "mine_bouncing_betty",					&"ZOMBIE_WEAPON_SATCHEL_2000",				2000,	"" );
+	add_zombie_weapon( "mortar_round", 							&"ZOMBIE_WEAPON_MORTARROUND_2000", 			2000,	"" );
+	add_zombie_weapon( "satchel_charge", 						&"ZOMBIE_WEAPON_SATCHEL_2000", 				2000,	"vox_monkey",	3 );
+	add_zombie_weapon( "zombie_cymbal_monkey",					&"ZOMBIE_WEAPON_SATCHEL_2000", 				2000,	"vox_monkey",	3 );
+	add_zombie_weapon( "ray_gun", 								&"ZOMBIE_WEAPON_RAYGUN_10000", 				10000,	"vox_raygun",	6 );
+	add_zombie_weapon( "ray_gun_upgraded", 						&"ZOMBIE_WEAPON_RAYGUN_10000", 				10000,	"vox_raygun",	6 );
+	add_zombie_weapon( "tesla_gun",								&"ZOMBIE_BUY_TESLA", 						10,		"vox_tesla",	5 );
+	add_zombie_weapon( "tesla_gun_upgraded",					&"ZOMBIE_BUY_TESLA", 						10,		"vox_tesla",	5 );
+
+	if(level.script != "nazi_zombie_prototype")
+	{
+		Precachemodel("zombie_teddybear");
+	}
+	// ONLY 1 OF THE BELOW SHOULD BE ALLOWED
+	add_limited_weapon( "m2_flamethrower_zombie", 1 );
+	add_limited_weapon( "tesla_gun", 1);
+}   
 
 // Include the weapons that are only inr your level so that the cost/hints are accurate
 // Also adds these weapons to the random treasure chest.
@@ -1899,4 +2042,269 @@ play_level_easteregg_vox( object )
 		}
 		wait(15);
 	}
+}
+
+init_fx()
+{
+	level._effect["wood_chunk_destory"]	 	= loadfx( "impacts/large_woodhit" );
+
+	level._effect["edge_fog"]			 	= LoadFx( "env/smoke/fx_fog_zombie_amb" ); 
+	level._effect["chest_light"]		 	= LoadFx( "env/light/fx_ray_sun_sm_short" ); 
+
+	level._effect["eye_glow"]			 	= LoadFx( "misc/fx_zombie_eye_single" ); 
+
+	level._effect["zombie_grain"]			= LoadFx( "misc/fx_zombie_grain_cloud" );
+
+	level._effect["headshot"] 				= LoadFX( "impacts/flesh_hit_head_fatal_lg_exit" );
+	level._effect["headshot_nochunks"] 		= LoadFX( "misc/fx_zombie_bloodsplat" );
+	level._effect["bloodspurt"] 			= LoadFX( "misc/fx_zombie_bloodspurt" );
+	level._effect["tesla_head_light"]		= Loadfx( "maps/zombie/fx_zombie_tesla_neck_spurt");
+
+	level._effect["rise_burst_water"]		= LoadFx("maps/zombie/fx_zombie_body_wtr_burst");
+	level._effect["rise_billow_water"]	= LoadFx("maps/zombie/fx_zombie_body_wtr_billowing");
+	level._effect["rise_dust_water"]		= LoadFx("maps/zombie/fx_zombie_body_wtr_falling");
+
+	level._effect["rise_burst"]		= LoadFx("maps/mp_maps/fx_mp_zombie_hand_dirt_burst");
+	level._effect["rise_billow"]	= LoadFx("maps/mp_maps/fx_mp_zombie_body_dirt_billowing");
+	level._effect["rise_dust"]		= LoadFx("maps/mp_maps/fx_mp_zombie_body_dust_falling");	
+
+	// Flamethrower
+	level._effect["character_fire_pain_sm"]              		= loadfx( "env/fire/fx_fire_player_sm_1sec" );
+	level._effect["character_fire_death_sm"]             		= loadfx( "env/fire/fx_fire_player_md" );
+	level._effect["character_fire_death_torso"] 				= loadfx( "env/fire/fx_fire_player_torso" );
+}
+
+// zombie specific anims
+
+init_standard_zombie_anims()
+{
+	// deaths
+	level.scr_anim["zombie"]["death1"] 	= %ai_zombie_death_v1;
+	level.scr_anim["zombie"]["death2"] 	= %ai_zombie_death_v2;
+	level.scr_anim["zombie"]["death3"] 	= %ai_zombie_crawl_death_v1;
+	level.scr_anim["zombie"]["death4"] 	= %ai_zombie_crawl_death_v2;
+
+	// run cycles
+	
+	level.scr_anim["zombie"]["walk1"] 	= %ai_zombie_walk_v1;
+	level.scr_anim["zombie"]["walk2"] 	= %ai_zombie_walk_v2;
+	level.scr_anim["zombie"]["walk3"] 	= %ai_zombie_walk_v3;
+	level.scr_anim["zombie"]["walk4"] 	= %ai_zombie_walk_v4;
+
+	level.scr_anim["zombie"]["run1"] 	= %ai_zombie_walk_fast_v1;
+	level.scr_anim["zombie"]["run2"] 	= %ai_zombie_walk_fast_v2;
+	level.scr_anim["zombie"]["run3"] 	= %ai_zombie_walk_fast_v3;
+	level.scr_anim["zombie"]["run4"] 	= %ai_zombie_run_v2;
+	level.scr_anim["zombie"]["run5"] 	= %ai_zombie_run_v4;
+	level.scr_anim["zombie"]["run6"] 	= %ai_zombie_run_v3;
+	//level.scr_anim["zombie"]["run4"] 	= %ai_zombie_run_v1;
+	//level.scr_anim["zombie"]["run6"] 	= %ai_zombie_run_v4;
+
+	level.scr_anim["zombie"]["sprint1"] = %ai_zombie_sprint_v1;
+	level.scr_anim["zombie"]["sprint2"] = %ai_zombie_sprint_v2;
+	level.scr_anim["zombie"]["sprint3"] = %ai_zombie_sprint_v1;
+	level.scr_anim["zombie"]["sprint4"] = %ai_zombie_sprint_v2;
+	//level.scr_anim["zombie"]["sprint3"] = %ai_zombie_sprint_v3;
+	//level.scr_anim["zombie"]["sprint3"] = %ai_zombie_sprint_v4;
+	//level.scr_anim["zombie"]["sprint4"] = %ai_zombie_sprint_v5;
+
+	// run cycles in prone
+	level.scr_anim["zombie"]["crawl1"] 	= %ai_zombie_crawl;
+	level.scr_anim["zombie"]["crawl2"] 	= %ai_zombie_crawl_v1;
+	level.scr_anim["zombie"]["crawl3"] 	= %ai_zombie_crawl_v2;
+	level.scr_anim["zombie"]["crawl4"] 	= %ai_zombie_crawl_v3;
+	level.scr_anim["zombie"]["crawl5"] 	= %ai_zombie_crawl_v4;
+	level.scr_anim["zombie"]["crawl6"] 	= %ai_zombie_crawl_v5;
+	level.scr_anim["zombie"]["crawl_hand_1"] = %ai_zombie_walk_on_hands_a;
+	level.scr_anim["zombie"]["crawl_hand_2"] = %ai_zombie_walk_on_hands_b;
+
+
+
+	
+	level.scr_anim["zombie"]["crawl_sprint1"] 	= %ai_zombie_crawl_sprint;
+	level.scr_anim["zombie"]["crawl_sprint2"] 	= %ai_zombie_crawl_sprint_1;
+	level.scr_anim["zombie"]["crawl_sprint3"] 	= %ai_zombie_crawl_sprint_2;
+
+	if( !isDefined( level._zombie_melee ) )
+	{
+		level._zombie_melee = [];
+	}
+	if( !isDefined( level._zombie_walk_melee ) )
+	{
+		level._zombie_walk_melee = [];
+	}
+	if( !isDefined( level._zombie_run_melee ) )
+	{
+		level._zombie_run_melee = [];
+	}
+
+	level._zombie_melee["zombie"] = [];
+	level._zombie_walk_melee["zombie"] = [];
+	level._zombie_run_melee["zombie"] = [];
+
+	level._zombie_melee["zombie"][0] 				= %ai_zombie_attack_forward_v1; 
+	level._zombie_melee["zombie"][1] 				= %ai_zombie_attack_forward_v2; 
+	level._zombie_melee["zombie"][2] 				= %ai_zombie_attack_v1; 
+	level._zombie_melee["zombie"][3] 				= %ai_zombie_attack_v2;	
+	level._zombie_melee["zombie"][4]				= %ai_zombie_attack_v1;
+	level._zombie_melee["zombie"][5]				= %ai_zombie_attack_v4;
+	level._zombie_melee["zombie"][6]				= %ai_zombie_attack_v6;	
+	level._zombie_run_melee["zombie"][0]				=	%ai_zombie_run_attack_v1;
+	level._zombie_run_melee["zombie"][1]				=	%ai_zombie_run_attack_v2;
+	level._zombie_run_melee["zombie"][2]				=	%ai_zombie_run_attack_v3;
+	level.scr_anim["zombie"]["walk5"] 	= %ai_zombie_walk_v6;
+	level.scr_anim["zombie"]["walk6"] 	= %ai_zombie_walk_v7;
+	level.scr_anim["zombie"]["walk7"] 	= %ai_zombie_walk_v8;
+	level.scr_anim["zombie"]["walk8"] 	= %ai_zombie_walk_v9;
+
+	if( isDefined( level.zombie_anim_override ) )
+	{
+		[[ level.zombie_anim_override ]]();
+	}
+
+	level._zombie_walk_melee["zombie"][0]			= %ai_zombie_walk_attack_v1;
+	level._zombie_walk_melee["zombie"][1]			= %ai_zombie_walk_attack_v2;
+	level._zombie_walk_melee["zombie"][2]			= %ai_zombie_walk_attack_v3;
+	level._zombie_walk_melee["zombie"][3]			= %ai_zombie_walk_attack_v4;
+
+	// melee in crawl
+	if( !isDefined( level._zombie_melee_crawl ) )
+	{
+		level._zombie_melee_crawl = [];
+	}
+	level._zombie_melee_crawl["zombie"] = [];
+	level._zombie_melee_crawl["zombie"][0] 		= %ai_zombie_attack_crawl; 
+	level._zombie_melee_crawl["zombie"][1] 		= %ai_zombie_attack_crawl_lunge;
+
+	if( !isDefined( level._zombie_stumpy_melee ) )
+	{
+		level._zombie_stumpy_melee = [];
+	}
+	level._zombie_stumpy_melee["zombie"] = [];
+	level._zombie_stumpy_melee["zombie"][0] = %ai_zombie_walk_on_hands_shot_a;
+	level._zombie_stumpy_melee["zombie"][1] = %ai_zombie_walk_on_hands_shot_b;
+	//level._zombie_melee_crawl["zombie"][2]		= %ai_zombie_crawl_attack_A;
+
+	// tesla deaths
+	if( !isDefined( level._zombie_tesla_death ) )
+	{
+		level._zombie_tesla_death = [];
+	}
+	level._zombie_tesla_death["zombie"] = [];
+	level._zombie_tesla_death["zombie"][0] = %ai_zombie_tesla_death_a;
+	level._zombie_tesla_death["zombie"][1] = %ai_zombie_tesla_death_b;
+	level._zombie_tesla_death["zombie"][2] = %ai_zombie_tesla_death_c;
+	level._zombie_tesla_death["zombie"][3] = %ai_zombie_tesla_death_d;
+	level._zombie_tesla_death["zombie"][4] = %ai_zombie_tesla_death_e;
+
+	if( !isDefined( level._zombie_tesla_crawl_death ) )
+	{
+		level._zombie_tesla_crawl_death = [];
+	}
+	level._zombie_tesla_crawl_death["zombie"] = [];
+	level._zombie_tesla_crawl_death["zombie"][0] = %ai_zombie_tesla_crawl_death_a;
+	level._zombie_tesla_crawl_death["zombie"][1] = %ai_zombie_tesla_crawl_death_b;
+
+	// deaths
+	if( !isDefined( level._zombie_deaths ) )
+	{
+		level._zombie_deaths = [];
+	}
+	level._zombie_deaths["zombie"] = [];
+	level._zombie_deaths["zombie"][0] = %ch_dazed_a_death;
+	level._zombie_deaths["zombie"][1] = %ch_dazed_b_death;
+	level._zombie_deaths["zombie"][2] = %ch_dazed_c_death;
+	level._zombie_deaths["zombie"][3] = %ch_dazed_d_death;
+
+	/*
+	ground crawl
+	*/
+
+	if( !isDefined( level._zombie_rise_anims ) )
+	{
+		level._zombie_rise_anims = [];
+	}
+
+	// set up the arrays
+	level._zombie_rise_anims["zombie"] = [];
+
+	//level._zombie_rise_anims["zombie"][1]["walk"][0]		= %ai_zombie_traverse_ground_v1_crawl;
+	level._zombie_rise_anims["zombie"][1]["walk"][0]		= %ai_zombie_traverse_ground_v1_walk;
+
+	//level._zombie_rise_anims["zombie"][1]["run"][0]		= %ai_zombie_traverse_ground_v1_crawlfast;
+	level._zombie_rise_anims["zombie"][1]["run"][0]		= %ai_zombie_traverse_ground_v1_run;
+
+	level._zombie_rise_anims["zombie"][1]["sprint"][0]	= %ai_zombie_traverse_ground_climbout_fast;
+
+	//level._zombie_rise_anims["zombie"][2]["walk"][0]		= %ai_zombie_traverse_ground_v2_walk;	//!broken
+	level._zombie_rise_anims["zombie"][2]["walk"][0]		= %ai_zombie_traverse_ground_v2_walk_altA;
+	//level._zombie_rise_anims["zombie"][2]["walk"][2]		= %ai_zombie_traverse_ground_v2_walk_altB;//!broken
+
+	// ground crawl death
+	if( !isDefined( level._zombie_rise_death_anims ) )
+	{
+		level._zombie_rise_death_anims = [];
+	}
+	
+	level._zombie_rise_death_anims["zombie"] = [];
+
+	level._zombie_rise_death_anims["zombie"][1]["in"][0]		= %ai_zombie_traverse_ground_v1_deathinside;
+	level._zombie_rise_death_anims["zombie"][1]["in"][1]		= %ai_zombie_traverse_ground_v1_deathinside_alt;
+
+	level._zombie_rise_death_anims["zombie"][1]["out"][0]		= %ai_zombie_traverse_ground_v1_deathoutside;
+	level._zombie_rise_death_anims["zombie"][1]["out"][1]		= %ai_zombie_traverse_ground_v1_deathoutside_alt;
+
+	level._zombie_rise_death_anims["zombie"][2]["in"][0]		= %ai_zombie_traverse_ground_v2_death_low;
+	level._zombie_rise_death_anims["zombie"][2]["in"][1]		= %ai_zombie_traverse_ground_v2_death_low_alt;
+
+	level._zombie_rise_death_anims["zombie"][2]["out"][0]		= %ai_zombie_traverse_ground_v2_death_high;
+	level._zombie_rise_death_anims["zombie"][2]["out"][1]		= %ai_zombie_traverse_ground_v2_death_high_alt;
+	
+	//taunts
+	if( !isDefined( level._zombie_run_taunt ) )
+	{
+		level._zombie_run_taunt = [];
+	}
+	if( !isDefined( level._zombie_board_taunt ) )
+	{
+		level._zombie_board_taunt = [];
+	}
+	level._zombie_run_taunt["zombie"] = [];
+	level._zombie_board_taunt["zombie"] = [];
+	
+	//level._zombie_taunt["zombie"][0] = %ai_zombie_taunts_1;
+	//level._zombie_taunt["zombie"][1] = %ai_zombie_taunts_4;
+	//level._zombie_taunt["zombie"][2] = %ai_zombie_taunts_5b;
+	//level._zombie_taunt["zombie"][3] = %ai_zombie_taunts_5c;
+	//level._zombie_taunt["zombie"][4] = %ai_zombie_taunts_5d;
+	//level._zombie_taunt["zombie"][5] = %ai_zombie_taunts_5e;
+	//level._zombie_taunt["zombie"][6] = %ai_zombie_taunts_5f;
+	//level._zombie_taunt["zombie"][7] = %ai_zombie_taunts_7;
+	//level._zombie_taunt["zombie"][8] = %ai_zombie_taunts_9;
+	//level._zombie_taunt["zombie"][8] = %ai_zombie_taunts_11;
+	//level._zombie_taunt["zombie"][8] = %ai_zombie_taunts_12;
+	
+	level._zombie_board_taunt["zombie"][0] = %ai_zombie_taunts_4;
+	level._zombie_board_taunt["zombie"][1] = %ai_zombie_taunts_7;
+	level._zombie_board_taunt["zombie"][2] = %ai_zombie_taunts_9;
+	level._zombie_board_taunt["zombie"][3] = %ai_zombie_taunts_5b;
+	level._zombie_board_taunt["zombie"][4] = %ai_zombie_taunts_5c;
+	level._zombie_board_taunt["zombie"][5] = %ai_zombie_taunts_5d;
+	level._zombie_board_taunt["zombie"][6] = %ai_zombie_taunts_5e;
+	level._zombie_board_taunt["zombie"][7] = %ai_zombie_taunts_5f;
+}
+
+init_anims()
+{
+	init_standard_zombie_anims();
+}
+
+factory_init_zombie_leaderboard_data()
+{
+	level.zombieLeaderboardStatVariable["nazi_zombie_factory"]["highestwave"] = "nz_factory_highestwave";
+	level.zombieLeaderboardStatVariable["nazi_zombie_factory"]["timeinwave"] = "nz_factory_timeinwave";
+	level.zombieLeaderboardStatVariable["nazi_zombie_factory"]["totalpoints"] = "nz_factory_totalpoints";
+
+	level.zombieLeaderboardNumber["nazi_zombie_factory"]["waves"] = 19;
+	level.zombieLeaderboardNumber["nazi_zombie_factory"]["points"] = 20;
 }
