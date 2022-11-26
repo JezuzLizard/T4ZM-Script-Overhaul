@@ -1,6 +1,6 @@
 #include common_scripts\utility; 
 #include maps\_utility;
-#include maps\_zombiemode_utility;
+#include maps\so\zm_common\_zm_utility;
 #include maps\_music; 
 #include maps\_anim; 
 
@@ -50,10 +50,22 @@ main()
 	{
 		return;
 	}
-	level.zm_custom_map_fx_init = ::init_fx;
-	level.zm_custom_map_anim_init = ::init_anims;
-	level.zm_custom_map_leaderboard_init = ::asylum_init_zombie_leaderboard_data;
-	level.zm_custom_map_weapon_add_func = ::asylum_add_weapons;
+	if ( !isDefined( level.zm_custom_map_fx_init ) )
+	{
+		level.zm_custom_map_fx_init = ::init_fx;
+	}
+	if ( !isDefined( level.zm_custom_map_anim_init ) )
+	{
+		level.zm_custom_map_anim_init = ::init_anims;
+	}
+	if ( !isDefined( level.zm_custom_map_leaderboard_init ) )
+	{
+		level.zm_custom_map_leaderboard_init = ::asylum_init_zombie_leaderboard_data;
+	}
+	if ( !isDefined( level.zm_custom_map_weapon_add_func ) )
+	{
+		level.zm_custom_map_weapon_add_func = ::asylum_add_weapons;
+	}
 	maps\so\zm_common\_zm::init_zm();	
 	level.burning_zombies = [];
 	level.electrocuted_zombies = [];

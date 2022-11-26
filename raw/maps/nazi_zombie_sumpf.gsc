@@ -1,6 +1,6 @@
 #include common_scripts\utility; 
 #include maps\_utility;
-#include maps\_zombiemode_utility;
+#include maps\so\zm_common\_zm_utility;
 #include maps\_music;
 #include maps\nazi_zombie_sumpf_perks;
 #include maps\nazi_zombie_sumpf_zone_management;
@@ -30,7 +30,10 @@ main()
 	maps\nazi_zombie_sumpf_fx::main();
 	
 	// enable for dog rounds
-	level.dogs_enabled = true;
+	if ( !isDefined( level.dogs_enabled ) )
+	{
+		level.dogs_enabled = true;
+	}
 
 	// enable for zombie risers within active player zones
 	level.zombie_rise_spawners = [];
@@ -45,9 +48,6 @@ main()
 	level.use_zombie_heroes = true;
 		
 	level thread maps\_callbacksetup::SetupCallbacks();
-	
-	maps\_zombiemode_weapons::add_zombie_weapon( "mine_bouncing_betty",&"ZOMBIE_WEAPON_SATCHEL_2000", 2000 );		
-	maps\_zombiemode_weapons::add_zombie_weapon( "ptrs41_zombie", 						&"ZOMBIE_WEAPON_PTRS41_750", 				750,	"vox_sniper", 5);	
 	
 	//precachestring(&"ZOMBIE_BETTY_ALREADY_PURCHASED");
 	precachestring(&"ZOMBIE_BETTY_HOWTO");
@@ -66,10 +66,22 @@ main()
 	// If not a MOD, you may need to provide new localized strings to reflect the proper cost.	
 	include_weapons();
 	include_powerups();
-	level.zm_custom_map_fx_init = ::init_fx;
-	level.zm_custom_map_anim_init = ::init_anims;
-	level.zm_custom_map_leaderboard_init = ::sumpf_init_zombie_leaderboard_data;
-	level.zm_custom_map_weapon_add_func = ::sumpf_add_weapons;
+	if ( !isDefined( level.zm_custom_map_fx_init ) )
+	{
+		level.zm_custom_map_fx_init = ::init_fx;
+	}
+	if ( !isDefined( level.zm_custom_map_anim_init ) )
+	{
+		level.zm_custom_map_anim_init = ::init_anims;
+	}
+	if ( !isDefined( level.zm_custom_map_leaderboard_init ) )
+	{
+		level.zm_custom_map_leaderboard_init = ::sumpf_init_zombie_leaderboard_data;
+	}
+	if ( !isDefined( level.zm_custom_map_weapon_add_func ) )
+	{
+		level.zm_custom_map_weapon_add_func = ::sumpf_add_weapons;
+	}
 	maps\so\zm_common\_zm::init_zm();
 	maps\nazi_zombie_sumpf_blockers::init();
 	
@@ -213,6 +225,8 @@ sumpf_add_weapons()
 	add_zombie_weapon( "satchel_charge", 					&"ZOMBIE_WEAPON_SATCHEL_2000", 				2000,	"" );
 	add_zombie_weapon( "ray_gun", 							&"ZOMBIE_WEAPON_RAYGUN_10000", 				10000,	"vox_raygun", 6 );
 	add_zombie_weapon( "tesla_gun",							&"ZOMBIE_BUY_TESLA", 						10,		"vox_tesla", 5 );
+	add_zombie_weapon( "mine_bouncing_betty",&"ZOMBIE_WEAPON_SATCHEL_2000", 2000 );		
+	add_zombie_weapon( "ptrs41_zombie", 						&"ZOMBIE_WEAPON_PTRS41_750", 				750,	"vox_sniper", 5);	
 
 	Precachemodel("zombie_teddybear");
 	

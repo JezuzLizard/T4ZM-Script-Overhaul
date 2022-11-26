@@ -17,22 +17,51 @@ main()
 
 	maps\nazi_zombie_prototype_fx::main();
 
-	level.zm_custom_map_precache = ::prototype_precache_func;
-	level.custom_introscreen = ::prototype_custom_intro_screen;
-	level.zm_custom_map_fx_init = ::init_fx;
-	level.zm_custom_map_anim_init = ::init_anims;
-	level.zm_custom_map_leaderboard_init = ::prototype_init_zombie_leaderboard_data;
-	level.zm_custom_map_weapon_add_func = ::prototype_add_weapons;
-	level.use_legacy_sound_playing = true;
+	//Check if its defined first so mods can override it
+	if ( !isDefined( level.zm_custom_map_precache ) )
+	{
+		level.zm_custom_map_precache = ::prototype_precache_func;
+	}
+	if ( !isDefined( level.custom_introscreen ) )
+	{
+		level.custom_introscreen = ::prototype_custom_intro_screen;
+	}
+	if ( isDefined( level.zm_custom_map_fx_init ) )
+	{
+		level.zm_custom_map_fx_init = ::init_fx;
+	}
+	if ( !isDefined( level.zm_custom_map_anim_init ) )
+	{
+		level.zm_custom_map_anim_init = ::init_anims;
+	}
+	if ( !isDefined( level.zm_custom_map_leaderboard_init ) )
+	{
+		level.zm_custom_map_leaderboard_init = ::prototype_init_zombie_leaderboard_data;
+	}
+	if ( !isDefined( level.zm_custom_map_weapon_add_func ) )
+	{
+		level.zm_custom_map_weapon_add_func = ::prototype_add_weapons;
+	}
+	if ( !isDefined( level.use_legacy_sound_playing ) )
+	{
+		level.use_legacy_sound_playing = true;
+	}
+	if ( !isDefined( level.use_legacy_powerup_system ) )
+	{
+		level.use_legacy_powerup_system = true;
+	}
 	maps\so\zm_common\_zm::init_zm();
 
 	maps\so\zm_common\_zm_utility::add_sound( "break_stone", "break_stone" );
 
-	thread bad_area_fixes();
+	if ( !is_true( level.dont_use_map_glitch_patches ) )
+	{
+		thread bad_area_fixes();
 
-	thread above_couches_death();
-	thread above_roof_death();
-	thread below_ground_death();
+		thread above_couches_death();
+		thread above_roof_death();
+		thread below_ground_death();
+	}
 }
 
 
@@ -125,9 +154,7 @@ fix_hax()
 		{
 			self setorigin( (-173 ,677,self.origin[2] ) );
 		}
-
 	}
-		
 }
 
 

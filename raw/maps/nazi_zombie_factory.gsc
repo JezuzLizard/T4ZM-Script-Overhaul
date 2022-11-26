@@ -65,11 +65,22 @@ main()
 	include_weapons();
 	include_powerups();
 	level.use_zombie_heroes = true;
-	level.zm_custom_map_weapon_add_func = ::factory_add_weapons;
-	level.zm_custom_map_fx_init = ::init_fx;
-	level.zm_custom_map_anim_init = ::init_anims;
-	level.zm_custom_map_leaderboard_init = ::factory_init_zombie_leaderboard_data;
-	level.zm_custom_map_weapon_add_func = ::factory_add_weapons;
+	if ( !isDefined( level.zm_custom_map_fx_init ) )
+	{
+		level.zm_custom_map_fx_init = ::init_fx;
+	}
+	if ( !isDefined( level.zm_custom_map_anim_init ) )
+	{
+		level.zm_custom_map_anim_init = ::init_anims;
+	}
+	if ( !isDefined( level.zm_custom_map_leaderboard_init ) )
+	{
+		level.zm_custom_map_leaderboard_init = ::factory_init_zombie_leaderboard_data;
+	}
+	if ( !isDefined( level.zm_custom_map_weapon_add_func ) )
+	{
+		level.zm_custom_map_weapon_add_func = ::factory_add_weapons;
+	}
 	level.init_zombie_spawner_name = "receiver_zone_spawners";
 	maps\so\zm_common\_zm::init_zm();
 	
