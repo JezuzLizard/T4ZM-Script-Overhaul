@@ -66,6 +66,10 @@ main()
 	{
 		level.zm_custom_map_weapon_add_func = ::asylum_add_weapons;
 	}
+	if ( !isDefined( level.use_legacy_perk_system ) )
+	{
+		level.use_legacy_perk_system = true;
+	}
 	maps\so\zm_common\_zm::init_zm();	
 	level.burning_zombies = [];
 	level.electrocuted_zombies = [];

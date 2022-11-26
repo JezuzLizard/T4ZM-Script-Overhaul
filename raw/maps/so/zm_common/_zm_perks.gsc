@@ -1,6 +1,6 @@
 #include maps\_utility; 
 #include common_scripts\utility; 
-#include maps\_zombiemode_utility;
+#include maps\so\zm_common\_zm_utility;
 
 init()
 {
@@ -10,13 +10,6 @@ init()
 	{
 		return;
 	}
-
-	vending_upgrade_trigger = GetEntArray("zombie_vending_upgrade", "targetname");
-
-	if ( vending_upgrade_trigger.size >= 1 )
-	{
-		array_thread( vending_upgrade_trigger, ::vending_upgrade );;
-	}
 	
 
 	// this map uses atleast 1 perk machine
@@ -24,7 +17,6 @@ init()
 	PrecacheItem( "zombie_perk_bottle_jugg" );
 	PrecacheItem( "zombie_perk_bottle_revive" );
 	PrecacheItem( "zombie_perk_bottle_sleight" );
-	PrecacheItem( "zombie_knuckle_crack" );
 
 	PrecacheShader( "specialty_juggernaut_zombies" );
 	PrecacheShader( "specialty_fastreload_zombies" );
@@ -45,14 +37,12 @@ init()
 		PrecacheModel("zombie_vending_doubletap_on");
 		PrecacheModel("zombie_vending_revive_on");
 		PrecacheModel("zombie_vending_sleight_on");
-		precachemodel("zombie_vending_packapunch_on");
 	}
 
 	level._effect["sleight_light"] = loadfx("misc/fx_zombie_cola_on");
 	level._effect["doubletap_light"] = loadfx("misc/fx_zombie_cola_dtap_on");
 	level._effect["jugger_light"] = loadfx("misc/fx_zombie_cola_jugg_on");
 	level._effect["revive_light"] = loadfx("misc/fx_zombie_cola_revive_on");
-	level._effect["packapunch_fx"] = loadfx("maps/zombie/fx_zombie_packapunch");
 
 	if( !isDefined( level.packapunch_timeout ) )
 	{
@@ -63,7 +53,6 @@ init()
 	PrecacheString( &"ZOMBIE_PERK_QUICKREVIVE" );
 	PrecacheString( &"ZOMBIE_PERK_FASTRELOAD" );
 	PrecacheString( &"ZOMBIE_PERK_DOUBLETAP" );
-	PrecacheString( &"ZOMBIE_PERK_PACKAPUNCH" );
 
 	set_zombie_var( "zombie_perk_cost",					2000 );
 	set_zombie_var( "zombie_perk_juggernaut_health",	160 );
@@ -77,7 +66,6 @@ init()
 	level thread turn_doubletap_on();
 	level thread turn_sleight_on();
 	level thread turn_revive_on();
-	level thread turn_PackAPunch_on();	
 	
 		
 	level thread machine_watcher();
@@ -85,8 +73,22 @@ init()
 	level.revive_jingle = 0;
 	level.doubletap_jingle = 0;
 	level.jugger_jingle = 0;	
+
+	vending_upgrade_trigger = GetEntArray("zombie_vending_upgrade", "targetname");
+
+	if ( vending_upgrade_trigger.size < 1 )
+	{
+		return;
+	}
+	PrecacheItem( "zombie_knuckle_crack" );
+	precachemodel("zombie_vending_packapunch_on");
+	level._effect["packapunch_fx"] = loadfx("maps/zombie/fx_zombie_packapunch");
+	PrecacheString( &"ZOMBIE_PERK_PACKAPUNCH" );
+
+	array_thread( vending_upgrade_trigger, ::vending_upgrade );
+	level thread turn_PackAPunch_on();	
+
 	level.packa_jingle = 0;
-	
 }
 
 third_person_weapon_upgrade( current_weapon, origin, angles, packa_rollers, perk_machine )
@@ -137,7 +139,7 @@ vending_upgrade()
 	self SetCursorHint( "HINT_NOICON" );
 	level waittill("Pack_A_Punch_on");
 	
-	self thread maps\_zombiemode_weapons::decide_hide_show_hint();
+	self thread maps\so\zm_common\_zm_weapons::decide_hide_show_hint();
 	
 	packa_rollers = spawn("script_origin", self.origin);
 	packa_timer = spawn("script_origin", self.origin);
@@ -149,11 +151,11 @@ vending_upgrade()
 	for( ;; )
 	{
 		self waittill( "trigger", player );
-		index = maps\_zombiemode_weapons::get_player_index(player);	
+		index = maps\so\zm_common\_zm_weapons::get_player_index(player);	
 		cost = 5000;
 		plr = "plr_" + index + "_";
 		
-		if( !player maps\_zombiemode_weapons::can_buy_weapon() )
+		if( !player maps\so\zm_common\_zm_weapons::can_buy_weapon() )
 		{
 			wait( 0.1 );
 			continue;
@@ -191,7 +193,7 @@ vending_upgrade()
 			player thread play_no_money_perk_dialog();
 			continue;
 		}
-		player maps\_zombiemode_score::minus_to_player_score( cost ); 
+		player maps\so\zm_common\_zm_score::minus_to_player_score( cost ); 
 		self achievement_notify("perk_used");
 		sound = "bottle_dispense3d";
 		playsoundatposition(sound, self.origin);
@@ -240,7 +242,7 @@ vending_upgrade()
 
 wait_for_player_to_take( player, weapon, packa_timer )
 {
-	index = maps\_zombiemode_weapons::get_player_index(player);
+	index = maps\so\zm_common\_zm_weapons::get_player_index(player);
 	plr = "plr_" + index + "_";
 	
 	self endon( "pap_timeout" );
@@ -257,7 +259,7 @@ wait_for_player_to_take( player, weapon, packa_timer )
 				primaries = player GetWeaponsListPrimaries();
 				if( isDefined( primaries ) && primaries.size >= 2 )
 				{
-					player maps\_zombiemode_weapons::weapon_give( weapon+"_upgraded" );
+					player maps\so\zm_common\_zm_weapons::weapon_give( weapon+"_upgraded" );
 				}
 				else
 				{
@@ -551,7 +553,7 @@ vending_trigger_think()
 	for( ;; )
 	{
 		self waittill( "trigger", player );
-		index = maps\_zombiemode_weapons::get_player_index(player);
+		index = maps\so\zm_common\_zm_weapons::get_player_index(player);
 		
 		cost = level.zombie_vars["zombie_perk_cost"];
 		switch( perk )
@@ -629,7 +631,7 @@ vending_trigger_think()
 		sound = "bottle_dispense3d";
 		player achievement_notify( "perk_used" );
 		playsoundatposition(sound, self.origin);
-		player maps\_zombiemode_score::minus_to_player_score( cost ); 
+		player maps\so\zm_common\_zm_score::minus_to_player_score( cost ); 
 		///bottle_dispense
 		switch( perk )
 		{
@@ -703,7 +705,7 @@ vending_trigger_think()
 play_no_money_perk_dialog()
 {
 	
-	index = maps\_zombiemode_weapons::get_player_index(self);
+	index = maps\so\zm_common\_zm_weapons::get_player_index(self);
 	
 	player_index = "plr_" + index + "_";
 	if(!IsDefined (self.vox_nomoney_perk))
@@ -1005,38 +1007,64 @@ perk_vo(type)
 	self endon("death");
 	self endon("disconnect");
 
-	index = maps\_zombiemode_weapons::get_player_index(self);
-	sound = undefined;
+	index = maps\so\zm_common\_zm_weapons::get_player_index(self);
+	sound_to_play = undefined;
 
 	if(!isdefined (level.player_is_speaking))
 	{
 		level.player_is_speaking = 0;
 	}
-	player_index = "plr_" + index + "_";
-	//wait(randomfloatrange(1,2));
-
-//TUEY We need to eventually store the dialog in an array so you can add multiple variants...but we only have 1 now anyway.
-	switch(type)
-	{
-	case "specialty_armorvest":
-		sound_to_play = "vox_perk_jugga_0";
-		break;
-	case "specialty_fastreload":
-		sound_to_play = "vox_perk_speed_0";
-		break;
-	case "specialty_quickrevive":
-		sound_to_play = "vox_perk_revive_0";
-		break;
-	case "specialty_rof":
-		sound_to_play = "vox_perk_doubletap_0";
-		break; 	
-	default:	
-		sound_to_play = "vox_perk_jugga_0";
-		break;
-	}
 	
 	wait(1.0);
-	self maps\_zombiemode_spawner::do_player_playdialog(player_index, sound_to_play, 0.25);
+	if ( !is_true( level.use_legacy_perk_system ) )
+	{
+		player_index = "plr_" + index + "_";
+		//TUEY We need to eventually store the dialog in an array so you can add multiple variants...but we only have 1 now anyway.
+		switch(type)
+		{
+		case "specialty_armorvest":
+			sound_to_play = "vox_perk_jugga_0";
+			break;
+		case "specialty_fastreload":
+			sound_to_play = "vox_perk_speed_0";
+			break;
+		case "specialty_quickrevive":
+			sound_to_play = "vox_perk_revive_0";
+			break;
+		case "specialty_rof":
+			sound_to_play = "vox_perk_doubletap_0";
+			break; 	
+		default:	
+			sound_to_play = "vox_perk_jugga_0";
+			break;
+		}
+		self maps\_zombiemode_spawner::do_player_playdialog(player_index, sound_to_play, 0.25);
+	}
+	else 
+	{
+		switch(type)
+		{
+		case "specialty_armorvest":
+			sound_to_play = "plr_" + index + "_vox_drink_jugga";
+			break;
+		case "specialty_fastreload":
+			sound_to_play = "plr_" + index + "_vox_drink_speed";
+			break;
+		case "specialty_quickrevive":
+			sound_to_play = "plr_" + index + "_vox_drink_revive";
+			break;
+		case "specialty_rof":
+			sound_to_play = "plr_" + index + "_vox_drink_double";
+			break; 		
+		}
+		if (level.player_is_speaking != 1 && isDefined(sound_to_play))
+		{	
+			level.player_is_speaking = 1;
+			self playsound(sound_to_play, "sound_done");			
+			self waittill("sound_done");
+			level.player_is_speaking = 0;
+		}	
+	}
 }
 machine_watcher()
 {
@@ -1052,7 +1080,7 @@ machine_watcher()
 	else
 	{		
 		level waittill("master_switch_activated");
-		//array_thread(getentarray( "zombie_vending", "targetname" ), ::perks_a_cola_jingle);	
+		array_thread(getentarray( "zombie_vending", "targetname" ), ::perks_a_cola_jingle);	
 				
 	}		
 	
