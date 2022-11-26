@@ -859,7 +859,7 @@ buy_bouncing_betties()
 					play_sound_at_pos( "purchase", self.origin );
 					betty_model show();
 					//set the score
-					who maps\_zombiemode_score::minus_to_player_score( self.zombie_cost ); 
+					who maps\so\zm_common\_zm_score::minus_to_player_score( self.zombie_cost ); 
 					who thread bouncing_betty_setup();
 					//who thread show_betty_hint("betty_purchased");
 
@@ -1165,7 +1165,7 @@ electric_trap_think()
 					//need to play a 'woosh' sound here, like a gas furnace starting up
 					self waittill("switch_activated");
 					//set the score
-					who maps\_zombiemode_score::minus_to_player_score( self.zombie_cost );
+					who maps\so\zm_common\_zm_score::minus_to_player_score( self.zombie_cost );
 
 					//turn off the valve triggers associated with this valve until the gas is available again
 					array_thread (valve_trigs,::trigger_off);
@@ -1581,7 +1581,7 @@ Fountain_Mg42_Activate()
 			{				
 				play_sound_at_pos( "purchase", trig.origin );
 				//set the score
-				who maps\_zombiemode_score::minus_to_player_score( trig.zombie_cost ); 
+				who maps\so\zm_common\_zm_score::minus_to_player_score( trig.zombie_cost ); 
 				trig.is_activated = true;
 				trig trigger_off();
 				trig sethintstring(&"ZOMBIE_FLAMES_UNAVAILABLE");
@@ -2560,7 +2560,7 @@ spectator_respawn_new()
 	self notify( "spawned_player" );
 
 	// Penalize the player when we respawn, since he 'died'
-	self maps\_zombiemode_score::player_reduce_points( "died" );
+	self maps\so\zm_common\_zm_score::player_reduce_points( "died" );
 
 	return true;
 }

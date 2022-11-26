@@ -52,7 +52,6 @@ init_zm()
 	maps\_zombiemode_blockers::init();
 	maps\_zombiemode_spawner::init();
 	maps\_zombiemode_powerups::init();
-	//maps\_zombiemode_perks::init();
 	if ( isDefined( level.zm_custom_map_script_func ) )
 	{
 		level [[ level.zm_custom_map_script_func ]]();
@@ -485,7 +484,7 @@ onPlayerConnect_clientDvars()
 
 player_laststand()
 {
-	self maps\_zombiemode_score::player_downed_penalty();
+	self maps\so\zm_common\_zm_score::player_downed_penalty();
 
 	if( IsDefined( self.intermission ) && self.intermission )
 	{
@@ -647,7 +646,7 @@ coop_player_spawn_placement()
 
 zombify_player()
 {
-	self maps\_zombiemode_score::player_died_penalty(); 
+	self maps\so\zm_common\_zm_score::player_died_penalty(); 
 
 	if( !IsDefined( level.zombie_vars["zombify_player"] ) || !level.zombie_vars["zombify_player"] )
 	{
@@ -800,10 +799,8 @@ onPlayerSpawned()
 			if( self.initialized == false )
 			{
 				self.initialized = true; 
-				//				self maps\_zombiemode_score::create_player_score_hud(); 
-
 				// set the initial score on the hud		
-				self maps\_zombiemode_score::set_player_score_hud( true ); 
+				self maps\so\zm_common\_zm_score::set_player_score_hud( true ); 
 				self thread player_zombie_breadcrumb();
 
 				//Init stat tracking variables
@@ -940,7 +937,7 @@ player_revive_monitor()
 			{
 				points = 300;
 			}
-			reviver maps\_zombiemode_score::add_to_player_score( points );
+			reviver maps\so\zm_common\_zm_score::add_to_player_score( points );
 			self.score_lost_when_downed = 0;
 		}
 	}
@@ -1996,7 +1993,7 @@ spectators_respawn()
 				{
 					players[i].old_score = players[i].score;
 					players[i].score = 1500;
-					players[i] maps\_zombiemode_score::set_player_score_hud();
+					players[i] maps\so\zm_common\_zm_score::set_player_score_hud();
 				}
 			}
 		}
@@ -2060,7 +2057,7 @@ spectator_respawn()
 	self notify( "spawned_player" );
 
 	// Penalize the player when we respawn, since he 'died'
-	self maps\_zombiemode_score::player_reduce_points( "died" );
+	self maps\so\zm_common\_zm_score::player_reduce_points( "died" );
 
 	self thread player_zombie_breadcrumb();
 

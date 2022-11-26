@@ -241,7 +241,7 @@ treasure_chest_think()
 		// make sure the user is a player, and that they can afford it
 		if( is_player_valid( user ) && user.score >= cost )
 		{
-			user maps\_zombiemode_score::minus_to_player_score( cost ); 
+			user maps\so\zm_common\_zm_score::minus_to_player_score( cost ); 
 			break; 
 		}
 		else if ( user.score < cost )
@@ -937,7 +937,7 @@ treasure_chest_weapon_spawn( chest, player )
 			self notify( "move_imminent" );
 			level.chest_accessed = 0;
 
-			player maps\_zombiemode_score::add_to_player_score( 950 );
+			player maps\so\zm_common\_zm_score::add_to_player_score( 950 );
 
 			//allow power weapon to be accessed.
 			level.box_moved = true;

@@ -226,7 +226,7 @@ weapon_cabinet_think()
 				if( player.score >= cost )
 				{
 					//self play_sound_on_ent( "purchase" );
-					player maps\_zombiemode_score::minus_to_player_score( cost ); 
+					player maps\so\zm_common\_zm_score::minus_to_player_score( cost ); 
 					player weapon_give( self.zombie_weapon_upgrade ); 
 				}
 				else // not enough money
@@ -241,7 +241,7 @@ weapon_cabinet_think()
 				if( ammo_given )
 				{
 					//self play_sound_on_ent( "purchase" );
-					player maps\_zombiemode_score::minus_to_player_score( ammo_cost ); // this give him ammo to early
+					player maps\so\zm_common\_zm_score::minus_to_player_score( ammo_cost ); // this give him ammo to early
 				}
 			}
 			else // not enough money
@@ -259,7 +259,7 @@ weapon_cabinet_think()
 			self SetHintString( &"ZOMBIE_WEAPONCOSTAMMO", cost, ammo_cost ); 
 			//		self SetHintString( get_weapon_hint( self.zombie_weapon_upgrade ) );
 			self setCursorHint( "HINT_NOICON" ); 
-			player maps\_zombiemode_score::minus_to_player_score( self.zombie_cost ); 
+			player maps\so\zm_common\_zm_score::minus_to_player_score( self.zombie_cost ); 
 
 			doors = getentarray( self.target, "targetname" ); 
 
@@ -597,7 +597,7 @@ weapon_spawn_think()
 					}
 				}
 
-				player maps\_zombiemode_score::minus_to_player_score( cost ); 
+				player maps\so\zm_common\_zm_score::minus_to_player_score( cost ); 
 
 				bbPrint( "zombie_uses: playername %s playerscore %d round %d cost %d name %s x %f y %f z %f type weapon",
 						player.playername, player.score, level.round_number, cost, self.zombie_weapon_upgrade, self.origin );
@@ -653,7 +653,7 @@ weapon_spawn_think()
 				
 				if( ammo_given )
 				{
-						player maps\_zombiemode_score::minus_to_player_score( ammo_cost ); // this give him ammo to early
+						player maps\so\zm_common\_zm_score::minus_to_player_score( ammo_cost ); // this give him ammo to early
 
 					bbPrint( "zombie_uses: playername %s playerscore %d round %d cost %d name %s x %f y %f z %f type ammo",
 						player.playername, player.score, level.round_number, ammo_cost, self.zombie_weapon_upgrade, self.origin );

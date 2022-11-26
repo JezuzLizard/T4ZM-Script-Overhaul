@@ -1111,7 +1111,7 @@ electric_trap_think( enable_flag )
 					//need to play a 'woosh' sound here, like a gas furnace starting up
 					self waittill("switch_activated");
 					//set the score
-					who maps\_zombiemode_score::minus_to_player_score( self.zombie_cost );
+					who maps\so\zm_common\_zm_score::minus_to_player_score( self.zombie_cost );
 
 					//this trigger detects zombies walking thru the flames
 					self.zombie_dmg_trig trigger_on();
@@ -1623,7 +1623,7 @@ check_for_change()
 
 		if ( player GetStance() == "prone" )
 		{
-			player maps\_zombiemode_score::add_to_player_score( 25 );
+			player maps\so\zm_common\_zm_score::add_to_player_score( 25 );
 			play_sound_at_pos( "purchase", player.origin );
 			break;
 		}

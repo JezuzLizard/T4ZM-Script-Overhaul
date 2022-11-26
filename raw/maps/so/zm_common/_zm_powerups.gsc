@@ -835,7 +835,7 @@ start_carpenter( origin )
 	{
 		players[i].score += 200;
 		players[i].score_total += 200;
-		players[i] maps\_zombiemode_score::set_player_score_hud(); 
+		players[i] maps\so\zm_common\_zm_score::set_player_score_hud(); 
 	}
 
 
@@ -1081,7 +1081,7 @@ nuke_powerup( drop_item )
 	{
 		players[i].score += 400;
 		players[i].score_total += 400;
-		players[i] maps\_zombiemode_score::set_player_score_hud(); 
+		players[i] maps\so\zm_common\_zm_score::set_player_score_hud(); 
 	}
 
 }
@@ -1445,7 +1445,7 @@ full_ammo_move_hud()
 	{
 		players[i] playsound ("full_ammo");
 	}
-	
+
 	wait 0.5;
 	move_fade_time = 1.5;
 
