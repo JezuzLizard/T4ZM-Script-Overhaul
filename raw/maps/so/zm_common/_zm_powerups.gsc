@@ -646,7 +646,7 @@ special_drop_setup()
 		{
 			is_powerup = false;
 			dog_spawners = GetEntArray( "special_dog_spawner", "targetname" );
-			maps\_zombiemode_dogs::special_dog_spawn( dog_spawners, 1 );
+			maps\so\zm_common\_zm_ai_dogs::special_dog_spawn( dog_spawners, 1 );
 			//iprintlnbold( "Samantha Sez: No Powerup For You!" );
 			thread play_sound_2d( "sam_nospawn" );
 		}
@@ -881,7 +881,7 @@ powerup_vo(type)
 	self endon("death");
 	self endon("disconnect");
 	
-	index = maps\_zombiemode_weapons::get_player_index(self);
+	index = maps\so\zm_common\_zm_weapons::get_player_index(self);
 	sound = undefined;
 	rand = randomintrange(0,3);
 	vox_rand = randomintrange(1,100);  //RARE: This is to setup the Rare devil response lines
@@ -1069,7 +1069,7 @@ nuke_powerup( drop_item )
 
 		if( !( zombies[i] enemy_is_dog() ) )
 		{
-			zombies[i] maps\_zombiemode_spawner::zombie_head_gib();
+			zombies[i] maps\so\zm_common\_zm_spawner::zombie_head_gib();
 		}
 
 		zombies[i] dodamage( zombies[i].health + 666, zombies[i].origin );
@@ -1209,7 +1209,7 @@ check_for_instakill( player )
 		}
 		else
 		{
-			self maps\_zombiemode_spawner::zombie_head_gib();
+			self maps\so\zm_common\_zm_spawner::zombie_head_gib();
 			self DoDamage( self.health + 666, self.origin, player );
 			player notify("zombie_killed");
 			

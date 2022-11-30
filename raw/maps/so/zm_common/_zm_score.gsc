@@ -1,6 +1,6 @@
 #include maps\_utility; 
 #include common_scripts\utility;
-#include maps\_zombiemode_utility;
+#include maps\so\zm_common\_zm_utility;
 
 init()
 {
@@ -77,7 +77,7 @@ player_add_points( event, mod, hit_location ,is_dog)
 /*
 play_killstreak_vo()
 {
-	index = maps\_zombiemode_weapons::get_player_index(self);
+	index = maps\so\zm_common\_zm_weapons::get_player_index(self);
 	self.killstreak = "vox_killstreak";
 	
 	if(!isdefined (level.player_is_speaking))

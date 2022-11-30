@@ -710,7 +710,7 @@ play_no_money_perk_dialog()
 	player_index = "plr_" + index + "_";
 	if(!IsDefined (self.vox_nomoney_perk))
 	{
-		num_variants = maps\_zombiemode_spawner::get_number_variants(player_index + "vox_nomoney_perk");
+		num_variants = maps\so\zm_common\_zm_audio::get_number_variants(player_index + "vox_nomoney_perk");
 		self.vox_nomoney_perk = [];
 		for(i=0;i<num_variants;i++)
 		{
@@ -727,7 +727,7 @@ play_no_money_perk_dialog()
 		self.vox_nomoney_perk_available = self.vox_nomoney_perk;
 	}
 			
-	self maps\_zombiemode_spawner::do_player_playdialog(player_index, sound_to_play, 0.25);
+	self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, 0.25);
 	
 	
 		
@@ -1038,7 +1038,7 @@ perk_vo(type)
 			sound_to_play = "vox_perk_jugga_0";
 			break;
 		}
-		self maps\_zombiemode_spawner::do_player_playdialog(player_index, sound_to_play, 0.25);
+		self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, 0.25);
 	}
 	else 
 	{
@@ -1322,7 +1322,7 @@ play_packa_wait_dialog(player_index)
 	waittime = 0.05;
 	if(!IsDefined (self.vox_perk_packa_wait))
 	{
-		num_variants = maps\_zombiemode_spawner::get_number_variants(player_index + "vox_perk_packa_wait");
+		num_variants = maps\so\zm_common\_zm_audio::get_number_variants(player_index + "vox_perk_packa_wait");
 		self.vox_perk_packa_wait = [];
 		for(i=0;i<num_variants;i++)
 		{
@@ -1335,7 +1335,7 @@ play_packa_wait_dialog(player_index)
 		level.player_is_speaking = 0;
 	}
 	sound_to_play = random(self.vox_perk_packa_wait_available);
-	self maps\_zombiemode_spawner::do_player_playdialog(player_index, sound_to_play, waittime);
+	self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, waittime);
 	self.vox_perk_packa_wait_available = array_remove(self.vox_perk_packa_wait_available,sound_to_play);
 	
 	if (self.vox_perk_packa_wait_available.size < 1 )
@@ -1349,7 +1349,7 @@ play_packa_get_dialog(player_index)
 	waittime = 0.05;
 	if(!IsDefined (self.vox_perk_packa_get))
 	{
-		num_variants = maps\_zombiemode_spawner::get_number_variants(player_index + "vox_perk_packa_get");
+		num_variants = maps\so\zm_common\_zm_audio::get_number_variants(player_index + "vox_perk_packa_get");
 		self.vox_perk_packa_get = [];
 		for(i=0;i<num_variants;i++)
 		{
@@ -1362,7 +1362,7 @@ play_packa_get_dialog(player_index)
 		level.player_is_speaking = 0;
 	}
 	sound_to_play = random(self.vox_perk_packa_get_available);
-	self maps\_zombiemode_spawner::do_player_playdialog(player_index, sound_to_play, waittime);
+	self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, waittime);
 	self.vox_perk_packa_get_available = array_remove(self.vox_perk_packa_get_available,sound_to_play);
 	
 	if (self.vox_perk_packa_get_available.size < 1 )

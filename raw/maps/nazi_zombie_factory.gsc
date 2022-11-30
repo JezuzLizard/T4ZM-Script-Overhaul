@@ -1,7 +1,7 @@
 #include common_scripts\utility; 
 #include maps\_utility;
-#include maps\_zombiemode_utility; 
-#include maps\_zombiemode_zone_manager; 
+#include maps\so\zm_common\_zm_utility; 
+#include maps\so\zm_common\_zm_zonemgr; 
 #include maps\nazi_zombie_factory_teleporter;
 #include maps\_music;
 
@@ -24,9 +24,9 @@ main()
 	level.zombie_rise_spawners = [];	// Zombie riser control
 	level.max_barrier_search_dist_override = 400;
 
-	level.door_dialog_function = maps\_zombiemode::play_door_dialog;
-	level.achievement_notify_func = maps\_zombiemode_utility::achievement_notify;
-	level.dog_spawn_func = maps\_zombiemode_dogs::dog_spawn_factory_logic;
+	level.door_dialog_function = maps\so\zm_common\_zm::play_door_dialog;
+	level.achievement_notify_func = maps\so\zm_common\_zm_utility::achievement_notify;
+	level.dog_spawn_func = maps\so\zm_common\_zm_ai_dogs::dog_spawn_factory_logic;
 
 	// Animations needed for door initialization
 	script_anims_init();
@@ -83,7 +83,14 @@ main()
 	}
 	level.init_zombie_spawner_name = "receiver_zone_spawners";
 	maps\so\zm_common\_zm::init_zm();
-	
+	maps\so\zm_common\_zm_ai_dogs::init();
+	maps\_zombiemode_radio::init();	
+	maps\so\zm_common\_zm_weap_tesla_gun::init();
+	maps\_zombiemode_bowie::bowie_init();
+	maps\_zombiemode_cymbal_monkey::init();
+	maps\_zombiemode_betty::init();
+	maps\_zombiemode_timer::init();
+	maps\_zombiemode_auto_turret::init();
 	init_sounds();
 	init_achievement();
 	//ESM - activate the initial exterior goals
@@ -104,7 +111,7 @@ main()
 	// This controls when zones become active and start monitoring players so zombies can spawn
 //	level thread setup_door_waits();
 
-	// If you want to modify/add to the weapons table, please copy over the _zombiemode_weapons init_weapons() and paste it here.
+	// If you want to modify/add to the weapons table, please copy over the so\zm_common\_zm_weapons init_weapons() and paste it here.
 	// I recommend putting it in it's own function...
 	// If not a MOD, you may need to provide new localized strings to reflect the proper cost.	
 
@@ -113,7 +120,7 @@ main()
 	thread init_elec_trap_trigs();
 
 	level.zone_manager_init_func = ::factory_zone_init;
-	level thread maps\_zombiemode_zone_manager::manage_zones( "receiver_zone" );
+	level thread maps\so\zm_common\_zm_zonemgr::manage_zones( "receiver_zone" );
 
 	teleporter_init();
 	
@@ -438,8 +445,8 @@ bridge_init()
 	warehouse_bridge_clip = getent( "warehouse_bridge_clip", "targetname" );
 	warehouse_bridge_clip delete();
 
-	maps\_zombiemode_zone_manager::connect_zones( "wnuen_bridge_zone", "bridge_zone" );
-	maps\_zombiemode_zone_manager::connect_zones( "warehouse_top_zone", "bridge_zone" );
+	maps\so\zm_common\_zm_zonemgr::connect_zones( "wnuen_bridge_zone", "bridge_zone" );
+	maps\so\zm_common\_zm_zonemgr::connect_zones( "warehouse_top_zone", "bridge_zone" );
 }
 
 
@@ -450,16 +457,16 @@ jump_from_bridge()
 	trig = GetEnt( "trig_outside_south_zone", "targetname" );
 	trig waittill( "trigger" );
 
-	maps\_zombiemode_zone_manager::connect_zones( "outside_south_zone", "bridge_zone", true );
-	maps\_zombiemode_zone_manager::connect_zones( "outside_south_zone", "wnuen_bridge_zone", true );
+	maps\so\zm_common\_zm_zonemgr::connect_zones( "outside_south_zone", "bridge_zone", true );
+	maps\so\zm_common\_zm_zonemgr::connect_zones( "outside_south_zone", "wnuen_bridge_zone", true );
 }
 
 
 init_sounds()
 {
-	maps\_zombiemode_utility::add_sound( "break_stone", "break_stone" );
-	maps\_zombiemode_utility::add_sound( "gate_door",	"open_door" );
-	maps\_zombiemode_utility::add_sound( "heavy_door",	"open_door" );
+	maps\so\zm_common\_zm_utility::add_sound( "break_stone", "break_stone" );
+	maps\so\zm_common\_zm_utility::add_sound( "gate_door",	"open_door" );
+	maps\so\zm_common\_zm_utility::add_sound( "heavy_door",	"open_door" );
 }
 
 
@@ -470,134 +477,134 @@ factory_add_weapons()
 
 
 	// Pistols
-	add_zombie_weapon( "colt", 									&"ZOMBIE_WEAPON_COLT_50", 					50,		"vox_crappy",	8 );
-	add_zombie_weapon( "colt_dirty_harry", 						&"ZOMBIE_WEAPON_COLT_DH_100", 				100,	"vox_357",		5 );
-	add_zombie_weapon( "nambu", 								&"ZOMBIE_WEAPON_NAMBU_50", 					50, 	"vox_crappy",	8 );
-	add_zombie_weapon( "sw_357", 								&"ZOMBIE_WEAPON_SW357_100", 				100, 	"vox_357",		5 );
-	add_zombie_weapon( "zombie_sw_357", 						&"ZOMBIE_WEAPON_SW357_100", 				100, 	"vox_357",		5 );
-	add_zombie_weapon( "zombie_sw_357_upgraded", 				&"ZOMBIE_WEAPON_SW357_100", 				100, 	"vox_357",		5 );
-	add_zombie_weapon( "tokarev", 								&"ZOMBIE_WEAPON_TOKAREV_50", 				50, 	"vox_crappy",	8 );
-	add_zombie_weapon( "walther", 								&"ZOMBIE_WEAPON_WALTHER_50", 				50, 	"vox_crappy",	8 );
-	add_zombie_weapon( "zombie_colt", 							&"ZOMBIE_WEAPON_ZOMBIECOLT_25", 			25, 	"vox_crappy",	8 );
-	add_zombie_weapon( "zombie_colt_upgraded", 					&"ZOMBIE_WEAPON_ZOMBIECOLT_25", 			25, 	"vox_crappy",	8 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "colt", 									&"ZOMBIE_WEAPON_COLT_50", 					50,		"vox_crappy",	8 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "colt_dirty_harry", 						&"ZOMBIE_WEAPON_COLT_DH_100", 				100,	"vox_357",		5 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "nambu", 								&"ZOMBIE_WEAPON_NAMBU_50", 					50, 	"vox_crappy",	8 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "sw_357", 								&"ZOMBIE_WEAPON_SW357_100", 				100, 	"vox_357",		5 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_sw_357", 						&"ZOMBIE_WEAPON_SW357_100", 				100, 	"vox_357",		5 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_sw_357_upgraded", 				&"ZOMBIE_WEAPON_SW357_100", 				100, 	"vox_357",		5 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "tokarev", 								&"ZOMBIE_WEAPON_TOKAREV_50", 				50, 	"vox_crappy",	8 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "walther", 								&"ZOMBIE_WEAPON_WALTHER_50", 				50, 	"vox_crappy",	8 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_colt", 							&"ZOMBIE_WEAPON_ZOMBIECOLT_25", 			25, 	"vox_crappy",	8 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_colt_upgraded", 					&"ZOMBIE_WEAPON_ZOMBIECOLT_25", 			25, 	"vox_crappy",	8 );
 
 	// Bolt Action                                      		
-	add_zombie_weapon( "kar98k", 								&"ZOMBIE_WEAPON_KAR98K_200", 				200,	"",				0);
-	add_zombie_weapon( "zombie_kar98k", 						&"ZOMBIE_WEAPON_KAR98K_200", 				200,	"",				0);
-	add_zombie_weapon( "zombie_kar98k_upgraded", 				&"ZOMBIE_WEAPON_KAR98K_200", 				200,	"",				0);
-	add_zombie_weapon( "kar98k_bayonet", 						&"ZOMBIE_WEAPON_KAR98K_B_200", 				200,	"",				0);
-	add_zombie_weapon( "mosin_rifle", 							&"ZOMBIE_WEAPON_MOSIN_200", 				200,	"",				0); 
-	add_zombie_weapon( "mosin_rifle_bayonet", 					&"ZOMBIE_WEAPON_MOSIN_B_200", 				200,	"",				0 );
-	add_zombie_weapon( "springfield", 							&"ZOMBIE_WEAPON_SPRINGFIELD_200", 			200,	"",				0 );
-	add_zombie_weapon( "zombie_springfield", 					&"ZOMBIE_WEAPON_SPRINGFIELD_200", 			200,	"",				0 );
-	add_zombie_weapon( "springfield_bayonet", 					&"ZOMBIE_WEAPON_SPRINGFIELD_B_200", 		200,	"",				0 );
-	add_zombie_weapon( "zombie_type99_rifle", 					&"ZOMBIE_WEAPON_TYPE99_200", 				200,	"",				0 );
-	add_zombie_weapon( "zombie_type99_rifle_upgraded", 			&"ZOMBIE_WEAPON_TYPE99_200", 				200,	"",				0 );
-	add_zombie_weapon( "type99_rifle_bayonet", 					&"ZOMBIE_WEAPON_TYPE99_B_200", 				200,	"",				0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "kar98k", 								&"ZOMBIE_WEAPON_KAR98K_200", 				200,	"",				0);
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_kar98k", 						&"ZOMBIE_WEAPON_KAR98K_200", 				200,	"",				0);
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_kar98k_upgraded", 				&"ZOMBIE_WEAPON_KAR98K_200", 				200,	"",				0);
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "kar98k_bayonet", 						&"ZOMBIE_WEAPON_KAR98K_B_200", 				200,	"",				0);
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "mosin_rifle", 							&"ZOMBIE_WEAPON_MOSIN_200", 				200,	"",				0); 
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "mosin_rifle_bayonet", 					&"ZOMBIE_WEAPON_MOSIN_B_200", 				200,	"",				0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "springfield", 							&"ZOMBIE_WEAPON_SPRINGFIELD_200", 			200,	"",				0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_springfield", 					&"ZOMBIE_WEAPON_SPRINGFIELD_200", 			200,	"",				0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "springfield_bayonet", 					&"ZOMBIE_WEAPON_SPRINGFIELD_B_200", 		200,	"",				0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_type99_rifle", 					&"ZOMBIE_WEAPON_TYPE99_200", 				200,	"",				0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_type99_rifle_upgraded", 			&"ZOMBIE_WEAPON_TYPE99_200", 				200,	"",				0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "type99_rifle_bayonet", 					&"ZOMBIE_WEAPON_TYPE99_B_200", 				200,	"",				0 );
 
 	// Semi Auto                                        		
-	add_zombie_weapon( "zombie_gewehr43", 						&"ZOMBIE_WEAPON_GEWEHR43_600", 				600,	"" ,			0 );
-	add_zombie_weapon( "zombie_gewehr43_upgraded", 				&"ZOMBIE_WEAPON_GEWEHR43_600", 				600,	"" ,			0 );
-	add_zombie_weapon( "zombie_m1carbine", 						&"ZOMBIE_WEAPON_M1CARBINE_600",				600,	"" ,			0 );
-	add_zombie_weapon( "zombie_m1carbine_upgraded", 			&"ZOMBIE_WEAPON_M1CARBINE_600",				600,	"" ,			0 );
-	add_zombie_weapon( "m1carbine_bayonet", 					&"ZOMBIE_WEAPON_M1CARBINE_B_600", 			600,	"" ,			0 );
-	add_zombie_weapon( "zombie_m1garand", 						&"ZOMBIE_WEAPON_M1GARAND_600", 				600,	"" ,			0 );
-	add_zombie_weapon( "zombie_m1garand_upgraded", 				&"ZOMBIE_WEAPON_M1GARAND_600", 				600,	"" ,			0 );
-	add_zombie_weapon( "m1garand_bayonet", 						&"ZOMBIE_WEAPON_M1GARAND_B_600", 			600,	"" ,			0 );
-	add_zombie_weapon( "svt40", 								&"ZOMBIE_WEAPON_SVT40_600", 				600,	"" ,			0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_gewehr43", 						&"ZOMBIE_WEAPON_GEWEHR43_600", 				600,	"" ,			0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_gewehr43_upgraded", 				&"ZOMBIE_WEAPON_GEWEHR43_600", 				600,	"" ,			0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_m1carbine", 						&"ZOMBIE_WEAPON_M1CARBINE_600",				600,	"" ,			0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_m1carbine_upgraded", 			&"ZOMBIE_WEAPON_M1CARBINE_600",				600,	"" ,			0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "m1carbine_bayonet", 					&"ZOMBIE_WEAPON_M1CARBINE_B_600", 			600,	"" ,			0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_m1garand", 						&"ZOMBIE_WEAPON_M1GARAND_600", 				600,	"" ,			0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_m1garand_upgraded", 				&"ZOMBIE_WEAPON_M1GARAND_600", 				600,	"" ,			0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "m1garand_bayonet", 						&"ZOMBIE_WEAPON_M1GARAND_B_600", 			600,	"" ,			0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "svt40", 								&"ZOMBIE_WEAPON_SVT40_600", 				600,	"" ,			0 );
 
 	// Grenades                                         		
-	add_zombie_weapon( "fraggrenade", 							&"ZOMBIE_WEAPON_FRAGGRENADE_250", 			250,	"" ,			0 );
-	add_zombie_weapon( "molotov", 								&"ZOMBIE_WEAPON_MOLOTOV_200", 				200,	"vox_crappy",	8 );
-	add_zombie_weapon( "molotov_zombie", 						&"ZOMBIE_WEAPON_MOLOTOV_200", 				200,	"vox_crappy",	8 );
-	add_zombie_weapon( "stick_grenade", 						&"ZOMBIE_WEAPON_STICKGRENADE_250", 			250,	"" ,			0 );
-	add_zombie_weapon( "stielhandgranate", 						&"ZOMBIE_WEAPON_STIELHANDGRANATE_250", 		250,	"" ,			0, 250 );
-	add_zombie_weapon( "type97_frag", 							&"ZOMBIE_WEAPON_TYPE97FRAG_250", 			250,	"" ,			0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "fraggrenade", 							&"ZOMBIE_WEAPON_FRAGGRENADE_250", 			250,	"" ,			0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "molotov", 								&"ZOMBIE_WEAPON_MOLOTOV_200", 				200,	"vox_crappy",	8 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "molotov_zombie", 						&"ZOMBIE_WEAPON_MOLOTOV_200", 				200,	"vox_crappy",	8 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "stick_grenade", 						&"ZOMBIE_WEAPON_STICKGRENADE_250", 			250,	"" ,			0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "stielhandgranate", 						&"ZOMBIE_WEAPON_STIELHANDGRANATE_250", 		250,	"" ,			0, 250 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "type97_frag", 							&"ZOMBIE_WEAPON_TYPE97FRAG_250", 			250,	"" ,			0 );
 
 	// Scoped
-	add_zombie_weapon( "kar98k_scoped_zombie", 					&"ZOMBIE_WEAPON_KAR98K_S_750", 				750,	"vox_ppsh",		5);
-	add_zombie_weapon( "kar98k_scoped_bayonet_zombie", 			&"ZOMBIE_WEAPON_KAR98K_S_B_750", 			750,	"vox_ppsh",		5);
-	add_zombie_weapon( "mosin_rifle_scoped_zombie", 			&"ZOMBIE_WEAPON_MOSIN_S_750", 				750,	"vox_ppsh",		5);
-	add_zombie_weapon( "mosin_rifle_scoped_bayonet_zombie", 	&"ZOMBIE_WEAPON_MOSIN_S_B_750", 			750,	"vox_ppsh",		5);
-	add_zombie_weapon( "ptrs41_zombie", 						&"ZOMBIE_WEAPON_PTRS41_750", 				750,	"vox_ppsh",		5);
-	add_zombie_weapon( "ptrs41_zombie_upgraded", 				&"ZOMBIE_WEAPON_PTRS41_750", 				750,	"vox_ppsh",		5);
-	add_zombie_weapon( "springfield_scoped_zombie", 			&"ZOMBIE_WEAPON_SPRINGFIELD_S_750", 		750,	"vox_ppsh",		5);
-	add_zombie_weapon( "springfield_scoped_bayonet_zombie", 	&"ZOMBIE_WEAPON_SPRINGFIELD_S_B_750", 		750,	"vox_ppsh",		5);
-	add_zombie_weapon( "type99_rifle_scoped_zombie", 			&"ZOMBIE_WEAPON_TYPE99_S_750", 				750,	"vox_ppsh",		5);
-	add_zombie_weapon( "type99_rifle_scoped_bayonet_zombie", 	&"ZOMBIE_WEAPON_TYPE99_S_B_750", 			750,	"vox_ppsh",		5);
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "kar98k_scoped_zombie", 					&"ZOMBIE_WEAPON_KAR98K_S_750", 				750,	"vox_ppsh",		5);
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "kar98k_scoped_bayonet_zombie", 			&"ZOMBIE_WEAPON_KAR98K_S_B_750", 			750,	"vox_ppsh",		5);
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "mosin_rifle_scoped_zombie", 			&"ZOMBIE_WEAPON_MOSIN_S_750", 				750,	"vox_ppsh",		5);
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "mosin_rifle_scoped_bayonet_zombie", 	&"ZOMBIE_WEAPON_MOSIN_S_B_750", 			750,	"vox_ppsh",		5);
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "ptrs41_zombie", 						&"ZOMBIE_WEAPON_PTRS41_750", 				750,	"vox_ppsh",		5);
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "ptrs41_zombie_upgraded", 				&"ZOMBIE_WEAPON_PTRS41_750", 				750,	"vox_ppsh",		5);
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "springfield_scoped_zombie", 			&"ZOMBIE_WEAPON_SPRINGFIELD_S_750", 		750,	"vox_ppsh",		5);
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "springfield_scoped_bayonet_zombie", 	&"ZOMBIE_WEAPON_SPRINGFIELD_S_B_750", 		750,	"vox_ppsh",		5);
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "type99_rifle_scoped_zombie", 			&"ZOMBIE_WEAPON_TYPE99_S_750", 				750,	"vox_ppsh",		5);
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "type99_rifle_scoped_bayonet_zombie", 	&"ZOMBIE_WEAPON_TYPE99_S_B_750", 			750,	"vox_ppsh",		5);
 
 	// Full Auto                                                                                	
-	add_zombie_weapon( "zombie_mp40", 							&"ZOMBIE_WEAPON_MP40_1000", 				1000,	"vox_mp40",		2 ); 
-	add_zombie_weapon( "zombie_mp40_upgraded", 					&"ZOMBIE_WEAPON_MP40_1000", 				1000,	"vox_mp40",		2 ); 
-	add_zombie_weapon( "zombie_ppsh", 							&"ZOMBIE_WEAPON_PPSH_2000", 				2000,	"vox_ppsh",		5 );
-	add_zombie_weapon( "zombie_ppsh_upgraded", 					&"ZOMBIE_WEAPON_PPSH_2000", 				2000,	"vox_ppsh",		5 );
-	add_zombie_weapon( "zombie_stg44", 							&"ZOMBIE_WEAPON_STG44_1200", 				1200,	"vox_mg",		9 );
-	add_zombie_weapon( "zombie_stg44_upgraded", 				&"ZOMBIE_WEAPON_STG44_1200", 				1200,	"vox_mg",		9 );
-	add_zombie_weapon( "zombie_thompson", 						&"ZOMBIE_WEAPON_THOMPSON_1200", 			1200,	"",				0 );
-	add_zombie_weapon( "zombie_thompson_upgraded", 				&"ZOMBIE_WEAPON_THOMPSON_1200", 			1200,	"",				0 );
-	add_zombie_weapon( "zombie_type100_smg", 					&"ZOMBIE_WEAPON_TYPE100_1000", 				1000,	"",				0 );
-	add_zombie_weapon( "zombie_type100_smg_upgraded", 			&"ZOMBIE_WEAPON_TYPE100_1000", 				1000,	"",				0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_mp40", 							&"ZOMBIE_WEAPON_MP40_1000", 				1000,	"vox_mp40",		2 ); 
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_mp40_upgraded", 					&"ZOMBIE_WEAPON_MP40_1000", 				1000,	"vox_mp40",		2 ); 
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_ppsh", 							&"ZOMBIE_WEAPON_PPSH_2000", 				2000,	"vox_ppsh",		5 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_ppsh_upgraded", 					&"ZOMBIE_WEAPON_PPSH_2000", 				2000,	"vox_ppsh",		5 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_stg44", 							&"ZOMBIE_WEAPON_STG44_1200", 				1200,	"vox_mg",		9 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_stg44_upgraded", 				&"ZOMBIE_WEAPON_STG44_1200", 				1200,	"vox_mg",		9 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_thompson", 						&"ZOMBIE_WEAPON_THOMPSON_1200", 			1200,	"",				0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_thompson_upgraded", 				&"ZOMBIE_WEAPON_THOMPSON_1200", 			1200,	"",				0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_type100_smg", 					&"ZOMBIE_WEAPON_TYPE100_1000", 				1000,	"",				0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_type100_smg_upgraded", 			&"ZOMBIE_WEAPON_TYPE100_1000", 				1000,	"",				0 );
 
 	// Shotguns                                         	
-	add_zombie_weapon( "zombie_doublebarrel", 					&"ZOMBIE_WEAPON_DOUBLEBARREL_1200", 		1200,	"vox_shotgun", 6);
-	add_zombie_weapon( "zombie_doublebarrel_upgraded", 			&"ZOMBIE_WEAPON_DOUBLEBARREL_1200", 		1200,	"vox_shotgun", 6);
-	add_zombie_weapon( "zombie_doublebarrel_sawed", 			&"ZOMBIE_WEAPON_DOUBLEBARREL_SAWED_1200", 	1200,	"vox_shotgun", 6);
-	add_zombie_weapon( "zombie_doublebarrel_sawed_upgraded",	&"ZOMBIE_WEAPON_DOUBLEBARREL_SAWED_1200", 	1200,	"vox_shotgun", 6);
-	add_zombie_weapon( "zombie_shotgun", 						&"ZOMBIE_WEAPON_SHOTGUN_1500", 				1500,	"vox_shotgun", 6);
-	add_zombie_weapon( "zombie_shotgun_upgraded", 				&"ZOMBIE_WEAPON_SHOTGUN_1500", 				1500,	"vox_shotgun", 6);
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_doublebarrel", 					&"ZOMBIE_WEAPON_DOUBLEBARREL_1200", 		1200,	"vox_shotgun", 6);
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_doublebarrel_upgraded", 			&"ZOMBIE_WEAPON_DOUBLEBARREL_1200", 		1200,	"vox_shotgun", 6);
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_doublebarrel_sawed", 			&"ZOMBIE_WEAPON_DOUBLEBARREL_SAWED_1200", 	1200,	"vox_shotgun", 6);
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_doublebarrel_sawed_upgraded",	&"ZOMBIE_WEAPON_DOUBLEBARREL_SAWED_1200", 	1200,	"vox_shotgun", 6);
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_shotgun", 						&"ZOMBIE_WEAPON_SHOTGUN_1500", 				1500,	"vox_shotgun", 6);
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_shotgun_upgraded", 				&"ZOMBIE_WEAPON_SHOTGUN_1500", 				1500,	"vox_shotgun", 6);
 
 	// Heavy Machineguns                                	
-	add_zombie_weapon( "zombie_30cal", 							&"ZOMBIE_WEAPON_30CAL_3000", 				3000,	"vox_mg",		9 );
-	add_zombie_weapon( "zombie_30cal_upgraded", 				&"ZOMBIE_WEAPON_30CAL_3000", 				3000,	"vox_mg",		9 );
-	add_zombie_weapon( "zombie_bar", 							&"ZOMBIE_WEAPON_BAR_1800", 					1800,	"vox_bar",		5 );
-	add_zombie_weapon( "zombie_bar_upgraded", 					&"ZOMBIE_WEAPON_BAR_1800", 					1800,	"vox_bar",		5 );
-	add_zombie_weapon( "dp28", 									&"ZOMBIE_WEAPON_DP28_2250", 				2250,	"vox_mg" ,		9 );
-	add_zombie_weapon( "zombie_fg42", 							&"ZOMBIE_WEAPON_FG42_1500", 				1500,	"vox_mg" ,		9 ); 
-	add_zombie_weapon( "zombie_fg42_upgraded", 					&"ZOMBIE_WEAPON_FG42_1500", 				1500,	"vox_mg" ,		9 ); 
-	add_zombie_weapon( "fg42_scoped", 							&"ZOMBIE_WEAPON_FG42_S_1500", 				1500,	"vox_mg" ,		9 ); 
-	add_zombie_weapon( "zombie_mg42", 							&"ZOMBIE_WEAPON_MG42_3000", 				3000,	"vox_mg" ,		9 ); 
-	add_zombie_weapon( "zombie_mg42_upgraded", 					&"ZOMBIE_WEAPON_MG42_3000", 				3000,	"vox_mg" ,		9 );
-	add_zombie_weapon( "type99_lmg", 							&"ZOMBIE_WEAPON_TYPE99_LMG_1750", 			1750,	"vox_mg" ,		9 ); 
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_30cal", 							&"ZOMBIE_WEAPON_30CAL_3000", 				3000,	"vox_mg",		9 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_30cal_upgraded", 				&"ZOMBIE_WEAPON_30CAL_3000", 				3000,	"vox_mg",		9 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_bar", 							&"ZOMBIE_WEAPON_BAR_1800", 					1800,	"vox_bar",		5 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_bar_upgraded", 					&"ZOMBIE_WEAPON_BAR_1800", 					1800,	"vox_bar",		5 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "dp28", 									&"ZOMBIE_WEAPON_DP28_2250", 				2250,	"vox_mg" ,		9 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_fg42", 							&"ZOMBIE_WEAPON_FG42_1500", 				1500,	"vox_mg" ,		9 ); 
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_fg42_upgraded", 					&"ZOMBIE_WEAPON_FG42_1500", 				1500,	"vox_mg" ,		9 ); 
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "fg42_scoped", 							&"ZOMBIE_WEAPON_FG42_S_1500", 				1500,	"vox_mg" ,		9 ); 
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_mg42", 							&"ZOMBIE_WEAPON_MG42_3000", 				3000,	"vox_mg" ,		9 ); 
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_mg42_upgraded", 					&"ZOMBIE_WEAPON_MG42_3000", 				3000,	"vox_mg" ,		9 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "type99_lmg", 							&"ZOMBIE_WEAPON_TYPE99_LMG_1750", 			1750,	"vox_mg" ,		9 ); 
 
 	// Grenade Launcher                                 	
-	add_zombie_weapon( "m1garand_gl_zombie", 					&"ZOMBIE_WEAPON_M1GARAND_GL_1500", 			1500,	"",				0 );
-	add_zombie_weapon( "m1garand_gl_zombie_upgraded", 			&"ZOMBIE_WEAPON_M1GARAND_GL_1500", 			1500,	"",				0 );
-	add_zombie_weapon( "mosin_launcher_zombie", 				&"ZOMBIE_WEAPON_MOSIN_GL_1200",				1200,	"",				0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "m1garand_gl_zombie", 					&"ZOMBIE_WEAPON_M1GARAND_GL_1500", 			1500,	"",				0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "m1garand_gl_zombie_upgraded", 			&"ZOMBIE_WEAPON_M1GARAND_GL_1500", 			1500,	"",				0 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "mosin_launcher_zombie", 				&"ZOMBIE_WEAPON_MOSIN_GL_1200",				1200,	"",				0 );
 
 	// Bipods                               				
-	add_zombie_weapon( "30cal_bipod", 							&"ZOMBIE_WEAPON_30CAL_BIPOD_3500", 			3500,	"vox_mg",		5 ); 
-	add_zombie_weapon( "bar_bipod", 							&"ZOMBIE_WEAPON_BAR_BIPOD_2500", 			2500,	"vox_bar",		5 ); 
-	add_zombie_weapon( "dp28_bipod", 							&"ZOMBIE_WEAPON_DP28_BIPOD_2500", 			2500,	"vox_mg",		5 ); 
-	add_zombie_weapon( "fg42_bipod", 							&"ZOMBIE_WEAPON_FG42_BIPOD_2000", 			2000,	"vox_mg",		5 ); 
-	add_zombie_weapon( "mg42_bipod", 							&"ZOMBIE_WEAPON_MG42_BIPOD_3250", 			3250,	"vox_mg",		5 ); 
-	add_zombie_weapon( "type99_lmg_bipod", 						&"ZOMBIE_WEAPON_TYPE99_LMG_BIPOD_2250", 	2250,	"vox_mg",		5 ); 
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "30cal_bipod", 							&"ZOMBIE_WEAPON_30CAL_BIPOD_3500", 			3500,	"vox_mg",		5 ); 
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "bar_bipod", 							&"ZOMBIE_WEAPON_BAR_BIPOD_2500", 			2500,	"vox_bar",		5 ); 
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "dp28_bipod", 							&"ZOMBIE_WEAPON_DP28_BIPOD_2500", 			2500,	"vox_mg",		5 ); 
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "fg42_bipod", 							&"ZOMBIE_WEAPON_FG42_BIPOD_2000", 			2000,	"vox_mg",		5 ); 
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "mg42_bipod", 							&"ZOMBIE_WEAPON_MG42_BIPOD_3250", 			3250,	"vox_mg",		5 ); 
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "type99_lmg_bipod", 						&"ZOMBIE_WEAPON_TYPE99_LMG_BIPOD_2250", 	2250,	"vox_mg",		5 ); 
 
 	// Rocket Launchers
-	add_zombie_weapon( "bazooka", 								&"ZOMBIE_WEAPON_BAZOOKA_2000", 				2000,	"",				0 ); 
-	add_zombie_weapon( "panzerschrek_zombie", 					&"ZOMBIE_WEAPON_PANZERSCHREK_2000", 		2000,	"vox_panzer",	5 ); 
-	add_zombie_weapon( "panzerschrek_zombie_upgraded", 			&"ZOMBIE_WEAPON_PANZERSCHREK_2000", 		2000,	"vox_panzer",	5 ); 
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "bazooka", 								&"ZOMBIE_WEAPON_BAZOOKA_2000", 				2000,	"",				0 ); 
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "panzerschrek_zombie", 					&"ZOMBIE_WEAPON_PANZERSCHREK_2000", 		2000,	"vox_panzer",	5 ); 
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "panzerschrek_zombie_upgraded", 			&"ZOMBIE_WEAPON_PANZERSCHREK_2000", 		2000,	"vox_panzer",	5 ); 
 
 	// Flamethrower                                     	
-	add_zombie_weapon( "m2_flamethrower_zombie", 				&"ZOMBIE_WEAPON_M2_FLAMETHROWER_3000", 		3000,	"vox_flame",	7);	
-	add_zombie_weapon( "m2_flamethrower_zombie_upgraded", 		&"ZOMBIE_WEAPON_M2_FLAMETHROWER_3000", 		3000,	"vox_flame",	7);	
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "m2_flamethrower_zombie", 				&"ZOMBIE_WEAPON_M2_FLAMETHROWER_3000", 		3000,	"vox_flame",	7);	
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "m2_flamethrower_zombie_upgraded", 		&"ZOMBIE_WEAPON_M2_FLAMETHROWER_3000", 		3000,	"vox_flame",	7);	
 
 	// Special                                          	
-	add_zombie_weapon( "mine_bouncing_betty",					&"ZOMBIE_WEAPON_SATCHEL_2000",				2000,	"" );
-	add_zombie_weapon( "mortar_round", 							&"ZOMBIE_WEAPON_MORTARROUND_2000", 			2000,	"" );
-	add_zombie_weapon( "satchel_charge", 						&"ZOMBIE_WEAPON_SATCHEL_2000", 				2000,	"vox_monkey",	3 );
-	add_zombie_weapon( "zombie_cymbal_monkey",					&"ZOMBIE_WEAPON_SATCHEL_2000", 				2000,	"vox_monkey",	3 );
-	add_zombie_weapon( "ray_gun", 								&"ZOMBIE_WEAPON_RAYGUN_10000", 				10000,	"vox_raygun",	6 );
-	add_zombie_weapon( "ray_gun_upgraded", 						&"ZOMBIE_WEAPON_RAYGUN_10000", 				10000,	"vox_raygun",	6 );
-	add_zombie_weapon( "tesla_gun",								&"ZOMBIE_BUY_TESLA", 						10,		"vox_tesla",	5 );
-	add_zombie_weapon( "tesla_gun_upgraded",					&"ZOMBIE_BUY_TESLA", 						10,		"vox_tesla",	5 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "mine_bouncing_betty",					&"ZOMBIE_WEAPON_SATCHEL_2000",				2000,	"" );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "mortar_round", 							&"ZOMBIE_WEAPON_MORTARROUND_2000", 			2000,	"" );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "satchel_charge", 						&"ZOMBIE_WEAPON_SATCHEL_2000", 				2000,	"vox_monkey",	3 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "zombie_cymbal_monkey",					&"ZOMBIE_WEAPON_SATCHEL_2000", 				2000,	"vox_monkey",	3 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "ray_gun", 								&"ZOMBIE_WEAPON_RAYGUN_10000", 				10000,	"vox_raygun",	6 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "ray_gun_upgraded", 						&"ZOMBIE_WEAPON_RAYGUN_10000", 				10000,	"vox_raygun",	6 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "tesla_gun",								&"ZOMBIE_BUY_TESLA", 						10,		"vox_tesla",	5 );
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "tesla_gun_upgraded",					&"ZOMBIE_BUY_TESLA", 						10,		"vox_tesla",	5 );
 
 	if(level.script != "nazi_zombie_prototype")
 	{
 		Precachemodel("zombie_teddybear");
 	}
 	// ONLY 1 OF THE BELOW SHOULD BE ALLOWED
-	add_limited_weapon( "m2_flamethrower_zombie", 1 );
-	add_limited_weapon( "tesla_gun", 1);
+	maps\so\zm_common\_zm_weapons::add_limited_weapon( "m2_flamethrower_zombie", 1 );
+	maps\so\zm_common\_zm_weapons::add_limited_weapon( "tesla_gun", 1);
 }   
 
 // Include the weapons that are only inr your level so that the cost/hints are accurate
@@ -690,10 +697,10 @@ include_weapons()
 	include_weapon("mine_bouncing_betty", false);
 
 	// limited weapons
-	maps\_zombiemode_weapons::add_limited_weapon( "zombie_colt", 0 );
-	//maps\_zombiemode_weapons::add_limited_weapon( "zombie_type99_rifle", 0 );
-	maps\_zombiemode_weapons::add_limited_weapon( "zombie_gewehr43", 0 );
-	maps\_zombiemode_weapons::add_limited_weapon( "zombie_m1garand", 0 );
+	maps\so\zm_common\_zm_weapons::add_limited_weapon( "zombie_colt", 0 );
+	//maps\so\zm_common\_zm_weapons::add_limited_weapon( "zombie_type99_rifle", 0 );
+	maps\so\zm_common\_zm_weapons::add_limited_weapon( "zombie_gewehr43", 0 );
+	maps\so\zm_common\_zm_weapons::add_limited_weapon( "zombie_m1garand", 0 );
 }
 
 
@@ -733,7 +740,7 @@ factory_cymbal_monkey_weighting_func()
 	count = 0;
 	for( i = 0; i < players.size; i++ )
 	{
-		if( players[i] maps\_zombiemode_weapons::has_weapon_or_upgrade( "zombie_cymbal_monkey" ) )
+		if( players[i] maps\so\zm_common\_zm_weapons::has_weapon_or_upgrade( "zombie_cymbal_monkey" ) )
 		{
 			count++;
 		}
@@ -967,8 +974,8 @@ power_electric_switch()
 	playfx(level._effect["switch_sparks"] ,getstruct("power_switch_fx","targetname").origin);
 
 	// Don't want east or west to spawn when in south zone, but vice versa is okay
-	maps\_zombiemode_zone_manager::connect_zones( "outside_east_zone", "outside_south_zone" );
-	maps\_zombiemode_zone_manager::connect_zones( "outside_west_zone", "outside_south_zone", true );
+	maps\so\zm_common\_zm_zonemgr::connect_zones( "outside_east_zone", "outside_south_zone" );
+	maps\so\zm_common\_zm_zonemgr::connect_zones( "outside_west_zone", "outside_south_zone", true );
 }
 
 
@@ -1013,7 +1020,7 @@ electric_trap_dialog()
 			if(dist < 70*70 && timer == 3)
 			{
 				
-				index = maps\_zombiemode_weapons::get_player_index(players[i]);
+				index = maps\so\zm_common\_zm_weapons::get_player_index(players[i]);
 				plr = "plr_" + index + "_";
 				//players[i] create_and_play_dialog( plr, "vox_level_start", 0.25 );
 				wait(3);				
@@ -1410,7 +1417,7 @@ zapper_light_red( lightname )
 			zapper_lights[i].fx delete();
 		}
 
-		zapper_lights[i].fx = maps\_zombiemode_net::network_safe_spawn( "trap_light_red", 2, "script_model", zapper_lights[i].origin );
+		zapper_lights[i].fx = maps\so\zm_common\_zm_network::network_safe_spawn( "trap_light_red", 2, "script_model", zapper_lights[i].origin );
 		zapper_lights[i].fx setmodel("tag_origin");
 		zapper_lights[i].fx.angles = zapper_lights[i].angles+(-90,0,0);
 		playfxontag(level._effect["zapper_light_notready"],zapper_lights[i].fx,"tag_origin");
@@ -1432,7 +1439,7 @@ zapper_light_green( lightname )
 			zapper_lights[i].fx delete();
 		}
 
-		zapper_lights[i].fx = maps\_zombiemode_net::network_safe_spawn( "trap_light_green", 2, "script_model", zapper_lights[i].origin );
+		zapper_lights[i].fx = maps\so\zm_common\_zm_network::network_safe_spawn( "trap_light_green", 2, "script_model", zapper_lights[i].origin );
 		zapper_lights[i].fx setmodel("tag_origin");
 		zapper_lights[i].fx.angles = zapper_lights[i].angles+(-90,0,0);
 		playfxontag(level._effect["zapper_light_ready"],zapper_lights[i].fx,"tag_origin");
@@ -1519,7 +1526,7 @@ player_zombie_awareness()
 	self endon("disconnect");
 	self endon("death");
 	players = getplayers();
-	index = maps\_zombiemode_weapons::get_player_index(self);
+	index = maps\so\zm_common\_zm_weapons::get_player_index(self);
 	while(1)
 	{
 		wait(1);		
@@ -1580,12 +1587,12 @@ player_zombie_awareness()
 play_oh_shit_dialog()
 {
 	//player = getplayers();	
-	index = maps\_zombiemode_weapons::get_player_index(self);
+	index = maps\so\zm_common\_zm_weapons::get_player_index(self);
 	
 	player_index = "plr_" + index + "_";
 	if(!IsDefined (self.vox_oh_shit))
 	{
-		num_variants = maps\_zombiemode_spawner::get_number_variants(player_index + "vox_oh_shit");
+		num_variants = maps\so\zm_common\_zm_spawner::get_number_variants(player_index + "vox_oh_shit");
 		self.vox_oh_shit = [];
 		for(i=0;i<num_variants;i++)
 		{
@@ -1602,13 +1609,13 @@ play_oh_shit_dialog()
 		self.vox_oh_shit_available = self.vox_oh_shit;
 	}
 	
-	self maps\_zombiemode_spawner::do_player_playdialog(player_index, sound_to_play, 0.25);
+	self maps\so\zm_common\_zm_spawner::do_player_playdialog(player_index, sound_to_play, 0.25);
 }
 */
 
 level_start_vox()
 {
-	index = maps\_zombiemode_weapons::get_player_index( self );
+	index = maps\so\zm_common\_zm_weapons::get_player_index( self );
 	plr = "plr_" + index + "_";
 	wait( 6 );
 	self thread create_and_play_dialog( plr, "vox_level_start", 0.25 );
@@ -1669,7 +1676,7 @@ flytrap()
 		trig_control_panel waittill( "damage", amount, inflictor, direction, point, type );
 
 		weapon = inflictor getcurrentweapon();
-		if ( maps\_zombiemode_weapons::is_weapon_upgraded( weapon ) )
+		if ( maps\so\zm_common\_zm_weapons::is_weapon_upgraded( weapon ) )
 		{
 			upgrade_hit = true;
 		}
@@ -1952,7 +1959,7 @@ play_giant_mythos_lines()
 			{
 				players = get_players();
 				p = randomint(players.size);
-				index = maps\_zombiemode_weapons::get_player_index(players[p]);
+				index = maps\so\zm_common\_zm_weapons::get_player_index(players[p]);
 				plr = "plr_" + index + "_";
 				players[p] thread create_and_play_dialog( plr, "vox_gen_giant", .25 );
 				//iprintlnbold( "Just played Gen Giant line off of player " + p );
@@ -1988,7 +1995,7 @@ play_level_easteregg_vox( object )
 			
 		if( vox_rand <= percent )
 		{
-			index = maps\_zombiemode_weapons::get_player_index(who);
+			index = maps\so\zm_common\_zm_weapons::get_player_index(who);
 			plr = "plr_" + index + "_";
 			
 			switch( object )
@@ -2046,7 +2053,7 @@ play_level_easteregg_vox( object )
 		}
 		else
 		{
-			index = maps\_zombiemode_weapons::get_player_index(who);
+			index = maps\so\zm_common\_zm_weapons::get_player_index(who);
 			plr = "plr_" + index + "_";
 			
 			who thread create_and_play_dialog( plr, "vox_gen_sigh", .25 );
@@ -2086,7 +2093,7 @@ init_fx()
 }
 
 // zombie specific anims
-
+#using_animtree( "generic_human" ); 
 init_standard_zombie_anims()
 {
 	// deaths

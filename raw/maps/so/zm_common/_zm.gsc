@@ -48,10 +48,10 @@ init_zm()
 
 	maps\so\zm_common\_zm_weapons::init_zm_weapons();
 	maps\so\zm_common\_zm_magicbox::init_zm_magicbox();
-	//maps\_zombiemode_perks::init();
+	maps\so\zm_common\_zm_perks::init();
 	maps\_zombiemode_blockers::init();
-	maps\_zombiemode_spawner::init();
-	maps\_zombiemode_powerups::init();
+	maps\so\zm_common\_zm_spawner::init();
+	maps\so\zm_common\_zm_powerups::init();
 	if ( isDefined( level.zm_custom_map_script_func ) )
 	{
 		level [[ level.zm_custom_map_script_func ]]();
@@ -73,8 +73,8 @@ init_zm()
 	}
 
 	level.playerlaststand_func = ::player_laststand;
-	level.global_damage_func = maps\_zombiemode_spawner::zombie_damage; 
-	level.global_damage_func_ads = maps\_zombiemode_spawner::zombie_damage_ads;
+	level.global_damage_func = maps\so\zm_common\_zm_spawner::zombie_damage; 
+	level.global_damage_func_ads = maps\so\zm_common\_zm_spawner::zombie_damage_ads;
 	level.overridePlayerKilled = ::player_killed_override;
 	level.overridePlayerDamage = ::player_damage_override;
 
@@ -979,6 +979,8 @@ init_dvars()
 
 init_flags()
 {
+	flag_init("electricity_on");
+	flag_init("crawler_round");
 	flag_init( "solo_game" );
 	flag_init( "start_zombie_round_logic" );
 	flag_init( "spawn_point_override" );
@@ -1343,7 +1345,7 @@ zombie_game_over_death()
 
 		wait( 0.5 + RandomFloat( 2 ) );
 
-		zombies[i] maps\_zombiemode_spawner::zombie_head_gib();
+		zombies[i] maps\so\zm_common\_zm_spawner::zombie_head_gib();
 		zombies[i] DoDamage( zombies[i].health + 666, zombies[i].origin );
 	}
 }
@@ -1723,7 +1725,7 @@ round_wait()
 	}
 	else
 	{
-		while( maps\_zombiemode_utility::get_enemy_count() > 0 || level.zombie_total > 0 || level.intermission)
+		while( maps\so\zm_common\_zm_utility::get_enemy_count() > 0 || level.zombie_total > 0 || level.intermission)
 		{
 			wait( 0.5 );
 		}
@@ -1749,7 +1751,7 @@ round_think()
 		chalk_one_up();
 		//		round_text( &"ZOMBIE_ROUND_BEGIN" );
 
-		maps\_zombiemode_powerups::powerup_round_start();
+		maps\so\zm_common\_zm_powerups::powerup_round_start();
 
 		players = get_players();
 		array_thread( players, maps\_zombiemode_blockers::rebuild_barrier_reward_reset );
@@ -1787,6 +1789,51 @@ round_think()
 		level.round_number++;
 
 		level notify( "between_round_over" );
+	}
+}
+
+// Let's the players know that you need power to open these
+play_door_dialog()
+{
+	level endon( "electricity_on" );
+	self endon ("warning_dialog");
+	timer = 0;
+
+	while(1)
+	{
+		wait(0.05);
+		players = get_players();
+		for(i = 0; i < players.size; i++)
+		{		
+			dist = distancesquared(players[i].origin, self.origin );
+			if(dist > 70*70)
+			{
+				timer =0;
+				continue;
+			}
+			while(dist < 70*70 && timer < 3)
+			{
+				wait(0.5);
+				timer++;
+			}
+			if(dist > 70*70 && timer >= 3)
+			{
+				self playsound("door_deny");
+				players[i] thread do_player_vo("vox_start", 5);	
+				wait(3);				
+				self notify ("warning_dialog");
+				//iprintlnbold("warning_given");
+			}
+		}
+	}
+}
+
+wait_until_first_player()
+{
+	players = get_players();
+	if( !IsDefined( players[0] ) )
+	{
+		level waittill( "first_player_ready" );
 	}
 }
 
@@ -2315,8 +2362,7 @@ add_low_ammo_dialog()
 	player_index = "plr_" + index + "_";
 	if(!IsDefined (self.vox_ammo_low))
 	{
-		//num_variants = maps\_zombiemode_spawner::get_number_variants(player_index + "vox_ammo_low");
-		num_variants = 0;
+		num_variants = maps\so\zm_common\_zm_audio::get_number_variants(player_index + "vox_ammo_low");
 		self.vox_ammo_low = [];
 		for(i=0;i<num_variants;i++)
 		{
@@ -2338,7 +2384,7 @@ add_low_ammo_dialog()
 		self.vox_ammo_low_available = self.vox_ammo_low;
 	}
 			
-	//self maps\_zombiemode_spawner::do_player_playdialog(player_index, sound_to_play, 0.25);	
+	self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, 0.25);	
 
 }
 add_no_ammo_dialog( weap )
@@ -2362,8 +2408,7 @@ add_no_ammo_dialog( weap )
 	player_index = "plr_" + index + "_";
 	if(!IsDefined (self.vox_ammo_out))
 	{
-		//num_variants = maps\_zombiemode_spawner::get_number_variants(player_index + "vox_ammo_out");
-		num_variants = 0;
+		num_variants = maps\so\zm_common\_zm_audio::get_number_variants(player_index + "vox_ammo_out");
 		self.vox_ammo_out = [];
 		for(i=0;i<num_variants;i++)
 		{
@@ -2380,7 +2425,7 @@ add_no_ammo_dialog( weap )
 		self.vox_ammo_out_available = self.vox_ammo_out;
 	}
 
-	//self maps\_zombiemode_spawner::do_player_playdialog(player_index, sound_to_play, 0.25);	
+	self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, 0.25);	
 
 }
 

@@ -881,7 +881,7 @@ play_weapon_vo(weapon)
 		}
 
 		plr = "plr_" + index + "_";
-		//self maps\_zombiemode_spawner::do_player_playdialog(plr, sound_to_play, 0.05);
+		self maps\so\zm_common\_zm_audio::do_player_playdialog(plr, sound_to_play, 0.05);
 	}
 }
 do_player_weap_dialog(player_index, sound_to_play, waittime)
@@ -996,8 +996,7 @@ add_weapon_to_sound_array(vo,num)
 	{
 		index = get_player_index(player);
 		player_index = "plr_" + index + "_";
-		//num = maps\_zombiemode_spawner::get_number_variants(player_index + vo);
-		num = 0;
+		num = maps\so\zm_common\_zm_audio::get_number_variants(player_index + vo);
 	}
 //	iprintlnbold(vo);
 

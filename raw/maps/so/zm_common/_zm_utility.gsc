@@ -1666,8 +1666,7 @@ play_killstreak_dialog()
 		waittime = 0.25;
 		if(!IsDefined (self.vox_killstreak))
 		{
-			//num_variants = maps\_zombiemode_spawner::get_number_variants(player_index + "vox_killstreak");
-			num_variants = 0;
+			num_variants = maps\so\zm_common\_zm_audio::get_number_variants(player_index + "vox_killstreak");
 			self.vox_killstreak = [];
 			for(i=0;i<num_variants;i++)
 			{
@@ -1768,8 +1767,7 @@ create_and_play_dialog( player_index, dialog_category, waittime, response )
 				
 	if ( !IsDefined ( self.sound_dialog[ dialog_category ] ) )
 	{
-		//num_variants = maps\_zombiemode_spawner::get_number_variants( player_index + dialog_category );  
-		num_variants = 0;                
+		num_variants = maps\so\zm_common\_zm_audio::get_number_variants( player_index + dialog_category );              
 		assertex( num_variants > 0, "No dialog variants found for category: " + dialog_category );
 		
 		for( i = 0; i < num_variants; i++ )
@@ -1789,7 +1787,7 @@ create_and_play_dialog( player_index, dialog_category, waittime, response )
 	self.sound_dialog_available[ dialog_category ] = array_remove( self.sound_dialog_available[ dialog_category ], variation );
 
 	sound_to_play = dialog_category + "_" + variation;
-	//self maps\_zombiemode_spawner::do_player_playdialog(player_index, sound_to_play, waittime, response);
+	self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, waittime, response);
 }
 
 /*
@@ -1874,8 +1872,7 @@ create_and_play_responses( player_index, dialog_category, waittime )
 				
 	if ( !IsDefined ( self.sound_dialog[ dialog_category ] ) )
 	{
-		//num_variants = maps\_zombiemode_spawner::get_number_variants( player_index + dialog_category );   
-		num_variants = 0;               
+		num_variants = maps\so\zm_common\_zm_audio::get_number_variants( player_index + dialog_category );          
 		assertex( num_variants > 0, "No dialog variants found for category: " + dialog_category );
 		
 		for( i = 0; i < num_variants; i++ )
@@ -1895,7 +1892,7 @@ create_and_play_responses( player_index, dialog_category, waittime )
 	self.sound_dialog_available[ dialog_category ] = array_remove( self.sound_dialog_available[ dialog_category ], variation );
 
 	sound_to_play = dialog_category + "_" + variation;
-	//self maps\_zombiemode_spawner::do_player_playdialog(player_index, sound_to_play, waittime);
+	self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, waittime);
 }
 
 include_weapon( weapon_name, in_box, weighting_func )
@@ -1909,7 +1906,7 @@ include_weapon( weapon_name, in_box, weighting_func )
 
 include_powerup( powerup_name )
 {
-	maps\_zombiemode_powerups::include_zombie_powerup( powerup_name );
+	maps\so\zm_common\_zm_powerups::include_zombie_powerup( powerup_name );
 }
 
 include_achievement( achievement, var1, var2, var3, var4 )
