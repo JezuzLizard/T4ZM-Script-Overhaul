@@ -62,8 +62,22 @@ main()
 	precachestring(&"ZOMBIE_BETTY_ALREADY_PURCHASED");
 	precachestring(&"ZOMBIE_BETTY_HOWTO");
 	
-	include_weapons();
-	include_powerups();
+	if ( isDefined( level.zm_custom_map_include_weapons ) )
+	{
+		level [[ level.zm_custom_map_include_weapons ]]();
+	}
+	else 
+	{
+		include_weapons();
+	}
+	if ( isDefined( level.zm_custom_map_include_powerups ) )
+	{
+		level [[ level.zm_custom_map_include_powerups ]]();
+	}
+	else 
+	{
+		include_powerups();
+	}
 	level.use_zombie_heroes = true;
 	if ( !isDefined( level.zm_custom_map_fx_init ) )
 	{
@@ -82,6 +96,7 @@ main()
 		level.zm_custom_map_weapon_add_func = ::factory_add_weapons;
 	}
 	level.init_zombie_spawner_name = "receiver_zone_spawners";
+	maps\so\zm_common\_zm_spawner::init();
 	maps\so\zm_common\_zm::init_zm();
 	maps\so\zm_common\_zm_ai_dogs::init();
 	maps\_zombiemode_radio::init();	

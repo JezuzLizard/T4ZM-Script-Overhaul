@@ -232,7 +232,7 @@ weapon_cabinet_think()
 				else // not enough money
 				{
 					//play_sound_on_ent( "no_purchase" );
-					//player thread maps\_zombiemode_perks::play_no_money_perk_dialog();
+					player thread maps\so\zm_common\_zm_perks::play_no_money_perk_dialog();
 				}			
 			}
 			else if ( player.score >= ammo_cost )
@@ -247,7 +247,7 @@ weapon_cabinet_think()
 			else // not enough money
 			{
 				//play_sound_on_ent( "no_purchase" );
-				//player thread maps\_zombiemode_perks::play_no_money_perk_dialog();
+				player thread maps\so\zm_common\_zm_perks::play_no_money_perk_dialog();
 			}
 		}
 		else if( player.score >= cost ) // First time the player opens the cabinet
@@ -310,7 +310,7 @@ weapon_cabinet_think()
 		else // not enough money
 		{
 			//play_sound_on_ent( "no_purchase" );
-			//player thread maps\_zombiemode_perks::play_no_money_perk_dialog();
+			player thread maps\so\zm_common\_zm_perks::play_no_money_perk_dialog();
 		}		
 	}
 }

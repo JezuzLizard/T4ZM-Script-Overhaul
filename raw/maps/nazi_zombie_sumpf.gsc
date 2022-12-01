@@ -64,8 +64,22 @@ main()
 	// If you want to modify/add to the weapons table, please copy over the so\zm_common\_zm_weapons init_weapons() and paste it here.
 	// I recommend putting it in it's own function...
 	// If not a MOD, you may need to provide new localized strings to reflect the proper cost.	
-	include_weapons();
-	include_powerups();
+	if ( isDefined( level.zm_custom_map_include_weapons ) )
+	{
+		level [[ level.zm_custom_map_include_weapons ]]();
+	}
+	else 
+	{
+		include_weapons();
+	}
+	if ( isDefined( level.zm_custom_map_include_powerups ) )
+	{
+		level [[ level.zm_custom_map_include_powerups ]]();
+	}
+	else 
+	{
+		include_powerups();
+	}
 	if ( !isDefined( level.zm_custom_map_fx_init ) )
 	{
 		level.zm_custom_map_fx_init = ::init_fx;
@@ -82,9 +96,8 @@ main()
 	{
 		level.zm_custom_map_weapon_add_func = ::sumpf_add_weapons;
 	}
+	maps\so\zm_common\_zm_spawner::init();
 	maps\so\zm_common\_zm::init_zm();
-	maps\nazi_zombie_sumpf_blockers::init();
-	
 	//init_sounds();
 	init_zombie_sumpf();
 	
@@ -312,16 +325,6 @@ include_powerups()
 	include_powerup( "insta_kill" );
 	include_powerup( "double_points" );
 	include_powerup( "full_ammo" );
-}
-
-include_weapon( weapon_name )
-{
-	maps\so\zm_common\_zm_weapons::include_zombie_weapon( weapon_name );
-}
-
-include_powerup( powerup_name )
-{
-	maps\so\zm_common\_zm_powerups::include_zombie_powerup( powerup_name );
 }
 	
 spawn_initial_outside_zombies( name )

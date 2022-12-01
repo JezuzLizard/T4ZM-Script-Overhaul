@@ -9,8 +9,22 @@ main()
 	maps\_destructible_opel_blitz::init();
 	level.startInvulnerableTime = GetDvarInt( "player_deathInvulnerableTime" );
 
-	include_weapons();
-	include_powerups();
+	if ( isDefined( level.zm_custom_map_include_weapons ) )
+	{
+		level [[ level.zm_custom_map_include_weapons ]]();
+	}
+	else 
+	{
+		include_weapons();
+	}
+	if ( isDefined( level.zm_custom_map_include_powerups ) )
+	{
+		level [[ level.zm_custom_map_include_powerups ]]();
+	}
+	else 
+	{
+		include_powerups();
+	}
 	
 	if( !isdefined( level.startInvulnerableTime ) )
 		level.startInvulnerableTime = GetDvarInt( "player_deathInvulnerableTime" );
@@ -50,8 +64,8 @@ main()
 	{
 		level.use_legacy_powerup_system = true;
 	}
+	maps\so\zm_common\_zm_spawner_prototype::init();
 	maps\so\zm_common\_zm::init_zm();
-
 	maps\so\zm_common\_zm_utility::add_sound( "break_stone", "break_stone" );
 
 	if ( !is_true( level.dont_use_map_glitch_patches ) )

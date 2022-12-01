@@ -1,7 +1,7 @@
 #include maps\_utility; 
 #include common_scripts\utility; 
 #include maps\so\zm_common\_zm_utility;
-#include maps\_zombiemode_net;
+#include maps\so\zm_common\_zm_network;
 
 #using_animtree( "generic_human" );
 
@@ -335,7 +335,10 @@ tesla_play_death_fx( arc_num )
 		if( RandomInt( 100 ) < level.zombie_vars["tesla_head_gib_chance"] )
 		{
 			wait( RandomFloat( 0.53, 1.0 ) );
-			self maps\so\zm_common\_zm_spawner::zombie_head_gib();
+			if ( isDefined( level._zm_spawner_funcs ) && isDefined( level._zm_spawner_funcs[ "zombie_head_gib" ] ) )
+			{
+				self [[ level._zm_spawner_funcs[ "zombie_head_gib" ] ]]();
+			}
 		}
 		else
 		{

@@ -14,6 +14,8 @@ init_zm()
 	init_animscripts();
 	init_sounds();
 	init_shellshocks();
+	init_dvars();
+	init_flags();
 
 	level.zombie_ai_limit = 24;
 	SetAILimit( level.zombie_ai_limit );
@@ -45,12 +47,14 @@ init_zm()
 	maps\_load::main();
 
 	level.hudelem_count = 0;
-
+	if ( isDefined( level._zm_spawner_funcs ) && isDefined( level._zm_spawner_funcs[ "add_spawn_funcs_to_zombie_spawners" ] ) )
+	{
+		level [[ level._zm_spawner_funcs[ "add_spawn_funcs_to_zombie_spawners" ] ]]();
+	}
 	maps\so\zm_common\_zm_weapons::init_zm_weapons();
 	maps\so\zm_common\_zm_magicbox::init_zm_magicbox();
 	maps\so\zm_common\_zm_perks::init();
-	maps\_zombiemode_blockers::init();
-	maps\so\zm_common\_zm_spawner::init();
+	maps\so\zm_common\_zm_blockers::init();
 	maps\so\zm_common\_zm_powerups::init();
 	if ( isDefined( level.zm_custom_map_script_func ) )
 	{
@@ -73,8 +77,8 @@ init_zm()
 	}
 
 	level.playerlaststand_func = ::player_laststand;
-	level.global_damage_func = maps\so\zm_common\_zm_spawner::zombie_damage; 
-	level.global_damage_func_ads = maps\so\zm_common\_zm_spawner::zombie_damage_ads;
+	level.global_damage_func = level._zm_spawner_funcs[ "zombie_damage" ]; 
+	level.global_damage_func_ads = level._zm_spawner_funcs[ "zombie_damage_ads" ];
 	level.overridePlayerKilled = ::player_killed_override;
 	level.overridePlayerDamage = ::player_damage_override;
 
@@ -96,9 +100,6 @@ init_zm()
 	level.round_start_time = 0;
 
 	level thread onPlayerConnect(); 
-
-	init_dvars();
-	init_flags();
 	
 	if ( isDefined( level.zm_custom_map_leaderboard_init ) )
 	{
@@ -1345,7 +1346,10 @@ zombie_game_over_death()
 
 		wait( 0.5 + RandomFloat( 2 ) );
 
-		zombies[i] maps\so\zm_common\_zm_spawner::zombie_head_gib();
+		if ( isDefined( level._zm_spawner_funcs ) && isDefined( level._zm_spawner_funcs[ "zombie_head_gib" ] ) )
+		{
+			zombies[ i ] [[ level._zm_spawner_funcs[ "zombie_head_gib" ] ]]();
+		}
 		zombies[i] DoDamage( zombies[i].health + 666, zombies[i].origin );
 	}
 }
@@ -1365,8 +1369,6 @@ round_start()
 
 	level.chalk_hud1 = create_chalk_hud();
 	level.chalk_hud2 = create_chalk_hud( 64 );
-
-	flag_set( "begin_spawning" );
 
 	if ( !isdefined( level.round_spawn_func ) )
 		level.round_spawn_func = ::round_spawning;
@@ -1526,6 +1528,9 @@ round_spawning()
 	// DEBUG HACK:	
 	//max = 1;
 	old_spawn = undefined;
+
+	flag_set( "begin_spawning" );
+
 	while( count < max )
 	{
 
@@ -1632,6 +1637,7 @@ round_spawning()
 
 	}
 
+	flag_clear( "begin_spawning" );
 }
 
 ai_calculate_health()
@@ -2052,6 +2058,12 @@ spectators_respawn()
 spectator_respawn()
 {
 	println( "*************************Respawn Spectator***" );
+
+	if ( isDefined( level.zm_custom_map_spawn_point_override ) )
+	{
+		level [[ level.zm_custom_map_spawn_point_override ]]( self );
+	}
+
 	assert( IsDefined( self.spectator_respawn ) );
 
 	origin = self.spectator_respawn.origin;
@@ -2061,10 +2073,11 @@ spectator_respawn()
 
 	new_origin = undefined;
 	
+	if ( flag( "begin_spawning" ) )
+	{
+		new_origin = check_for_valid_spawn_near_team( self );
+	}
 	
-	new_origin = check_for_valid_spawn_near_team( self );
-	
-
 	if( IsDefined( new_origin ) )
 	{
 		self Spawn( new_origin, angles );

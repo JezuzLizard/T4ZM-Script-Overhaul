@@ -834,7 +834,7 @@ treasure_chest_weapon_spawn( chest, player )
 		}
 
 		/#
-		if( maps\_zombiemode_tesla::tesla_gun_exists() )	
+		if( maps\so\zm_common\_zm_weap_tesla_gun::tesla_gun_exists() )	
 		{
 			if ( i == 39 && GetDvar( "scr_spawn_tesla" ) != "" )
 			{

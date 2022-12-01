@@ -16,7 +16,6 @@ main()
 	precacheshellshock("electrocution");
 	
 	//add_zombie_hint( "default_buy_door_2500", &"ZOMBIE_BUTTON_BUY_OPEN_DOOR_2500" );
-	maps\so\zm_common\_zm_weapons::maps\so\zm_common\_zm_weapons::add_zombie_weapon( "mine_bouncing_betty",&"ZOMBIE_WEAPON_SATCHEL_2000", 2000 );
 	
 	precachemodel("tag_origin");
 	precachemodel("zombie_zapper_power_box");
@@ -42,8 +41,22 @@ main()
 	precachestring(&"ZOMBIE_INTRO_ASYLUM_LEVEL_HIMMLER");
 	precachestring(&"ZOMBIE_INTRO_ASYLUM_LEVEL_SEPTEMBER");
 	
-	include_weapons();
-	include_powerups();		
+	if ( isDefined( level.zm_custom_map_include_weapons ) )
+	{
+		level [[ level.zm_custom_map_include_weapons ]]();
+	}
+	else 
+	{
+		include_weapons();
+	}
+	if ( isDefined( level.zm_custom_map_include_powerups ) )
+	{
+		level [[ level.zm_custom_map_include_powerups ]]();
+	}
+	else 
+	{
+		include_powerups();
+	}
 	maps\nazi_zombie_asylum_fx::main();	
 	
 	if(getdvar("light_mode") != "")
@@ -70,6 +83,16 @@ main()
 	{
 		level.use_legacy_perk_system = true;
 	}
+	if ( !isDefined( level.Player_Spawn_func ) )
+	{
+		level.Player_Spawn_func = ::blank;
+	}
+	if ( !isDefineD( level.zm_custom_map_spawn_point_override ) )
+	{
+		level.zm_custom_map_spawn_point_override = ::spawn_point_override;
+	}
+
+	maps\so\zm_common\_zm_spawner_asylum::init();
 	maps\so\zm_common\_zm::init_zm();	
 	level.burning_zombies = [];
 	level.electrocuted_zombies = [];
@@ -83,9 +106,7 @@ main()
 	level thread watch_magic_doors();
 	
 	//special spawn point logic for the map
-	level thread spawn_point_override();
-
-	level.custom_spawnPlayer = ::spectator_respawn_new;	
+	//level thread spawn_point_override();
 	
 	//zombie asylum custom stuff
 	init_zombie_asylum();	
@@ -108,6 +129,11 @@ main()
 	// I recommend putting it in it's own function...
 	// If not a MOD, you may need to provide new localized strings to reflect the proper cost.
 	
+}
+
+blank()
+{
+
 }
 
 player_zombie_awareness()
@@ -284,7 +310,7 @@ init_zombie_asylum()
 	flag_set("spawn_point_override");
 	
 	//custom spawner function for respawning from spec mode
-	//level.custom_spawnPlayer = ::respawn_from_spectator_new;	
+	level.custom_spawnPlayer = maps\so\zm_common\_zm::spectator_respawn;	
 	
 	//bouncing betties
 	level thread purchase_bouncing_betties();
@@ -730,6 +756,8 @@ asylum_add_weapons()
 	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "satchel_charge", 					&"ZOMBIE_WEAPON_SATCHEL_2000", 				2000,	"" );
 	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "ray_gun", 							&"ZOMBIE_WEAPON_RAYGUN_10000", 				10000,	"vox_raygun", 5 );
 
+	maps\so\zm_common\_zm_weapons::add_zombie_weapon( "mine_bouncing_betty",&"ZOMBIE_WEAPON_SATCHEL_2000", 2000 );
+
 	Precachemodel("zombie_teddybear");
 
 	// ONLY 1 OF THE BELOW SHOULD BE ALLOWED
@@ -812,17 +840,6 @@ include_powerups()
 	include_powerup( "double_points" );
 	include_powerup( "full_ammo" );
 }
-
-include_weapon( weapon_name )
-{
-	maps\so\zm_common\_zm_weapons::include_zombie_weapon( weapon_name );
-}
-
-include_powerup( powerup_name )
-{
-	maps\so\zm_common\_zm_powerups::include_zombie_powerup( powerup_name );
-}
-
 
 /*------------------------------------
 BOUNCING BETTY STUFFS - 
@@ -972,7 +989,10 @@ betty_think()
 	{
 		if(DistanceSquared(zombs[i].origin, temp_origin) < 200 * 200)
 		{
-			zombs[i] thread maps\so\zm_common\_zm_spawner::zombie_damage( "MOD_EXPLOSIVE", "none", zombs[i].origin, self.owner );
+			if ( isDefined( level._zm_spawner_funcs ) && isDefined( level._zm_spawner_funcs[ "zombie_damage" ] ) )
+			{
+				zombs[ i ] thread [[ level._zm_spawner_funcs[ "zombie_damage" ] ]]( "MOD_EXPLOSIVE", "none", zombs[i].origin, self.owner );
+			}
 		}
 	}
 	//radiusdamage(self.origin,128,1000,75,self.owner);
@@ -1457,11 +1477,13 @@ zombie_flame_watch()
 	
 - special asylum spawning hotness
 ------------------------------------*/
-spawn_point_override()
+spawn_point_override( target_player )
 {
-	flag_wait( "all_players_connected" );
-	
-	players = get_players(); 
+	if ( isDefined( target_player.spectator_respawn ) )
+	{
+		return;
+	}
+	players = getPlayers(); 
 
 	//spawn points are split, so grab them both seperately
 	north_structs = getstructarray("north_spawn","script_noteworthy");
@@ -1474,34 +1496,43 @@ spawn_point_override()
 		side1 = south_structs;
 		side2 = north_structs;
 	}
-		
-	//spawn players on a specific side, but randomize it up a bit
-	for( i = 0; i < players.size; i++ )
-	{
-		
-		//track zombies for sounds
-		players[i] thread player_zombie_awareness();
-		players[i] thread player_killstreak_timer();
-		
-		//fix exploits found after release
-		players[i] thread fix_hax();
+	
+	spawnpoints = array_combine( side1, side2 );
 
-			
-		if(i<2)
+	spawnpoints = array_randomize( spawnpoints );
+
+	//spawn players on a specific side, but randomize it up a bit
+
+	
+	for ( j = 0; j < spawnpoints.size; j++ )
+	{
+		spawnpoint_is_in_use = false;
+		for( i = 0; i < players.size; i++ )
 		{
-			players[i] setorigin( side1[i].origin ); 
-			players[i] setplayerangles( side1[i].angles );
-			players[i].respawn_point = side1[i];
-			players[i].spawn_side = side1[i].script_noteworthy;
-		}
-		else
-		{
-			players[i] setorigin( side2[i].origin);
-			players[i] setplayerangles( side2[i].angles);
-			players[i].respawn_point = side2[i];
-			players[i].spawn_side = side2[i].script_noteworthy;
+			if ( isDefined( players[ i ].spectator_respawn ) && players[ i ].spectator_respawn == spawnpoints[ j ] )
+			{
+				spawnpoint_is_in_use = true;
+				break;
+			}
 		}	
-	}	
+		if ( !spawnpoint_is_in_use )
+		{
+			//track zombies for sounds
+			target_player thread player_zombie_awareness();
+			target_player thread player_killstreak_timer();
+			
+			//fix exploits found after release
+			target_player thread fix_hax();
+
+			target_player setorigin( spawnpoints[ j ].origin ); 
+			target_player setplayerangles( spawnpoints[ j ].angles );
+			target_player.spectator_respawn = spawnpoints[ j ];
+			target_player.spawn_side = spawnpoints[ j ].script_noteworthy;
+			break;
+		}
+	}
+	
+	assert( isDefined( target_player.spectator_respawn ) );
 }
 
 //betty hint stuff
@@ -2520,53 +2551,6 @@ fix_hax()
 		}
 
 	}
-}
-
-
-spectator_respawn_new()
-{
-
-	self.has_betties = undefined;
-	self.is_burning = undefined;
-		
-	origin = self.respawn_point.origin;
-	angles = self.respawn_point.angles;	
-	
-	//add 10 units to the z value to prevent the player from spawning into the ground sometimes on stairs
-	origin =  origin +  (0,0,10);
-	
-
-	self Spawn( origin, angles );
-
-	if( IsSplitScreen() )
-	{
-		last_alive = undefined;
-		players = get_players();
-
-		for( i = 0; i < players.size; i++ )
-		{
-			if( !players[i].is_zombie )
-			{
-				last_alive = players[i];
-			}
-		}
-
-		share_screen( last_alive, false );
-	}
-
-	// The check_for_level_end looks for this
-	self.is_zombie = false;
-	self.ignoreme = false;
-
-	setClientSysState("lsm", "0", self);	// Notify client last stand ended.
-	self RevivePlayer();
-
-	self notify( "spawned_player" );
-
-	// Penalize the player when we respawn, since he 'died'
-	self maps\so\zm_common\_zm_score::player_reduce_points( "died" );
-
-	return true;
 }
 
 init_fx()

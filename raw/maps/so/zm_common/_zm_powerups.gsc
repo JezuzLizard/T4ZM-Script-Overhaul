@@ -489,7 +489,7 @@ powerup_drop(drop_point)
 	// never drop unless in the playable area
 	playable_area = getentarray("playable_area","targetname");
 
-	powerup = maps\_zombiemode_net::network_safe_spawn( "powerup", 1, "script_model", drop_point + (0,0,40));
+	powerup = maps\so\zm_common\_zm_network::network_safe_spawn( "powerup", 1, "script_model", drop_point + (0,0,40));
 	
 	//chris_p - fixed bug where you could not have more than 1 playable area trigger for the whole map
 	valid_drop = false;
@@ -642,11 +642,11 @@ special_drop_setup()
 		break;
 
 	case "dog":
-		if ( level.round_number >= 15 )
+		if ( isDefined( level.ai_dogs_special_dog_spawn_func ) && level.round_number >= 15 )
 		{
 			is_powerup = false;
 			dog_spawners = GetEntArray( "special_dog_spawner", "targetname" );
-			maps\so\zm_common\_zm_ai_dogs::special_dog_spawn( dog_spawners, 1 );
+			level [[ level.ai_dogs_special_dog_spawn_func ]]( dog_spawners, 1 );
 			//iprintlnbold( "Samantha Sez: No Powerup For You!" );
 			thread play_sound_2d( "sam_nospawn" );
 		}
@@ -817,7 +817,7 @@ start_carpenter( origin )
 			if( !IsDefined( chunk ) )
 				break;
 
-			windows thread maps\_zombiemode_blockers_new::replace_chunk( chunk, false, true );
+			windows thread maps\so\zm_common\_zm_blockers::replace_chunk( chunk, false, true );
 			windows.clip enable_trigger(); 
 			windows.clip DisconnectPaths();
 			wait_network_frame();
@@ -1069,7 +1069,10 @@ nuke_powerup( drop_item )
 
 		if( !( zombies[i] enemy_is_dog() ) )
 		{
-			zombies[i] maps\so\zm_common\_zm_spawner::zombie_head_gib();
+			if ( isDefined( level._zm_spawner_funcs ) && isDefined( level._zm_spawner_funcs[ "zombie_head_gib" ] ) )
+			{
+				zombies[ i ] [[ level._zm_spawner_funcs[ "zombie_head_gib" ] ]]();
+			}
 		}
 
 		zombies[i] dodamage( zombies[i].health + 666, zombies[i].origin );
@@ -1209,7 +1212,10 @@ check_for_instakill( player )
 		}
 		else
 		{
-			self maps\so\zm_common\_zm_spawner::zombie_head_gib();
+			if ( isDefined( level._zm_spawner_funcs ) && isDefined( level._zm_spawner_funcs[ "zombie_head_gib" ] ) )
+			{
+				self [[ level._zm_spawner_funcs[ "zombie_head_gib" ] ]]();
+			}
 			self DoDamage( self.health + 666, self.origin, player );
 			player notify("zombie_killed");
 			

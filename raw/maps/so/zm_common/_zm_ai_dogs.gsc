@@ -70,6 +70,10 @@ init()
 	
 	level thread [[level.dog_round_track_override]]();
 
+	if ( !isDefined( level.ai_dogs_special_dog_spawn_func ) )
+	{
+		level.ai_dogs_special_dog_spawn_func = ::special_dog_spawn;
+	}
 }
 
 
@@ -81,10 +85,14 @@ dog_spawner_init()
 
 	for( i = 0; i < dogs.size; i++ )
 	{
-		if( maps\so\zm_common\_zm_spawner::is_spawner_targeted_by_blocker( dogs[i] ) )
+		if ( isDefined( level._zm_spawner_funcs ) && isDefined( level._zm_spawner_funcs[ "is_spawner_targeted_by_blocker" ] ) )
 		{
-			dogs[i].locked_spawner = true;
+			if( level [[ level._zm_spawner_funcs[ "is_spawner_targeted_by_blocker" ] ]]( dogs[i] ) )
+			{
+				dogs[i].locked_spawner = true;
+			}
 		}
+
 	}
 
 	assert( dogs.size > 0 );
@@ -653,8 +661,10 @@ dog_init()
 	self ClearGoalVolume();
 
 	self.flame_damage_time = 0;
-
-	self maps\so\zm_common\_zm_spawner::zombie_history( "zombie_dog_spawn_init -> Spawned = " + self.origin );
+	if ( isDefined( level._zm_spawner_funcs ) && isDefined( level._zm_spawner_funcs[ "zombie_history" ] ) )
+	{
+		self [[ level._zm_spawner_funcs[ "zombie_history" ] ]]( "zombie_dog_spawn_init -> Spawned = " + self.origin );
+	}
 }
 
 
@@ -747,7 +757,10 @@ dog_explode_fx( origin )
 // this is where zombies go into attack mode, and need different attributes set up
 zombie_setup_attack_properties_dog()
 {
-	self maps\so\zm_common\_zm_spawner::zombie_history( "zombie_setup_attack_properties()" );
+	if ( isDefined( level._zm_spawner_funcs ) && isDefined( level._zm_spawner_funcs[ "zombie_history" ] ) )
+	{
+		self [[ level._zm_spawner_funcs[ "zombie_history" ] ]]( "zombie_setup_attack_properties()" );
+	}
 	
 	self thread dog_behind_audio();
 
