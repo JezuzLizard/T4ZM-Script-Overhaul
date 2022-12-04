@@ -11,6 +11,7 @@ init()
 		return;
 	}
 	
+	level.additionalprimaryweapon_limit = 3;
 
 	// this map uses atleast 1 perk machine
 	PrecacheItem( "zombie_perk_bottle_doubletap" );
@@ -54,6 +55,17 @@ init()
 	PrecacheString( &"ZOMBIE_PERK_FASTRELOAD" );
 	PrecacheString( &"ZOMBIE_PERK_DOUBLETAP" );
 
+	if ( array_validate( level._custom_perks ) )
+	{
+		a_keys = getarraykeys( level._custom_perks );
+
+		for ( i = 0; i < a_keys.size; i++ )
+		{
+			if ( isdefined( level._custom_perks[a_keys[i]].precache_func ) )
+				level [[ level._custom_perks[a_keys[i]].precache_func ]]();
+		}
+	}
+
 	set_zombie_var( "zombie_perk_cost",					2000 );
 	set_zombie_var( "zombie_perk_juggernaut_health",	160 );
 
@@ -66,7 +78,17 @@ init()
 	level thread turn_doubletap_on();
 	level thread turn_sleight_on();
 	level thread turn_revive_on();
-	
+
+	if ( array_validate( level._custom_perks ) )
+	{
+		a_keys = getarraykeys( level._custom_perks );
+
+		for ( i = 0; i < a_keys.size; i++ )
+		{
+			if ( isdefined( level._custom_perks[a_keys[i]].perk_machine_thread ) )
+				level thread [[ level._custom_perks[a_keys[i]].perk_machine_thread ]]();
+		}
+	}	
 		
 	level thread machine_watcher();
 	level.speed_jingle = 0;
@@ -253,11 +275,12 @@ wait_for_player_to_take( player, weapon, packa_timer )
 		packa_timer stoploopsound(.05);
 		if( trigger_player == player ) 
 		{
-			if( !player maps\_laststand::player_is_in_laststand() )
+			if( !player maps\_laststand::player_is_in_laststand() && !( isDefined( player.is_drinking ) && player.is_drinking > 0 ) && player getCurrentWeapon() != "mine_bouncing_betty" )
 			{
 				self notify( "pap_taken" );
+				weapon_limit = get_player_weapon_limit( player );
 				primaries = player GetWeaponsListPrimaries();
-				if( isDefined( primaries ) && primaries.size >= 2 )
+				if( isDefined( primaries ) && primaries.size >= weapon_limit )
 				{
 					player maps\so\zm_common\_zm_weapons::weapon_give( weapon+"_upgraded" );
 				}
@@ -292,8 +315,6 @@ wait_for_timeout( packa_timer )
 do_knuckle_crack()
 {
 	gun = self upgrade_knuckle_crack_begin();
-	
-	self.is_drinking = 1;
 	self waittill_any( "fake_death", "death", "player_downed", "weapon_change_complete" );
 	
 	self upgrade_knuckle_crack_end( gun );
@@ -302,8 +323,7 @@ do_knuckle_crack()
 
 upgrade_knuckle_crack_begin()
 {
-	self DisableOffhandWeapons();
-	self DisableWeaponCycling();
+	self increment_is_drinking();
 
 	self AllowLean( false );
 	self AllowAds( false );
@@ -349,9 +369,6 @@ upgrade_knuckle_crack_end( gun )
 	assert( gun != "zombie_perk_bottle_sleight" );
 	assert( gun != "syrette" );
 
-	self EnableOffhandWeapons();
-	self EnableWeaponCycling();
-
 	self AllowLean( true );
 	self AllowAds( true );
 	self AllowSprint( true );
@@ -366,9 +383,12 @@ upgrade_knuckle_crack_end( gun )
 		return;
 	}
 
+	self decrement_is_drinking();
 	self TakeWeapon(weapon);
 	primaries = self GetWeaponsListPrimaries();
-	if( isDefined( primaries ) && primaries.size > 0 )
+	if ( isDefined( self.is_drinking ) && self.is_drinking > 0 )
+		return;	
+	else if( isDefined( primaries ) && primaries.size > 0 )
 	{
 		self SwitchToWeapon( primaries[0] );
 	}
@@ -574,15 +594,22 @@ vending_trigger_think()
 			cost = 2000;
 			break;
 
+		default:
+			if ( array_validate( level._custom_perks ) && isdefined( level._custom_perks[perk] ) && isdefined( level._custom_perks[perk].cost ) )
+				cost = level._custom_perks[perk].cost;
+			break;
+
 		}
 
 		if (player maps\_laststand::player_is_in_laststand() )
 		{
+			wait 0.1;
 			continue;
 		}
 
 		if(player in_revive_trigger())
 		{
+			wait 0.1;
 			continue;
 		}
 		
@@ -595,6 +622,12 @@ vending_trigger_think()
 		if( player isSwitchingWeapons() )
 		{
 			wait(0.1);
+			continue;
+		}
+
+		if ( isDefined( player.is_drinking ) && player.is_drinking > 0 )
+		{
+			wait 0.1;
 			continue;
 		}
 
@@ -628,80 +661,90 @@ vending_trigger_think()
 			continue;
 		}
 
-		sound = "bottle_dispense3d";
-		player achievement_notify( "perk_used" );
-		playsoundatposition(sound, self.origin);
-		player maps\so\zm_common\_zm_score::minus_to_player_score( cost ); 
-		///bottle_dispense
-		switch( perk )
-		{
-		case "specialty_armorvest":
-			sound = "mx_jugger_sting";
-			break;
-
-		case "specialty_quickrevive":
-			sound = "mx_revive_sting";
-			break;
-
-		case "specialty_fastreload":
-			sound = "mx_speed_sting";
-			break;
-
-		case "specialty_rof":
-			sound = "mx_doubletap_sting";
-			break;
-
-		default:
-			sound = "mx_jugger_sting";
-			break;
-		}
-
-		self thread play_vendor_stings(sound);
-	
-		//		self waittill("sound_done");
-
-
-		// do the drink animation
-		gun = player perk_give_bottle_begin( perk );
-		player.is_drinking = 1;
-		player waittill_any( "fake_death", "death", "player_downed", "weapon_change_complete" );
-
-		// restore player controls and movement
-		player perk_give_bottle_end( gun, perk );
-		player.is_drinking = undefined;
-		// TODO: race condition?
-		if ( player maps\_laststand::player_is_in_laststand() )
-		{
-			continue;
-		}
-
-		player SetPerk( perk );
-		player thread perk_vo(perk);
-		player setblur( 4, 0.1 );
-		wait(0.1);
-		player setblur(0, 0.1);
-		//earthquake (0.4, 0.2, self.origin, 100);
-		if(perk == "specialty_armorvest")
-		{
-			player.maxhealth = level.zombie_vars["zombie_perk_juggernaut_health"];
-			player.health = level.zombie_vars["zombie_perk_juggernaut_health"];
-			//player.health = 160;
-		}
-
-		
-		player perk_hud_create( perk );
-
-		//stat tracking
-		player.stats["perks"]++;
-
-		//player iprintln( "Bought Perk: " + perk );
-		bbPrint( "zombie_uses: playername %s playerscore %d round %d cost %d name %s x %f y %f z %f type perk",
-			player.playername, player.score, level.round_number, cost, perk, self.origin );
-
-		player thread perk_think( perk );
-
+		self thread vending_trigger_post_think( player, perk );
 	}
 }
+
+vending_trigger_post_think( player, perk )
+{
+	level endon( "end_game" );
+	player endon( "disconnect" );
+	sound = "bottle_dispense3d";
+	player achievement_notify( "perk_used" );
+	playsoundatposition(sound, self.origin);
+	player maps\so\zm_common\_zm_score::minus_to_player_score( cost ); 
+	///bottle_dispense
+	switch( perk )
+	{
+	case "specialty_armorvest":
+		sound = "mx_jugger_sting";
+		break;
+
+	case "specialty_quickrevive":
+		sound = "mx_revive_sting";
+		break;
+
+	case "specialty_fastreload":
+		sound = "mx_speed_sting";
+		break;
+
+	case "specialty_rof":
+		sound = "mx_doubletap_sting";
+		break;
+
+	default:
+		if ( array_validate( level._custom_perks ) && isDefined( level._custom_perks[ perk ] ) && isDefined( level._custom_perks[ perk ].stinger ) )
+		{
+			sound = level._custom_perks[ perk ].stinger;
+		}
+		break;
+	}
+
+	self thread play_vendor_stings(sound);
+
+	//		self waittill("sound_done");
+
+
+	// do the drink animation
+	gun = player perk_give_bottle_begin( perk );
+	player waittill_any( "fake_death", "death", "player_downed", "weapon_change_complete" );
+
+	// restore player controls and movement
+	player perk_give_bottle_end( gun, perk );
+	player.is_drinking = undefined;
+	// TODO: race condition?
+	if ( player maps\_laststand::player_is_in_laststand() )
+	{
+		continue;
+	}
+	if ( array_validate( level._custom_perks ) && isdefined( level._custom_perks[perk] ) && isdefined( level._custom_perks[perk].player_thread_give ) )
+		self thread [[ level._custom_perks[perk].player_thread_give ]]();
+	player SetPerk( perk );
+	player thread perk_vo(perk);
+	player setblur( 4, 0.1 );
+	wait(0.1);
+	player setblur(0, 0.1);
+	//earthquake (0.4, 0.2, self.origin, 100);
+	if(perk == "specialty_armorvest")
+	{
+		player.maxhealth = level.zombie_vars["zombie_perk_juggernaut_health"];
+		player.health = level.zombie_vars["zombie_perk_juggernaut_health"];
+		//player.health = 160;
+	}
+
+	
+	player perk_hud_create( perk );
+
+	//stat tracking
+	player.stats["perks"]++;
+
+	//player iprintln( "Bought Perk: " + perk );
+	bbPrint( "zombie_uses: playername %s playerscore %d round %d cost %d name %s x %f y %f z %f type perk",
+		player.playername, player.score, level.round_number, cost, perk, self.origin );
+
+	player thread perk_think( perk );
+}
+
 play_no_money_perk_dialog()
 {
 	
@@ -801,8 +844,11 @@ vending_set_hintstring( perk )
 		break;
 
 	default:
-		self SetHintString( perk + " Cost: " + level.zombie_vars["zombie_perk_cost"] );
-		break;
+		if ( array_validate( level._custom_perks ) )
+		{
+			if ( isdefined( level._custom_perks[perk] ) && isdefined( level._custom_perks[perk].cost ) && isdefined( level._custom_perks[perk].hint_string ) )
+				self sethintstring( level._custom_perks[perk].hint_string, level._custom_perks[perk].cost );
+		}
 
 	}
 }
@@ -821,6 +867,9 @@ perk_think( perk )
 #/
 
 		self waittill_any( "fake_death", "death", "player_downed" );
+
+		if ( array_validate( level._custom_perks ) && isdefined( level._custom_perks[perk] ) && isdefined( level._custom_perks[perk].player_thread_take ) )
+			self thread [[ level._custom_perks[perk].player_thread_take ]]();
 
 		self UnsetPerk( perk );
 		self.maxhealth = 100;
@@ -868,7 +917,10 @@ perk_hud_create( perk )
 			break;
 
 		default:
-			shader = "";
+			if ( array_validate( level._custom_perks ) && isDefined( level._custom_perks[ perk ] ) && isDefined( level._custom_perks[ perk ].shader ) )
+			{
+				shader = level._custom_perks[ perk ].shader;
+			}
 			break;
 		}
 
@@ -897,8 +949,7 @@ perk_hud_destroy( perk )
 
 perk_give_bottle_begin( perk )
 {
-	self DisableOffhandWeapons();
-	self DisableWeaponCycling();
+	self increment_is_drinking();
 
 	self AllowLean( false );
 	self AllowAds( false );
@@ -933,6 +984,11 @@ perk_give_bottle_begin( perk )
 	case "specialty_rof":
 		weapon = "zombie_perk_bottle_doubletap";
 		break;
+	
+	default:
+		if ( array_validate( level._custom_perks ) && isdefined( level._custom_perks[perk] ) && isdefined( level._custom_perks[perk].perk_bottle ) )
+			weapon = level._custom_perks[perk].perk_bottle;
+		break;
 	}
 
 	self GiveWeapon( weapon );
@@ -949,9 +1005,6 @@ perk_give_bottle_end( gun, perk )
 	assert( gun != "zombie_perk_bottle_jugg" );
 	assert( gun != "zombie_perk_bottle_sleight" );
 	assert( gun != "syrette" );
-
-	self EnableOffhandWeapons();
-	self EnableWeaponCycling();
 
 	self AllowLean( true );
 	self AllowAds( true );
@@ -976,6 +1029,11 @@ perk_give_bottle_end( gun, perk )
 	case "specialty_rof":
 		weapon = "zombie_perk_bottle_doubletap";
 		break;
+	
+	default:
+		if ( array_validate( level._custom_perks ) && isdefined( level._custom_perks[perk] ) && isdefined( level._custom_perks[perk].perk_bottle ) )
+			weapon = level._custom_perks[perk].perk_bottle;
+		break;
 	}
 
 	// TODO: race condition?
@@ -985,21 +1043,29 @@ perk_give_bottle_end( gun, perk )
 		return;
 	}
 
-	if ( gun != "none" && gun != "mine_bouncing_betty" )
+	self takeweapon( weapon );
+
+	if ( self is_multiple_drinking() )
 	{
-		self SwitchToWeapon( gun );
+		self decrement_is_drinking();
+		return;
 	}
-	else 
+	else if ( gun != "none" && gun != "mine_bouncing_betty" )
 	{
-		// try to switch to first primary weapon
-		primaryWeapons = self GetWeaponsListPrimaries();
-		if( IsDefined( primaryWeapons ) && primaryWeapons.size > 0 )
-		{
-			self SwitchToWeapon( primaryWeapons[0] );
-		}
+		self switchtoweapon( gun );
+	}
+	else
+	{
+		primaryweapons = self getweaponslistprimaries();
+
+		if ( isdefined( primaryweapons ) && primaryweapons.size > 0 )
+			self switchtoweapon( primaryweapons[0] );
 	}
 
-	self TakeWeapon(weapon);
+	self waittill( "weapon_change_complete" );
+
+	if ( !self maps\mp\zombies\_zm_laststand::player_is_in_laststand() && !( isdefined( self.intermission ) && self.intermission ) )
+		self decrement_is_drinking();
 }
 
 perk_vo(type)
@@ -1035,7 +1101,10 @@ perk_vo(type)
 			sound_to_play = "vox_perk_doubletap_0";
 			break; 	
 		default:	
-			sound_to_play = "vox_perk_jugga_0";
+			if ( array_validate( level._custom_perks ) && isDefined( level._custom_perks[ type ] ) && isDefined( level._custom_perks[ type ].dialog ) )
+			{
+				sound_to_play = level._custom_perks[ type ].dialog;
+			}
 			break;
 		}
 		self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, 0.25);
@@ -1055,7 +1124,13 @@ perk_vo(type)
 			break;
 		case "specialty_rof":
 			sound_to_play = "plr_" + index + "_vox_drink_double";
-			break; 		
+			break; 	
+		default:	
+			if ( array_validate( level._custom_perks ) && isDefined( level._custom_perks[ type ] ) && isDefined( level._custom_perks[ type ].dialog ) )
+			{
+				sound_to_play = level._custom_perks[ type ].dialog;
+			}
+			break;		
 		}
 		if (level.player_is_speaking != 1 && isDefined(sound_to_play))
 		{	
@@ -1076,6 +1151,14 @@ machine_watcher()
 		level thread machine_watcher_factory("doubletap_on");
 		level thread machine_watcher_factory("revive_on");
 		level thread machine_watcher_factory("Pack_A_Punch_on");
+		if ( array_validate( level._custom_perks ) )
+		{
+			keys = getArrayKeys( level._custom_perks );
+			for ( i = 0; i < keys.size; i++ )
+			{
+				level thread machine_watcher_factory( level._custom_perks[ keys[ i ] ].alias + "_on", keys[ i ] );
+			}
+		}
 	}
 	else
 	{		
@@ -1087,7 +1170,7 @@ machine_watcher()
 }
 
 //PI ESM - added for support for two switches in factory
-machine_watcher_factory(vending_name)
+machine_watcher_factory(vending_name, perk)
 {
 	level waittill(vending_name);
 	switch(vending_name)
@@ -1113,7 +1196,10 @@ machine_watcher_factory(vending_name)
 			break;		
 		
 		default:
-			temp_script_sound = "mx_jugger_jingle";
+			if ( array_validate( level._custom_perks ) && isDefined( level._custom_perks[ perk ] ) && isDefined( level._custom_perks[ perk ].jingle ) )
+			{
+				temp_script_sound = level._custom_perks[ perk ].jingle;
+			}
 			break;
 	}
 
@@ -1210,6 +1296,19 @@ play_vendor_stings(sound)
 			temp_org_pack_s delete();
 //			iprintlnbold("stinger packapunch:"  + level.packa_jingle);
 		}
+		else if ( array_validate( level._custom_perks ) && isDefined( level._custom_perks[ self.script_noteworthy ] ) )
+		{
+			if ( sound == level._custom_perks[ self.script_noteworthy ].jingle && !level._custom_perks[ keys[ i ] ].jingle_active )
+			{
+				level._custom_perks[ self.script_noteworthy ].jingle_active = true;
+				temp_sound = spawn("script_origin", self.origin);
+				temp_sound playsound (self.script_sound, "sound_done");
+				temp_sound waittill("sound_done");
+				level._custom_perks[ self.script_noteworthy ].jingle_active = false;
+				temp_sound delete();
+				break;
+			}
+		}
 	}
 }
 
@@ -1282,6 +1381,20 @@ perks_a_cola_jingle()
 				temp_org_packa waittill("sound_done");
 				level.packa_jingle = 0;
 				temp_org_packa delete();
+			}
+			
+			if ( array_validate( level._custom_perks ) && isDefined( level._custom_perks[ self.script_noteworthy ] ) )
+			{
+				if ( self.script_sound == level._custom_perks[ self.script_noteworthy ].jingle && !level._custom_perks[ keys[ i ] ].jingle_active )
+				{
+					level._custom_perks[ self.script_noteworthy ].jingle_active = true;
+					temp_sound = spawn("script_origin", self.origin);
+					temp_sound playsound (self.script_sound, "sound_done");
+					temp_sound waittill("sound_done");
+					level._custom_perks[ self.script_noteworthy ].jingle_active = false;
+					temp_sound delete();
+					break;
+				}
 			}
 
 			self thread play_random_broken_sounds();
@@ -1369,4 +1482,71 @@ play_packa_get_dialog(player_index)
 	{
 		self.vox_perk_packa_get_available = self.vox_perk_packa_get;
 	}
+}
+
+register_perk_basic_info( str_perk, str_perk_alias, n_perk_cost, str_hint_string, str_perk_bottle_weapon, str_perk_shader, str_perk_jingle, str_perk_stinger, str_perk_dialog )
+{
+	assert( isdefined( str_perk ), "str_perk is a required argument for register_perk_basic_info!" );
+	assert( isdefined( n_perk_cost ), "n_perk_cost is a required argument for register_perk_basic_info!" );
+	assert( isdefined( str_hint_string ), "str_hint_string is a required argument for register_perk_basic_info!" );
+	assert( isdefined( str_perk_bottle_weapon ), "str_perk_bottle_weapon is a required argument for register_perk_basic_info!" );
+	_register_undefined_perk( str_perk );
+	level._custom_perks[str_perk].alias = str_perk_alias;
+	level._custom_perks[str_perk].cost = n_perk_cost;
+	level._custom_perks[str_perk].hint_string = str_hint_string;
+	level._custom_perks[str_perk].perk_bottle = str_perk_bottle_weapon;
+	level._custom_perks[str_perk].shader = str_perk_shader;
+	level._custom_perks[str_perk].jingle = str_perk_jingle;
+	level._custom_perks[str_perk].jingle_active = false;
+	level._custom_perks[str_perk].stinger = str_perk_stinger;
+	level._custom_perks[str_perk].dialog = str_perk_dialog;
+}
+
+register_perk_machine( str_perk, func_perk_machine_setup, func_perk_machine_thread )
+{
+	assert( isdefined( str_perk ), "str_perk is a required argument for register_perk_machine!" );
+	assert( isdefined( func_perk_machine_setup ), "func_perk_machine_setup is a required argument for register_perk_machine!" );
+	assert( isdefined( func_perk_machine_thread ), "func_perk_machine_thread is a required argument for register_perk_machine!" );
+	_register_undefined_perk( str_perk );
+
+	if ( !isdefined( level._custom_perks[str_perk].perk_machine_set_kvps ) )
+		level._custom_perks[str_perk].perk_machine_set_kvps = func_perk_machine_setup;
+
+	if ( !isdefined( level._custom_perks[str_perk].perk_machine_thread ) )
+		level._custom_perks[str_perk].perk_machine_thread = func_perk_machine_thread;
+}
+
+register_perk_precache_func( str_perk, func_precache )
+{
+	assert( isdefined( str_perk ), "str_perk is a required argument for register_perk_precache_func!" );
+	assert( isdefined( func_precache ), "func_precache is a required argument for register_perk_precache_func!" );
+	_register_undefined_perk( str_perk );
+
+	if ( !isdefined( level._custom_perks[str_perk].precache_func ) )
+		level._custom_perks[str_perk].precache_func = func_precache;
+}
+
+register_perk_threads( str_perk, func_give_player_perk, func_take_player_perk )
+{
+	assert( isdefined( str_perk ), "str_perk is a required argument for register_perk_threads!" );
+	assert( isdefined( func_give_player_perk ), "func_give_player_perk is a required argument for register_perk_threads!" );
+	_register_undefined_perk( str_perk );
+
+	if ( !isdefined( level._custom_perks[str_perk].player_thread_give ) )
+		level._custom_perks[str_perk].player_thread_give = func_give_player_perk;
+
+	if ( isdefined( func_take_player_perk ) )
+	{
+		if ( !isdefined( level._custom_perks[str_perk].player_thread_take ) )
+			level._custom_perks[str_perk].player_thread_take = func_take_player_perk;
+	}
+}
+
+_register_undefined_perk( str_perk )
+{
+	if ( !isdefined( level._custom_perks ) )
+		level._custom_perks = [];
+
+	if ( !isdefined( level._custom_perks[str_perk] ) )
+		level._custom_perks[str_perk] = spawnstruct();
 }

@@ -987,14 +987,7 @@ array_limiter( array, total )
 
 array_validate( array )
 {
-	if( IsDefined( array ) && array.size > 0 )
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+	return IsDefined( array ) && isArray( array ) && array.size > 0
 }
 
 add_later_round_spawners()
@@ -1921,4 +1914,73 @@ achievement_notify( notify_name )
 is_true( value )
 {
 	return isDefined( value ) && value;
+}
+
+get_player_weapon_limit( player )
+{
+	if ( isdefined( level.get_player_weapon_limit ) )
+		return [[ level.get_player_weapon_limit ]]( player );
+
+	weapon_limit = 2;
+
+	if ( isDefined( level.additionalprimaryweapon_perk_name ) && level.additionalprimaryweapon_perk_name != "" )
+	{
+		if ( player hasperk( level.additionalprimaryweapon_perk_name ) )
+			weapon_limit = level.additionalprimaryweapon_limit;
+	}
+
+
+	return weapon_limit;
+}
+
+get_player_perk_purchase_limit()
+{
+	if ( isdefined( level.get_player_perk_purchase_limit ) )
+		return self [[ level.get_player_perk_purchase_limit ]]();
+
+	return level.perk_purchase_limit;
+}
+
+increment_is_drinking()
+{
+	if ( !isdefined( self.is_drinking ) )
+		self.is_drinking = 0;
+
+	if ( self.is_drinking == 0 )
+	{
+		self disableoffhandweapons();
+		self disableweaponcycling();
+	}
+
+	self.is_drinking++;
+}
+
+is_multiple_drinking()
+{
+	return isDefined( self.is_drinking ) && self.is_drinking > 1;
+}
+
+decrement_is_drinking()
+{
+	if ( self.is_drinking > 0 )
+		self.is_drinking--;
+	else
+	{
+/#
+		assertmsg( "making is_drinking less than or equal to 0" );
+#/
+	}
+
+	if ( self.is_drinking == 0 )
+	{
+		self enableoffhandweapons();
+		self enableweaponcycling();
+	}
+}
+
+clear_is_drinking()
+{
+	self.is_drinking = 0;
+	self enableoffhandweapons();
+	self enableweaponcycling();
 }

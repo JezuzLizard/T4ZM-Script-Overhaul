@@ -231,13 +231,16 @@ treasure_chest_think()
 	while( 1 )
 	{
 		self waittill( "trigger", user ); 
-		/*
 		if( user in_revive_trigger() )
 		{
 			wait( 0.1 );
 			continue;
 		}
-		*/
+		if ( isDefineD( user.is_drinking ) && user.is_drinking > 0 )
+		{
+			wait 0.1;
+			continue;
+		}
 		// make sure the user is a player, and that they can afford it
 		if( is_player_valid( user ) && user.score >= cost )
 		{
@@ -246,7 +249,7 @@ treasure_chest_think()
 		}
 		else if ( user.score < cost )
 		{
-			//user thread maps\_zombiemode_perks::play_no_money_perk_dialog();
+			user thread maps\so\zm_common\_zm_perks::play_no_money_perk_dialog();
 			continue;	
 		}
 

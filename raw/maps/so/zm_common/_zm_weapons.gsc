@@ -708,8 +708,10 @@ weapon_give( weapon, is_upgrade )
 		is_upgrade = false;
 	}
 
+	weapon_limit = get_player_weapon_limit( self );
+
 	// This should never be true for the first time.
-	if( primaryWeapons.size >= 2 ) // he has two weapons
+	if( primaryWeapons.size >= weapon_limit ) // he has two weapons
 	{
 		current_weapon = self getCurrentWeapon(); // get his current weapon
 
