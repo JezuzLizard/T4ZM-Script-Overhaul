@@ -11,6 +11,15 @@ init()
 	}
 
 	PrecacheShader( "black" ); 
+
+	if ( isDefined( level._custom_powerups ) && level._custom_powerups.size > 0 )
+	{
+		keys = getArrayKeys( level._custom_powerups );
+		for ( i = 0; i < keys.size; i++ )
+		{
+			level [[ level._custom_powerups[ keys[ i ] ].precache_func ]]();
+		}
+	}
 	// powerup Vars
 	set_zombie_var( "zombie_insta_kill", 				0 );
 	set_zombie_var( "zombie_point_scalar", 				1 );
@@ -28,10 +37,36 @@ init()
 	level._effect["powerup_on"] 				= loadfx( "misc/fx_zombie_powerup_on" );
 	level._effect["powerup_grabbed"] 			= loadfx( "misc/fx_zombie_powerup_grab" );
 	level._effect["powerup_grabbed_wave"] 		= loadfx( "misc/fx_zombie_powerup_wave" );
-
+	if ( isDefined( level._custom_powerups ) && level._custom_powerups.size > 0 )
+	{
+		keys = getArrayKeys( level._custom_powerups );
+		for ( i = 0; i < keys.size; i++ )
+		{
+			level [[ level._custom_powerups[ keys[ i ] ].setup_func ]]();
+		}
+	}
 	init_powerups();
-
+	level thread on_player_connect_powerup_init();
 	thread watch_for_drop();
+}
+
+on_player_connect_powerup_init()
+{
+	while ( true )
+	{
+		level waittill( "connected", player );
+		if ( isDefined( level._custom_powerups ) && level._custom_powerups.size > 0 )
+		{
+			keys = getArrayKeys( level._custom_powerups );
+			for ( i = 0; i < keys.size; i++ )
+			{
+				if ( isDefined( level._custom_powerups[ keys[ i ] ].player_setup_func ) )
+				{
+					player [[ level._custom_powerups[ keys[ i ] ].player_setup_func ]]();
+				}
+			}
+		}		
+	}
 }
 
 init_powerups()
@@ -587,14 +622,18 @@ powerup_setup()
 	//TUEY Spawn Powerup
 	playsoundatposition("spawn_powerup", self.origin);
 
-	self.powerup_name 	= struct.powerup_name;
-	self.hint 			= struct.hint;
+	self.powerup_name = struct.powerup_name;
+	self.hint = struct.hint;
+	self.solo = struct.solo;
+	self.caution = struct.caution;
+	self.zombie_grabbable = struct.zombie_grabbable;
+	self.func_should_drop_with_regular_powerups = struct.func_should_drop_with_regular_powerups;
 
 	if( IsDefined( struct.fx ) )
 	{
 		self.fx = struct.fx;
 	}
-
+	
 	self PlayLoopSound("spawn_powerup_loop");
 }
 
@@ -716,12 +755,40 @@ powerup_grab()
 
 	while (isdefined(self))
 	{
+		wait 0.1;
 		players = get_players();
 
 		for (i = 0; i < players.size; i++)
-		{
+		{	
+			if ( isDefined( level._custom_powerups ) && level._custom_powerups.size > 0 )
+			{
+				if ( isDefined( level._custom_powerups[ self.powerup_name ] ) && isDefined( level._custom_powerups[ self.powerup_name ].pre_grab_check_func ) )
+				{
+					can_grab = level [[ level._custom_powerups[ self.powerup_name ].pre_grab_check_func ]]( self, players[i] );
+					if ( !can_grab )
+					{
+						continue;
+					}
+				}
+			}
 			if (distance (players[i].origin, self.origin) < 64)
 			{
+				if ( isdefined( level._powerup_global_grab_check ) )
+				{
+					if ( !level [[ level._powerup_global_grab_check ]]( self, players[i] ) )
+						continue;
+				}
+				if ( isDefined( level._custom_powerups ) && level._custom_powerups.size > 0 )
+				{
+					if ( isDefined( level._custom_powerups[ self.powerup_name ] ) && isDefined( level._custom_powerups[ self.powerup_name ].grab_check_func ) )
+					{
+						can_grab = level [[ level._custom_powerups[ self.powerup_name ].grab_check_func ]]( self, players[i] );
+						if ( !can_grab )
+						{
+							continue;
+						}
+					}
+				}
 				playfx (level._effect["powerup_grabbed"], self.origin);
 				playfx (level._effect["powerup_grabbed_wave"], self.origin);	
 
@@ -761,7 +828,13 @@ powerup_grab()
 						break;
 
 					default:
-						println ("Unrecognized poweup.");
+						if ( isDefined( level._custom_powerups ) && level._custom_powerups.size > 0 )
+						{
+							if ( isDefined( level._custom_powerups[ self.powerup_name ].grab_func ) )
+							{
+								level thread [[ level._custom_powerups[ self.powerup_name ].grab_func ]]( self, players[i] );
+							}
+						}
 						break;
 					}
 				}
@@ -775,7 +848,6 @@ powerup_grab()
 				self notify ("powerup_grabbed");
 			}
 		}
-		wait 0.1;
 	}	
 }
 
@@ -1500,4 +1572,60 @@ print_powerup_drop( powerup, type )
 		println( "Random Powerup Count: " + level.powerup_score_count );
 		println( "======================================" );
 #/
+}
+
+register_powerup_basic_info( powerup, model, hint, func_should_drop_with_regular_powerups, solo, caution, zombie_grabbable, fx )
+{
+	_register_undefined_powerup( powerup );
+	precachemodel( model );
+	precachestring( hint );
+	level._custom_powerups[ powerup ].powerup_name = powerup;
+	level._custom_powerups[ powerup ].model_name = model,
+	level._custom_powerups[ powerup ].hint = hint;
+	level._custom_powerups[ powerup ].func_should_drop_with_regular_powerups = func_should_drop_with_regular_powerups;
+	level._custom_powerups[ powerup ].solo = solo;
+	level._custom_powerups[ powerup ].caution = caution;
+	level._custom_powerups[ powerup ].zombie_grabbable = zombie_grabbable;
+	if ( isdefined( fx ) )
+		level._custom_powerups[ powerup ].fx = loadfx( fx );
+	level._custom_powerups[ powerup ].weapon_classname = "script_model";
+	level.zombie_powerup_array[ level.zombie_powerup_array.size ] = powerup;
+	level.zombie_special_drop_array[level.zombie_special_drop_array.size] = powerup;
+	level.zombie_powerups[ powerup ] = level._custom_powerups[ powerup ];
+}
+
+register_powerup_setup( powerup, precache_func, setup_func )
+{
+	_register_undefined_powerup( powerup );
+	level._custom_powerups[ powerup ].precache_func = precache_func;
+	level._custom_powerups[ powerup ].setup_func = setup_func;
+}
+
+register_powerup_grab_info( powerup, grab_func, pre_grab_check_func, grab_check_func )
+{
+	_register_undefined_powerup( powerup );
+	level._custom_powerups[ powerup ].grab_func = grab_func;
+	if ( isDefined( pre_grab_check_func ) )
+	{
+		level._custom_powerupsp[ powerup ].pre_grab_check_func = pre_grab_check_func;
+	}
+	if ( isDefined( grab_check_func ) )
+	{
+		level._custom_powerups[ powerup ].grab_check_func = grab_check_func;
+	}
+}
+
+register_powerup_player_setup( powerup, player_setup_func )
+{
+	_register_undefined_powerup( powerup );
+	level._custom_powerups[ powerup ].player_setup_func = player_setup_func;
+}
+
+_register_undefined_powerup( str_powerup )
+{
+	if ( !isdefined( level._custom_powerups ) )
+		level._custom_powerups = [];
+
+	if ( !isdefined( level._custom_powerups[ str_powerup ] ) )
+		level._custom_powerups[ str_powerup ] = spawnstruct();
 }
