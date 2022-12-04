@@ -305,7 +305,11 @@ treasure_chest_think()
 			if( grabber == user || grabber == level )
 			{
 
-
+				if ( isdefined( grabber.is_drinking ) && grabber.is_drinking > 0 )
+				{
+					wait 0.1;
+					continue;
+				}
 				if( grabber == user && is_player_valid( user ) && user GetCurrentWeapon() != "mine_bouncing_betty" )
 				{
 					bbPrint( "zombie_uses: playername %s playerscore %d round %d cost %d name %s x %f y %f z %f type magic_accept",
