@@ -123,9 +123,6 @@ on_all_players_ready()
 
 	//chrisp - adding spawning vo 
 	level thread spawn_vo();
-	
-	//add ammo tracker for VO
-	level thread track_players_ammo_count();
 
 	//DisableGrenadeSuicide(); //Doesn't work here???
 
@@ -769,6 +766,8 @@ onPlayerConnect()
 		player thread player_revive_monitor();
 
 		//player thread watchGrenadeThrow();
+
+		player thread track_ammo_count();
 
 		player.score = level.zombie_vars["zombie_score_start"]; 
 		player.score_total = player.score; 
@@ -1419,13 +1418,6 @@ create_chalk_hud( x )
 	hud SetShader( "hud_chalk_1", 64, 64 );
 
 	return hud;
-}
-
-spawn_vo_player(index,num)
-{
-	sound = "plr_" + index + "_vox_" + num +"play";
-	self playsound(sound, "sound_done");			
-	self waittill("sound_done");
 }
 
 round_spawning()
@@ -2290,85 +2282,76 @@ spawn_vo()
 		index = maps\so\zm_common\_zm_weapons::get_player_index(player);
 		player thread spawn_vo_player(index,players.size);
 	}
-
 }
 
-track_players_ammo_count()
+spawn_vo_player(index,num)
+{
+	sound = "plr_" + index + "_vox_" + num +"play";
+	self playsound(sound, "sound_done");			
+	self waittill("sound_done");
+}
+
+track_ammo_count()
 {
 	self endon("disconnect");
 	self endon("death");
-	if(!IsDefined (level.player_ammo_low))	
+	if(!IsDefined (self.player_ammo_low))	
 	{
-		level.player_ammo_low = 0;
+		self.player_ammo_low = false;
 	}	
-	if(!IsDefined(level.player_ammo_out))
+	if(!IsDefined(self.player_ammo_out))
 	{
-		level.player_ammo_out = 0;
+		self.player_ammo_out = false;
 	}
-	while(1)
+	while ( true )
 	{
-		players = get_players();
-		for(i=0;i<players.size;i++)
+		wait 1;
+		if ( !is_player_valid( self ) )
+		{				
+			continue;
+		}
+		weap = self getcurrentweapon();
+		if(!isDefined(weap) || weap == "none" || isSubStr( weap, "perk_bottle" ) || weap == "mine_bouncing_betty" || weap == "syrette" || weap == "zombie_knuckle_crack" || weap == "zombie_bowie_flourish" )
 		{
-	
-			weap = players[i] getcurrentweapon();
-			//iprintln("current weapon: " + weap);
-			//iprintlnbold(weap);
-			//Excludes all Perk based 'weapons' so that you don't get low ammo spam.
-			if(!isDefined(weap) || weap == "none" || weap == "zombie_perk_bottle_doubletap" || weap == "zombie_perk_bottle_jugg" || weap == "zombie_perk_bottle_revive" || weap == "zombie_perk_bottle_sleight" || weap == "mine_bouncing_betty" || weap == "syrette" || weap == "zombie_knuckle_crack" || weap == "zombie_bowie_flourish" )
+			continue;
+		}
+		ammo_count = self GetAmmoCount( weap );
+		if ( ammo_count > 5 )
+		{
+			continue;
+		}		
+
+		if ( ammo_count > 0 )
+		{
+			if ( !self.player_ammo_low )
 			{
-				continue;
-			}
-			//iprintln("checking ammo for " + weap);
-			if ( players[i] GetAmmoCount( weap ) > 5)
-			{
-				continue;
-			}		
-			if ( players[i] maps\_laststand::player_is_in_laststand() )
-			{				
-				continue;
-			}
-			else if (players[i] GetAmmoCount( weap ) < 5 && players[i] GetAmmoCount( weap ) > 0)
-			{
-				if (level.player_ammo_low == 0)
-				{
-					level.player_ammo_low = 1;
-					players[i] thread add_low_ammo_dialog();		
-					players[i] thread ammo_dialog_timer();
-					level waittill("send_dialog_reminder");
-					level.player_ammo_low = 0;
-				}
-	
-			}
-			else if (players[i] GetAmmoCount( weap ) == 0)
-			{	
-				if(!isDefined(weap) || weap == "none")
-				{
-					continue;	
-				}				
-				level.player_ammo_out = 1;
-				players[i] thread add_no_ammo_dialog( weap );
-				//put in this wait to keep the game from spamming about being low on ammo.
-				wait(20);
-				level.player_ammo_out = 0;												
-			}
-			else
-			{
-				continue;
+				self thread add_low_ammo_dialog();
+				self thread ammo_low_dialog_timer();
 			}
 		}
-		wait(.5);
+		else
+		{	
+			if ( !self.player_ammo_out )
+			{
+				self thread add_no_ammo_dialog( weap );
+				self thread ammo_out_dialog_timer();
+			}
+		}
 	}	
 }
-ammo_dialog_timer()
+
+ammo_low_dialog_timer()
 {
-	level endon ("ammo_out");
-	while(1)
-	{
-		wait(20);
-		level notify ("send_dialog_reminder");	
-		
-	}	
+	self.player_ammo_low = true;
+	wait 20;
+	self.player_ammo_low = false;
+}
+
+ammo_out_dialog_timer()
+{
+	self.player_ammo_out = true;
+	wait 20;
+	self.player_ammo_out = false;	
 }
 
 add_low_ammo_dialog()
@@ -2433,18 +2416,18 @@ add_no_ammo_dialog( weap )
 			self.vox_ammo_out[self.vox_ammo_out.size] = "vox_ammo_out_" + i;	
 		}
 		self.vox_ammo_out_available = self.vox_ammo_out;		
-	}	
-	sound_to_play = random(self.vox_ammo_out_available);
-	
-	self.vox_ammo_out_available = array_remove(self.vox_ammo_out_available,sound_to_play);
-	
+	}
+	if ( self.vox_ammo_out_available.size > 0 )
+	{
+		sound_to_play = random(self.vox_ammo_out_available);
+		
+		self.vox_ammo_out_available = array_remove(self.vox_ammo_out_available,sound_to_play);
+		self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, 0.25);	
+	}
 	if (self.vox_ammo_out_available.size < 1 )
 	{
 		self.vox_ammo_out_available = self.vox_ammo_out;
 	}
-
-	self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, 0.25);	
-
 }
 
 get_safe_breadcrumb_pos( player )
