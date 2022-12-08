@@ -249,7 +249,7 @@ treasure_chest_think()
 		}
 		else if ( user.score < cost )
 		{
-			user thread maps\so\zm_common\_zm_perks::play_no_money_perk_dialog();
+			user thread maps\so\zm_common\_zm_audio::play_no_money_perk_dialog();
 			continue;	
 		}
 
@@ -266,6 +266,12 @@ treasure_chest_think()
 	// SRS 9/3/2008: added to help other functions know if we timed out on grabbing the item
 	self.timedOut = false;
 
+	self._box_open = true;
+    self._box_opened_by_fire_sale = false;
+
+    if ( is_true( level.zombie_vars["zombie_powerup_fire_sale_on"] ) )
+        self._box_opened_by_fire_sale = true;
+
 	// mario kart style weapon spawning
 	weapon_spawn_org thread treasure_chest_weapon_spawn( self, user ); 
 
@@ -277,7 +283,7 @@ treasure_chest_think()
 
 	weapon_spawn_org waittill( "randomization_done" ); 
 
-	if (flag("moving_chest_now"))
+	if ( flag( "moving_chest_now" ) && !is_true( level.zombie_vars["zombie_powerup_fire_sale_on"] ) && !self._box_opened_by_fire_sale )
 	{
 		user thread treasure_chest_move_vo();
 		self treasure_chest_move(lid);
@@ -337,23 +343,20 @@ treasure_chest_think()
 		weapon_spawn_org notify( "weapon_grabbed" );
 
 		//increase counter of amount of time weapon grabbed.
-		if(level.script != "nazi_zombie_prototype")
-		{
+		if ( !is_true( self._box_opened_by_fire_sale ) )
 			level.chest_accessed += 1;
-			
-			// PI_CHANGE_BEGIN
-			// JMA - we only update counters when it's available
-			if( isDefined(level.script) && (level.script == "nazi_zombie_sumpf" || level.script == "nazi_zombie_factory") && level.box_moved == true && isDefined(level.pulls_since_last_ray_gun) )
-			{
-				level.pulls_since_last_ray_gun += 1;
-			}
-			
-			if( isDefined(level.script) && (level.script == "nazi_zombie_sumpf" || level.script == "nazi_zombie_factory") && isDefined(level.pulls_since_last_tesla_gun) )
-			{				
-				level.pulls_since_last_tesla_gun += 1;
-			}
-			// PI_CHANGE_END
-		}	
+		// PI_CHANGE_BEGIN
+		// JMA - we only update counters when it's available
+		if( level.box_moved == true && isDefined(level.pulls_since_last_ray_gun) )
+		{
+			level.pulls_since_last_ray_gun += 1;
+		}
+		
+		if( isDefined(level.pulls_since_last_tesla_gun) )
+		{				
+			level.pulls_since_last_tesla_gun += 1;
+		}
+		// PI_CHANGE_END
 		self disable_trigger();
 
 		// spend cash here...
@@ -369,6 +372,8 @@ treasure_chest_think()
 	}
 
 	flag_clear("moving_chest_now");
+	self._box_open = false;
+	self._box_opened_by_fire_sale = false;
 	self thread treasure_chest_think();
 }
 
@@ -543,8 +548,22 @@ treasure_chest_move(lid)
 
 	old_chest_index = level.chest_index;
 
-	wait(5);
+	post_selection_wait_duration = 7;
 
+	if ( is_true( level.zombie_vars["zombie_powerup_fire_sale_on"] ) )
+	{
+		current_sale_time = level.zombie_vars["zombie_powerup_fire_sale_time"];
+		wait 0.1;
+		self thread fire_sale_fix();
+		level.zombie_vars["zombie_powerup_fire_sale_time"] = current_sale_time;
+
+		while ( isDefined( level.zombie_vars["zombie_powerup_fire_sale_time"] ) && level.zombie_vars["zombie_powerup_fire_sale_time"] > 0 )
+			wait 0.1;
+	}
+	else
+		post_selection_wait_duration += 5;
+
+	wait(5);
 	//chest moving logic
 	//PI CHANGE - for sumpf, this doesn't work because chest_index is always incremented twice (here and line 724) - while this would work with an odd number of chests, 
 	//		     with an even number it skips half of the chest locations in the map
@@ -555,7 +574,7 @@ treasure_chest_move(lid)
 	//also make sure box doesn't respawn in old location.
 	//PI WJB: removed check on "magic_box_explore_only" dvar because it is only ever used here and when it is set in _zombiemode.gsc line 446
 	// where it is declared and set to 0, causing this while loop to never happen because the check was to see if it was equal to 1
-	if( level.script == "nazi_zombie_asylum" || level.script == "nazi_zombie_factory" || level.script == "nazi_zombie_sumpf" || level.script == "nazi_zombie_paris" || level.script == "nazi_zombie_coast" || level.script == "nazi_zombie_theater")
+	if( getdvar("magic_chest_movable") == "1" )
 	{
 		level.chest_index++;
 
@@ -583,6 +602,9 @@ treasure_chest_move(lid)
 		wait(0.01);
 			
 	}
+
+	wait( post_selection_wait_duration );
+
 	level.chests[level.chest_index] show_magic_box();
 	
 	//turn off magic box light.
@@ -590,6 +612,21 @@ treasure_chest_move(lid)
 	//PI CHANGE - altered to allow for more than one object of rubble per box
 	unhide_magic_box( level.chest_index );
 	
+}
+
+fire_sale_fix()
+{
+	self.old_cost = 950;
+	self thread show_chest();
+	self.zombie_cost = 10;
+	wait 0.1;
+
+	level waittill( "fire_sale_off" );
+
+	while ( isdefined( self._box_open ) && self._box_open )
+		wait 0.1;
+
+	self.zombie_cost = self.old_cost;
 }
 
 rotateroll_box()
@@ -649,8 +686,8 @@ treasure_chest_lid_open()
 
 	self RotateRoll( 105, openTime, ( openTime * 0.5 ) );
 
-	//play_sound_at_pos( "open_chest", self.origin );
-	//play_sound_at_pos( "music_chest", self.origin );
+	play_sound_at_pos( "open_chest", self.origin );
+	play_sound_at_pos( "music_chest", self.origin );
 }
 
 treasure_chest_lid_close( timedOut )
@@ -659,7 +696,7 @@ treasure_chest_lid_close( timedOut )
 	closeTime = 0.5;
 
 	self RotateRoll( closeRoll, closeTime, ( closeTime * 0.5 ) );
-	//play_sound_at_pos( "close_chest", self.origin );
+	play_sound_at_pos( "close_chest", self.origin );
 }
 
 treasure_chest_ChooseRandomWeapon( player )
@@ -868,7 +905,7 @@ treasure_chest_weapon_spawn( chest, player )
 	}
 
 	//increase the chance of joker appearing from 0-100 based on amount of the time chest has been opened.
-	if(level.script != "nazi_zombie_prototype" && getdvar("magic_chest_movable") == "1")
+	if ( getdvar("magic_chest_movable") == "1" && !is_true( chest._box_opened_by_fire_sale ) && !is_true( level.zombie_vars["zombie_powerup_fire_sale_on"] ) )
 	{
 
 		if(level.chest_accessed < level.chest_min_move_usage)
@@ -953,7 +990,7 @@ treasure_chest_weapon_spawn( chest, player )
 
 	self notify( "randomization_done" );
 
-	if (flag("moving_chest_now"))
+	if ( flag("moving_chest_now") && !is_true( level.zombie_vars["zombie_powerup_fire_sale_on"] ) )
 	{
 		wait .5;	// we need a wait here before this notify
 		level notify("weapon_fly_away_start");
@@ -1101,7 +1138,7 @@ treasure_chest_give_weapon( weapon_string )
 		}
 	}
 
-	//self play_sound_on_ent( "purchase" ); 
+	self play_sound_on_ent( "purchase" ); 
 
 	if( weapon_string == "molotov" || weapon_string == "molotov_zombie" )
 	{
@@ -1134,7 +1171,10 @@ treasure_chest_give_weapon( weapon_string )
 		}
 		// PI_CHANGE_END
 		
-		//self maps\_zombiemode_cymbal_monkey::player_give_cymbal_monkey();
+		if ( isDefined( level._zm_cymbal_monkey_funcs ) && isDefined( level._zm_cymbal_monkey_funcs[ "player_give_cymbal_monkey" ] ) )
+		{
+			self [[ level._zm_cymbal_monkey_funcs[ "player_give_cymbal_monkey" ] ]]();
+		}
 		play_weapon_vo(weapon_string);
 		return;
 	}

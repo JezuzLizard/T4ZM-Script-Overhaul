@@ -163,7 +163,7 @@ door_think()
 				else // Not enough money
 				{
 					play_sound_at_pos( "no_purchase", self.doors[0].origin );
-					who thread maps\so\zm_common\_zm_perks::play_no_money_perk_dialog();
+					who thread maps\so\zm_common\_zm_audio::play_no_money_perk_dialog();
 					continue;
 				}
 			}
@@ -482,7 +482,7 @@ debris_think()
 			else
 			{
 				play_sound_at_pos( "no_purchase", self.origin );
-				// who thread maps\nazi_zombie_sumpf_blockers::play_no_money_purchase_dialog();
+				who thread maps\so\zm_common\_zm_audio::play_no_money_purchase_dialog();
 			}
 		}
 	}

@@ -1757,7 +1757,10 @@ create_and_play_dialog( player_index, dialog_category, waittime, response )
 		self.sound_dialog = [];
 		self.sound_dialog_available = [];
 	}
-				
+	if ( is_true( level.no_player_dialog ) )
+	{
+		return;
+	}
 	if ( !IsDefined ( self.sound_dialog[ dialog_category ] ) )
 	{
 		num_variants = maps\so\zm_common\_zm_audio::get_number_variants( player_index + dialog_category );              

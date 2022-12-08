@@ -6,6 +6,7 @@
 
 main()
 {	
+	setDvar( "magic_chest_movable", "0" );
 	maps\_destructible_opel_blitz::init();
 	level.startInvulnerableTime = GetDvarInt( "player_deathInvulnerableTime" );
 
@@ -63,6 +64,10 @@ main()
 	if ( !isDefined( level.use_legacy_powerup_system ) )
 	{
 		level.use_legacy_powerup_system = true;
+	}
+	if ( !isDefined( level.no_player_dialog ) )
+	{
+		level.no_player_dialog = true;
 	}
 	maps\so\zm_common\_zm_spawner_prototype::init();
 	maps\so\zm_common\_zm::init_zm();

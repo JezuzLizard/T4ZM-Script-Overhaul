@@ -225,14 +225,14 @@ weapon_cabinet_think()
 			{
 				if( player.score >= cost )
 				{
-					//self play_sound_on_ent( "purchase" );
+					self play_sound_on_ent( "purchase" );
 					player maps\so\zm_common\_zm_score::minus_to_player_score( cost ); 
 					player weapon_give( self.zombie_weapon_upgrade ); 
 				}
 				else // not enough money
 				{
-					//play_sound_on_ent( "no_purchase" );
-					player thread maps\so\zm_common\_zm_perks::play_no_money_perk_dialog();
+					play_sound_on_ent( "no_purchase" );
+					player thread maps\so\zm_common\_zm_audio::play_no_money_perk_dialog();
 				}			
 			}
 			else if ( player.score >= ammo_cost )
@@ -240,21 +240,21 @@ weapon_cabinet_think()
 				ammo_given = player ammo_give( self.zombie_weapon_upgrade ); 
 				if( ammo_given )
 				{
-					//self play_sound_on_ent( "purchase" );
+					self play_sound_on_ent( "purchase" );
 					player maps\so\zm_common\_zm_score::minus_to_player_score( ammo_cost ); // this give him ammo to early
 				}
 			}
 			else // not enough money
 			{
-				//play_sound_on_ent( "no_purchase" );
-				player thread maps\so\zm_common\_zm_perks::play_no_money_perk_dialog();
+				play_sound_on_ent( "no_purchase" );
+				player thread maps\so\zm_common\_zm_audio::play_no_money_perk_dialog();
 			}
 		}
 		else if( player.score >= cost ) // First time the player opens the cabinet
 		{
 			self.has_been_used_once = true;
 
-			//self play_sound_on_ent( "purchase" ); 
+			self play_sound_on_ent( "purchase" ); 
 
 			self SetHintString( &"ZOMBIE_WEAPONCOSTAMMO", cost, ammo_cost ); 
 			//		self SetHintString( get_weapon_hint( self.zombie_weapon_upgrade ) );
@@ -309,8 +309,8 @@ weapon_cabinet_think()
 		}
 		else // not enough money
 		{
-			//play_sound_on_ent( "no_purchase" );
-			player thread maps\so\zm_common\_zm_perks::play_no_money_perk_dialog();
+			play_sound_on_ent( "no_purchase" );
+			player thread maps\so\zm_common\_zm_audio::play_no_money_perk_dialog();
 		}		
 	}
 }
@@ -511,12 +511,10 @@ can_buy_weapon()
 	{
 		return false;
 	}
-	/*
 	if( self in_revive_trigger() )
 	{
 		return false;
 	}
-	*/
 	return true;
 }
 
@@ -606,9 +604,8 @@ weapon_spawn_think()
 			}
 			else
 			{
-				//play_sound_on_ent( "no_purchase" );
-				//player thread maps\nazi_zombie_sumpf_blockers::play_no_money_purchase_dialog();
-				
+				player play_sound_on_ent( "no_purchase" );
+				player thread maps\so\zm_common\_zm_audio::play_no_money_purchase_dialog();		
 			}
 		}
 		else
@@ -661,7 +658,7 @@ weapon_spawn_think()
 			}
 			else
 			{
-				//play_sound_on_ent( "no_purchase" );
+				play_sound_on_ent( "no_purchase" );
 			}
 		}
 	}
@@ -691,7 +688,7 @@ weapon_show( player )
 	wait( 0.05 ); 
 	self Show(); 
 
-	//play_sound_at_pos( "weapon_show", self.origin, self );
+	play_sound_at_pos( "weapon_show", self.origin, self );
 
 	time = 1; 
 	self MoveTo( self.og_origin, time ); 
@@ -748,8 +745,10 @@ weapon_give( weapon, is_upgrade )
 			}
 		}
 		// PI_CHANGE_END
-				
-		//self maps\_zombiemode_cymbal_monkey::player_give_cymbal_monkey();
+		if ( isDefined( level._zm_cymbal_monkey_funcs ) && isDefined( level._zm_cymbal_monkey_funcs[ "player_give_cymbal_monkey" ] ) )
+		{
+			self [[ level._zm_cymbal_monkey_funcs[ "player_give_cymbal_monkey" ] ]]();
+		}
 		play_weapon_vo( weapon );
 		return;
 	}
@@ -758,7 +757,7 @@ weapon_give( weapon, is_upgrade )
 			self TakeWeapon( "zombie_cymbal_monkey" );
 	}
 
-	//self play_sound_on_ent( "purchase" );
+	self play_sound_on_ent( "purchase" );
 	self GiveWeapon( weapon, 0 ); 
 	self GiveMaxAmmo( weapon ); 
 	self SwitchToWeapon( weapon );
@@ -776,7 +775,7 @@ play_weapon_vo(weapon)
 	if( level.zombie_weapons[weapon].sound == "vox_monkey" )
 	{
 		plr = "plr_" + index + "_";
-		//create_and_play_dialog( plr, "vox_monkey", .25, "resp_monk" );
+		create_and_play_dialog( plr, "vox_monkey", .25, "resp_monk" );
 		return;
 	}
 	//	iprintlnbold (index);

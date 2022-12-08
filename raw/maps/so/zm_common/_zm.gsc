@@ -112,6 +112,7 @@ init_zm()
 on_all_players_ready()
 {
 	flag_wait( "all_players_connected" );
+	flag_set( "start_zombie_round_logic" );
 	bbPrint( "sessions: mapname %s gametype zom isserver 1", level.script );
 
 	DisableGrenadeSuicide(); //Works here though ???
@@ -2368,8 +2369,8 @@ ammo_dialog_timer()
 		level notify ("send_dialog_reminder");	
 		
 	}	
-	
 }
+
 add_low_ammo_dialog()
 {
 	index = maps\so\zm_common\_zm_weapons::get_player_index(self);	
@@ -2408,7 +2409,10 @@ add_no_ammo_dialog( weap )
 	// Let's pause here a couple of seconds to see if we're really out of ammo.
 	// If you take a weapon, there's a second or two where your current weapon
 	// will be set to no ammo while you switch to the new one.
-	wait(2);
+	while ( self isSwitchingWeapons() )
+	{
+		wait 0.1;
+	}
 
 	curr_weap = self getcurrentweapon();
 	if ( !IsDefined(curr_weap) || curr_weap != weap || self GetAmmoCount( curr_weap ) != 0 )

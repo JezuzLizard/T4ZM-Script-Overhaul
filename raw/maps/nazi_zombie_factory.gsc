@@ -102,7 +102,7 @@ main()
 	maps\_zombiemode_radio::init();	
 	maps\so\zm_common\_zm_weap_tesla_gun::init();
 	maps\_zombiemode_bowie::bowie_init();
-	maps\_zombiemode_cymbal_monkey::init();
+	maps\so\zm_common\_zm_cymbal_monkey::init();
 	maps\_zombiemode_betty::init();
 	maps\_zombiemode_timer::init();
 	maps\_zombiemode_auto_turret::init();

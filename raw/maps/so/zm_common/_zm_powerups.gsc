@@ -81,13 +81,13 @@ init_powerups()
 	}
 
 	// Random Drops
-	add_zombie_powerup( "nuke", 		"zombie_bomb",		&"ZOMBIE_POWERUP_NUKE", 			"misc/fx_zombie_mini_nuke" );
-//	add_zombie_powerup( "nuke", 		"zombie_bomb",		&"ZOMBIE_POWERUP_NUKE", 			"misc/fx_zombie_mini_nuke_hotness" );
-	add_zombie_powerup( "insta_kill", 	"zombie_skull",		&"ZOMBIE_POWERUP_INSTA_KILL" );
-	add_zombie_powerup( "double_points","zombie_x2_icon",	&"ZOMBIE_POWERUP_DOUBLE_POINTS" );
-	add_zombie_powerup( "full_ammo",  	"zombie_ammocan",	&"ZOMBIE_POWERUP_MAX_AMMO");
-	add_zombie_powerup( "carpenter",  	"zombie_carpenter",	&"ZOMBIE_POWERUP_MAX_AMMO");
-
+	register_powerup_basic_info( "nuke", "zombie_bomb", &"ZOMBIE_POWERUP_NUKE", ::func_should_always_drop, false, false, false, "misc/fx_zombie_mini_nuke" );
+	register_powerup_basic_info( "insta_kill", "zombie_skull", &"ZOMBIE_POWERUP_INSTA_KILL", ::func_should_always_drop, false, false, false );
+	register_powerup_basic_info( "double_points", "zombie_x2_icon", &"ZOMBIE_POWERUP_DOUBLE_POINTS", ::func_should_always_drop, false, false, false );
+	register_powerup_basic_info( "full_ammo", "zombie_ammocan", &"ZOMBIE_POWERUP_MAX_AMMO", ::func_should_always_drop, false, false, false );
+	register_powerup_basic_info( "carpenter", "zombie_carpenter", &"ZOMBIE_POWERUP_MAX_AMMO", ::func_should_drop_carpenter, false, false, false );
+	register_powerup_hud_info( "insta_kill", "specialty_instakill_zombies", "zombie_powerup_insta_kill_time", "zombie_powerup_insta_kill_on" );
+	register_powerup_hud_info( "double_points", "specialty_doublepoints_zombies", "zombie_powerup_point_doubler_time", "zombie_powerup_point_doubler_on" );
 	//	add_zombie_special_powerup( "monkey" );
 
 	// additional special "drops"
@@ -101,227 +101,180 @@ init_powerups()
 	randomize_powerups();
 	if ( !is_true( level.use_legacy_powerup_system ) )
 	{
-		level thread powerup_hud_overlay();
+		level thread powerup_hud_monitor();
 	}
 }  
 
-powerup_hud_overlay()
+func_should_drop_carpenter()
 {
+	return get_num_window_destroyed() < 5;
+}
 
-	level.powerup_hud_array = [];
-	level.powerup_hud_array[0] = true;
-	level.powerup_hud_array[1] = true;
+func_should_always_drop()
+{
+	return true;
+}
 
-	level.powerup_hud = [];
-	level.powerup_hud_cover = [];
-	level endon ("disconnect");
+powerup_hud_monitor()
+{
+	flag_wait( "start_zombie_round_logic" );
 
+	flashing_timers = [];
+	flashing_values = [];
+	flashing_timer = 10;
+	flashing_delta_time = 0;
+	flashing_is_on = 0;
+	flashing_value = 3;
+	flashing_min_timer = 0.15;
 
-	for(i = 0; i < 2; i++)
+	while ( flashing_timer >= flashing_min_timer )
 	{
-		level.powerup_hud[i] = create_simple_hud();
-		level.powerup_hud[i].foreground = true; 
-		level.powerup_hud[i].sort = 2; 
-		level.powerup_hud[i].hidewheninmenu = false; 
-		level.powerup_hud[i].alignX = "center"; 
-		level.powerup_hud[i].alignY = "bottom";
-		level.powerup_hud[i].horzAlign = "center"; 
-		level.powerup_hud[i].vertAlign = "bottom";
-		level.powerup_hud[i].x = -32 + (i * 15); 
-		level.powerup_hud[i].y = level.powerup_hud[i].y - 35; 
-		level.powerup_hud[i].alpha = 0.8;
-		//hud SetShader( shader_inst, 24, 24 );
-	}
+		if ( flashing_timer < 5 )
+			flashing_delta_time = 0.1;
+		else
+			flashing_delta_time = 0.2;
 
-	shader_2x = "specialty_doublepoints_zombies";
-	shader_insta = "specialty_instakill_zombies";
-//	shader_white = "black";
-	
-
-
-
-	//for(i = 0; i < 2; i++)
-	//{
-	//	level.powerup_hud_cover[i] = create_simple_hud();
-	//	level.powerup_hud_cover[i].foreground = true; 
-	//	level.powerup_hud_cover[i].sort = 1; 
-	//	level.powerup_hud_cover[i].hidewheninmenu = false; 
-	//	level.powerup_hud_cover[i].alignX = "center"; 
-	//	level.powerup_hud_cover[i].alignY = "bottom";
-	//	level.powerup_hud_cover[i].horzAlign = "center"; 
-	//	level.powerup_hud_cover[i].vertAlign = "bottom";
-	//	level.powerup_hud_cover[i].x = -32 + (i * 34); 
-	//	level.powerup_hud_cover[i].y = level.powerup_hud_cover[i].y - 30; 
-	//	level.powerup_hud_cover[i].alpha = 1;
-	//	//hud SetShader( shader_inst, 24, 24 );
-	//}
-
-
-
-	//increment = 0;
-	
-
-	while(true)
-	{
-		if(level.zombie_vars["zombie_powerup_insta_kill_time"] < 5)
+		if ( flashing_is_on )
 		{
-			wait(0.1);		
-			level.powerup_hud[1].alpha = 0;
-			wait(0.1);
-			
-
-		}
-		else if(level.zombie_vars["zombie_powerup_insta_kill_time"] < 10)
-		{
-			wait(0.2);
-			level.powerup_hud[1].alpha = 0;
-			wait(0.18);
-			
-		}
-		
-		if(level.zombie_vars["zombie_powerup_point_doubler_time"] < 5)
-		{
-			wait(0.1);	
-			level.powerup_hud[0].alpha = 0;
-			wait(0.1);
-			
-
-		}
-		else if(level.zombie_vars["zombie_powerup_point_doubler_time"] < 10)
-		{
-			wait(0.2);
-			level.powerup_hud[0].alpha = 0;
-			wait(0.18);
-		}
-		
-
-		//if(level.zombie_vars["zombie_powerup_insta_kill_time"] != 0)
-		//	iprintlnbold(level.zombie_vars["zombie_powerup_insta_kill_time"]);
-
-		//if(level.zombie_vars["zombie_powerup_point_doubler_time"] != 0)
-		//	iprintlnbold(level.zombie_vars["zombie_powerup_point_doubler_time"]);
-
-
-		//wait(0.01);
-		
-		if(level.zombie_vars["zombie_powerup_point_doubler_on"] == true && level.zombie_vars["zombie_powerup_insta_kill_on"] == true)
-		{
-
-			level.powerup_hud[0].x = -24;
-			level.powerup_hud[1].x = 24;
-			level.powerup_hud[0].alpha = 1;
-			level.powerup_hud[1].alpha = 1;
-			level.powerup_hud[0] setshader(shader_2x, 32, 32);
-			level.powerup_hud[1] setshader(shader_insta, 32, 32);
-			/*level.powerup_hud_cover[0].x = -36;
-			level.powerup_hud_cover[1].x = 36;
-			level.powerup_hud_cover[0] setshader(shader_white, 32, i);
-			level.powerup_hud_cover[1] setshader(shader_white, 32, j);
-			level.powerup_hud_cover[0].alpha = 1;
-			level.powerup_hud_cover[1].alpha = 1;*/
-
-		}
-		else if(level.zombie_vars["zombie_powerup_point_doubler_on"] == true && level.zombie_vars["zombie_powerup_insta_kill_on"] == false)
-		{
-			level.powerup_hud[0].x = 0; 
-			//level.powerup_hud[0].y = level.powerup_hud[0].y - 70; 
-			level.powerup_hud[0] setshader(shader_2x, 32, 32);
-			level.powerup_hud[1].alpha = 0;
-			level.powerup_hud[0].alpha = 1;
-
-		}
-		else if(level.zombie_vars["zombie_powerup_insta_kill_on"] == true && level.zombie_vars["zombie_powerup_point_doubler_on"] == false)
-		{
-
-			level.powerup_hud[1].x = 0; 
-			//level.powerup_hud[1].y = level.powerup_hud[1].y - 70; 
-			level.powerup_hud[1] setshader(shader_insta, 32, 32);
-			level.powerup_hud[0].alpha = 0;
-			level.powerup_hud[1].alpha = 1;
+			flashing_timer = flashing_timer - flashing_delta_time - 0.05;
+			flashing_value = 2;
 		}
 		else
 		{
-			
-			level.powerup_hud[1].alpha = 0;
-			level.powerup_hud[0].alpha = 0;
-
+			flashing_timer -= flashing_delta_time;
+			flashing_value = 3;
 		}
 
-		wait(0.01);
-
-
-	
-		//increment += 1;
-
-		//if(increment >= 20)
-		//{
-		//	level.powerup_hud[0].alpha = 0;
-		//	level.powerup_hud[1].alpha = 0;
-		////	level.powerup_hud_cover[0].alpha = 0;
-		////	level.powerup_hud_cover[1].alpha = 0;
-		//}
-		//
-		//if(increment == 30)
-		//{
-
-		//	level.powerup_hud_array[1] = false;
-		//	level.powerup_hud_array[0] = false;
-
-		//}
-		//wait(0.5);
-
-		
-
-
-
-
-	/*	if(randomint(100) > 50)
-			level.powerup_hud_array[0] = false;
-		else 
-			level.powerup_hud_array[0] = true;
-	
-
-		if(randomint(100) > 50)
-			level.powerup_hud_array[1] = false;
-		else
-			level.powerup_hud_array[1] = true;*/
-
+		flashing_timers[flashing_timers.size] = flashing_timer;
+		flashing_values[flashing_values.size] = flashing_value;
+		flashing_is_on = !flashing_is_on;
 	}
 
+	powerup_hud_fields = [];
+	powerup_keys = getarraykeys( level._custom_powerups );
 
-	
+	for ( powerup_key_index = 0; powerup_key_index < powerup_keys.size; powerup_key_index++ )
+	{
+		if ( isdefined( level._custom_powerups[powerup_keys[powerup_key_index]].shader ) )
+		{
+			powerup_name = powerup_keys[powerup_key_index];
+			powerup_hud_fields[powerup_name] = spawnstruct();
+			powerup_hud_fields[powerup_name].shader = level._custom_powerups[powerup_name].shader;
+			powerup_hud_fields[powerup_name].solo = level._custom_powerups[powerup_name].solo;
+			powerup_hud_fields[powerup_name].time_name = level._custom_powerups[powerup_name].time_name;
+			powerup_hud_fields[powerup_name].on_name = level._custom_powerups[powerup_name].on_name;
+		}
+	}
 
-	//for(i = 0; i < 2; i++)
-	//{
-	//	level.powerup_hud_cover[i] = create_simple_hud();
-	//	level.powerup_hud_cover[i].foreground = true; 
-	//	level.powerup_hud_cover[i].sort = 1; 
-	//	level.powerup_hud_cover[i].hidewheninmenu = false; 
-	//	level.powerup_hud_cover[i].alignX = "center"; 
-	//	level.powerup_hud_cover[i].alignY = "bottom";
-	//	level.powerup_hud_cover[i].horzAlign = "center"; 
-	//	level.powerup_hud_cover[i].vertAlign = "bottom";
-	//	level.powerup_hud_cover[i].x = -32 + (i * 34); 
-	//	level.powerup_hud_cover[i].y = level.powerup_hud_cover[i].y - 79; 
-	//	level.powerup_hud_cover[i].alpha = 0.5;
-	//	//hud SetShader( shader_inst, 24, 24 );
-	//}
+	powerup_hud_field_keys = getarraykeys( powerup_hud_fields );
 
+	while ( true )
+	{
+		wait 0.05;
+		waittillframeend;
+		players = getPlayers();
 
-	//while(true)
-	//{
-	//	/*	for(i = 0; i < 2; i++)
-	//	{
-	//	level.powerup_hud[i].y = level.powerup_hud[i].y - 5;
+		for ( playerindex = 0; playerindex < players.size; playerindex++ )
+		{
+			for ( powerup_hud_field_key_index = 0; powerup_hud_field_key_index < powerup_hud_field_keys.size; powerup_hud_field_key_index++ )
+			{
+				player = players[playerindex];
 
-	//	}*/
+				if ( !isDefined( player.powerup_hud ) )
+				{
+					player.powerup_hud = [];
+				}
 
+				if ( !isDefined( player.powerup_hud[ powerup_hud_field_keys[ powerup_hud_field_key_index ] ] ) )
+				{
+					hudelem = newClientHudelem( player );
+					hudelem.foreground = true; 
+					hudelem.sort = 2; 
+					hudelem.hidewheninmenu = false; 
+					hudelem.alignX = "center"; 
+					hudelem.alignY = "bottom";
+					hudelem.horzAlign = "center"; 
+					hudelem.vertAlign = "bottom";
+					hudelem.x = -32 + (powerup_hud_field_key_index * 15); 
+					hudelem.y = hudelem.y - 35; 
+					hudelem.alpha = 0.8;
+					hudelem.flashing = false;
+					hudelem setshader( powerup_hud_fields[ powerup_hud_field_keys[ powerup_hud_field_key_index ] ].shader;, 32, 32);
+					player.powerup_hud[ powerup_hud_field_keys[ powerup_hud_field_key_index ] ] = hudelem;
+				}
+/#
+				if ( isdefined( player.pers["isBot"] ) && player.pers["isBot"] )
+					continue;
+#/
+				if ( isdefined( level.powerup_player_valid ) )
+				{
+					if ( ![[ level.powerup_player_valid ]]( player ) )
+						continue;
+				}
 
+				time_name = powerup_hud_fields[powerup_hud_field_keys[powerup_hud_field_key_index]].time_name;
+				on_name = powerup_hud_fields[powerup_hud_field_keys[powerup_hud_field_key_index]].on_name;
+				powerup_timer = undefined;
+				powerup_on = undefined;
 
+				if ( powerup_hud_fields[powerup_hud_field_keys[powerup_hud_field_key_index]].solo )
+				{
+					if ( isdefined( player._show_solo_hud ) && player._show_solo_hud == 1 )
+					{
+						powerup_timer = player.zombie_vars[time_name];
+						powerup_on = player.zombie_vars[on_name];
+					}
+				}
+				else if ( isdefined( level.zombie_vars[time_name] ) )
+				{
+					powerup_timer = level.zombie_vars[time_name];
+					powerup_on = level.zombie_vars[on_name];
+				}
 
-	//	wait(1);
-	//}
+				if ( isdefined( powerup_timer ) && isdefined( powerup_on ) )
+				{
+					if ( !is_true( player.powerup_hud[ powerup_hud_field_keys[ powerup_hud_field_key_index ] ].flashing ) )
+					{
+						player.powerup_hud[ powerup_hud_field_keys[ powerup_hud_field_key_index ] ] thread set_hud_powerups( powerup_timer, powerup_on );
+					}
+					continue;
+				}
 
+				player.powerup_hud[ powerup_hud_field_keys[ powerup_hud_field_key_index ] ].alpha = 0;
+			}
+		}
+	}
+}
+
+set_hud_powerups( powerup_timer, powerup_on )
+{
+	self.flashing = true;
+	if ( powerup_on )
+	{
+		if ( powerup_timer < 10 )
+		{
+			if ( powerup_timer < 5 )
+			{
+				wait 0.1;
+				self.alpha = 0;
+				wait 0.1;
+				self.alpha = 1;
+			}
+			else 
+			{
+				wait 0.2;
+				self.alpha = 0;
+				wait 0.18;
+				self.alpha = 1;
+			}
+		}
+		else
+			self.alpha = 1;
+	}
+	else
+		self.alpha = 0;
+
+	self.flashing = false;
 }
 
 randomize_powerups()
@@ -347,28 +300,29 @@ get_next_powerup()
 
 	//level.windows_destroyed = get_num_window_destroyed();
 
-	while( powerup == "carpenter" && get_num_window_destroyed() < 5)
+	while( true )
 	{	
-		
-		
-		if( level.zombie_powerup_index >= level.zombie_powerup_array.size )
+		if ( ![[ level._custom_powerups[ powerup ].func_should_drop_with_regular_powerups ]]() )
 		{
-			level.zombie_powerup_index = 0;
-			randomize_powerups();
+			powerup = get_next_powerup();
+			continue;
 		}
-		
-		
-		powerup = level.zombie_powerup_array[level.zombie_powerup_index];
-		level.zombie_powerup_index++;
-			
-		if( powerup != "carpenter" )
-			return powerup;
-		
-		
-		wait(0.05);
+		return powerup;
 	}
 
+	return powerup;
+}
+
+get_next_powerup()
+{
+	powerup = level.zombie_powerup_array[level.zombie_powerup_index];
 	level.zombie_powerup_index++;
+
+	if ( level.zombie_powerup_index >= level.zombie_powerup_array.size )
+	{
+		level.zombie_powerup_index = 0;
+		randomize_powerups();
+	}
 
 	return powerup;
 }
@@ -431,44 +385,6 @@ watch_for_drop()
 		wait( 0.5 );
 	}
 }
-
-add_zombie_powerup( powerup_name, model_name, hint, fx )
-{
-	if( IsDefined( level.zombie_include_powerups ) && !IsDefined( level.zombie_include_powerups[powerup_name] ) )
-	{
-		return;
-	}
-
-	PrecacheModel( model_name );
-	PrecacheString( hint );
-
-	struct = SpawnStruct();
-
-	if( !IsDefined( level.zombie_powerups ) )
-	{
-		level.zombie_powerups = [];
-	}
-
-	if( !IsDefined( level.zombie_powerup_array ) )
-	{
-		level.zombie_powerup_array = [];
-	}
-
-	struct.powerup_name = powerup_name;
-	struct.model_name = model_name;
-	struct.weapon_classname = "script_model";
-	struct.hint = hint;
-
-	if( IsDefined( fx ) )
-	{
-		struct.fx = LoadFx( fx );
-	}
-
-	level.zombie_powerups[powerup_name] = struct;
-	level.zombie_powerup_array[level.zombie_powerup_array.size] = powerup_name;
-	add_zombie_special_drop( powerup_name );
-}
-
 
 // special powerup list for the teleporter drop
 add_zombie_special_drop( powerup_name )
@@ -616,7 +532,7 @@ powerup_setup()
 {
 	powerup = get_next_powerup();
 
-	struct = level.zombie_powerups[powerup];
+	struct = level._custom_powerups[powerup];
 	self SetModel( struct.model_name );
 
 	//TUEY Spawn Powerup
@@ -726,7 +642,7 @@ special_drop_setup()
 
 //		wait( 0.5 );
 
-		struct = level.zombie_powerups[powerup];
+		struct = level._custom_powerups[powerup];
 		self SetModel( struct.model_name );
 
 		//TUEY Spawn Powerup
@@ -1586,12 +1502,11 @@ register_powerup_basic_info( powerup, model, hint, func_should_drop_with_regular
 	level._custom_powerups[ powerup ].solo = solo;
 	level._custom_powerups[ powerup ].caution = caution;
 	level._custom_powerups[ powerup ].zombie_grabbable = zombie_grabbable;
-	if ( isdefined( fx ) )
+	if ( isDefined( fx ) )
 		level._custom_powerups[ powerup ].fx = loadfx( fx );
 	level._custom_powerups[ powerup ].weapon_classname = "script_model";
 	level.zombie_powerup_array[ level.zombie_powerup_array.size ] = powerup;
 	level.zombie_special_drop_array[level.zombie_special_drop_array.size] = powerup;
-	level.zombie_powerups[ powerup ] = level._custom_powerups[ powerup ];
 }
 
 register_powerup_setup( powerup, precache_func, setup_func )
@@ -1601,13 +1516,21 @@ register_powerup_setup( powerup, precache_func, setup_func )
 	level._custom_powerups[ powerup ].setup_func = setup_func;
 }
 
+register_powerup_hud_info( powerup, shader, time, on )
+{
+	_register_undefined_powerup( powerup );
+	level._custom_powerups[ powerup ].shader = shader;
+	level._custom_powerups[ powerup ].time_name = time;
+	level._custom_powerups[ powerup ].on_name = on;
+}
+
 register_powerup_grab_info( powerup, grab_func, pre_grab_check_func, grab_check_func )
 {
 	_register_undefined_powerup( powerup );
 	level._custom_powerups[ powerup ].grab_func = grab_func;
 	if ( isDefined( pre_grab_check_func ) )
 	{
-		level._custom_powerupsp[ powerup ].pre_grab_check_func = pre_grab_check_func;
+		level._custom_powerups[ powerup ].pre_grab_check_func = pre_grab_check_func;
 	}
 	if ( isDefined( grab_check_func ) )
 	{

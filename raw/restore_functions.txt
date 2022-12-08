@@ -1,10 +1,1 @@
-get_number_variants
-do_player_playerdialog
-play_no_money_purchase_dialog
-player_give_cymbal_monkey
-play_no_money_perk_dialog
-create_and_play_dialog
-play_sound_at_pos
-in_revive_trigger
-play_sound_on_ent
 _zombiemode_achievement::init

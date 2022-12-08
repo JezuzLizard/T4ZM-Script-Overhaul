@@ -212,7 +212,7 @@ vending_upgrade()
 		{
 			//player iprintln( "Not enough points to buy Perk: " + perk );
 			self playsound("deny");
-			player thread play_no_money_perk_dialog();
+			player thread maps\so\zm_common\_zm_audio::play_no_money_perk_dialog();
 			continue;
 		}
 		player maps\so\zm_common\_zm_score::minus_to_player_score( cost ); 
@@ -646,7 +646,7 @@ vending_trigger_think()
 			{
 				//player iprintln( "Already using Perk: " + perk );
 				self playsound("deny");
-				player thread play_no_money_perk_dialog();
+				player thread maps\so\zm_common\_zm_audio::play_no_money_perk_dialog();
 
 				
 				continue;
@@ -657,7 +657,7 @@ vending_trigger_think()
 		{
 			//player iprintln( "Not enough points to buy Perk: " + perk );
 			self playsound("deny");
-			player thread play_no_money_perk_dialog();
+			player thread maps\so\zm_common\_zm_audio::play_no_money_perk_dialog();
 			continue;
 		}
 
@@ -745,37 +745,6 @@ vending_trigger_post_think( player, perk )
 	player thread perk_think( perk );
 }
 
-play_no_money_perk_dialog()
-{
-	
-	index = maps\so\zm_common\_zm_weapons::get_player_index(self);
-	
-	player_index = "plr_" + index + "_";
-	if(!IsDefined (self.vox_nomoney_perk))
-	{
-		num_variants = maps\so\zm_common\_zm_audio::get_number_variants(player_index + "vox_nomoney_perk");
-		self.vox_nomoney_perk = [];
-		for(i=0;i<num_variants;i++)
-		{
-			self.vox_nomoney_perk[self.vox_nomoney_perk.size] = "vox_nomoney_perk_" + i;	
-		}
-		self.vox_nomoney_perk_available = self.vox_nomoney_perk;		
-	}	
-	sound_to_play = random(self.vox_nomoney_perk_available);
-	
-	self.vox_nomoney_perk_available = array_remove(self.vox_nomoney_perk_available,sound_to_play);
-	
-	if (self.vox_nomoney_perk_available.size < 1 )
-	{
-		self.vox_nomoney_perk_available = self.vox_nomoney_perk;
-	}
-			
-	self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, 0.25);
-	
-	
-		
-	
-}
 check_player_has_perk(perk)
 {
 	/#

@@ -42,6 +42,10 @@ designate_rival_hero(player, hero, rival)
 }
 play_death_vo(hit_location, player,mod,zombie)
 {
+	if ( is_true( level.no_player_dialog ) )
+	{
+		return;
+	}
 	// CHRISP - adding some modifiers here so that it doens't play 100% of the time 
 	// and takes into account the damage type. 
 	//	default is 10% chance of saying something
@@ -265,203 +269,221 @@ play_death_vo(hit_location, player,mod,zombie)
 
 play_headshot_response_hero(player_index)
 {
-		
-		waittime = 0;
-		if(!IsDefined( self.one_at_a_time_hero))
+	if ( is_true( level.no_player_dialog ) )
+	{
+		return;
+	}	
+	waittime = 0;
+	if(!IsDefined( self.one_at_a_time_hero))
+	{
+		self.one_at_a_time_hero = 0;
+	}
+	if(!IsDefined (self.vox_resp_hr_headdist))
+	{
+		num_variants = get_number_variants(player_index + "vox_resp_hr_headdist");
+	//	iprintlnbold(num_variants);
+		self.vox_resp_hr_headdist = [];
+		for(i=0;i<num_variants;i++)
 		{
-			self.one_at_a_time_hero = 0;
+			self.vox_resp_hr_headdist[self.vox_resp_hr_headdist.size] = "vox_resp_hr_headdist_" + i;	
 		}
-		if(!IsDefined (self.vox_resp_hr_headdist))
+		self.vox_resp_hr_headdist_available = self.vox_resp_hr_headdist;
+	}
+	if ( self.one_at_a_time_hero == 0 && self.vox_resp_hr_headdist_available.size > 0 )
+	{
+		self.one_at_a_time_hero = 1;
+		sound_to_play = random(self.vox_resp_hr_headdist_available);
+	//	iprintlnbold(player_index + "_" + sound_to_play);
+	
+		wait(2);
+		self do_player_playdialog(player_index, sound_to_play, waittime);
+		self.vox_resp_hr_headdist_available = array_remove(self.vox_resp_hr_headdist_available,sound_to_play);			
+		if (self.vox_resp_hr_headdist_available.size < 1 )
 		{
-			num_variants = get_number_variants(player_index + "vox_resp_hr_headdist");
-		//	iprintlnbold(num_variants);
-			self.vox_resp_hr_headdist = [];
-			for(i=0;i<num_variants;i++)
-			{
-				self.vox_resp_hr_headdist[self.vox_resp_hr_headdist.size] = "vox_resp_hr_headdist_" + i;	
-			}
 			self.vox_resp_hr_headdist_available = self.vox_resp_hr_headdist;
 		}
-		if(self.one_at_a_time_hero == 0)
-		{
-			self.one_at_a_time_hero = 1;
-			sound_to_play = random(self.vox_resp_hr_headdist_available);
-		//	iprintlnbold(player_index + "_" + sound_to_play);
-		
-			wait(2);
-			self do_player_playdialog(player_index, sound_to_play, waittime);
-			self.vox_resp_hr_headdist_available = array_remove(self.vox_resp_hr_headdist_available,sound_to_play);			
-			if (self.vox_resp_hr_headdist_available.size < 1 )
-			{
-				self.vox_resp_hr_headdist_available = self.vox_resp_hr_headdist;
-			}
-			self.one_at_a_time_hero = 0;
-		}
+		self.one_at_a_time_hero = 0;
+	}
 }
 play_headshot_response_rival(player_index)
 {
-		
-		waittime = 0;
-		if(!IsDefined( self.one_at_a_time_rival))
+	if ( is_true( level.no_player_dialog ) )
+	{
+		return;
+	}	
+	waittime = 0;
+	if(!IsDefined( self.one_at_a_time_rival))
+	{
+		self.one_at_a_time_rival = 0;
+	}
+	if(!IsDefined (self.vox_resp_riv_headdist))
+	{
+		num_variants = get_number_variants(player_index + "vox_resp_riv_headdist");
+		self.vox_resp_riv_headdist = [];
+		for(i=0;i<num_variants;i++)
 		{
-			self.one_at_a_time_rival = 0;
+			self.vox_resp_riv_headdist[self.vox_resp_riv_headdist.size] = "vox_resp_riv_headdist_" + i;	
 		}
-		if(!IsDefined (self.vox_resp_riv_headdist))
+		self.vox_resp_riv_headdist_available = self.vox_resp_riv_headdist;
+	}
+	if ( self.one_at_a_time_rival == 0 && self.vox_resp_riv_headdist_available.size > 0 )
+	{
+		self.one_at_a_time_rival = 1;
+		sound_to_play = random(self.vox_resp_riv_headdist_available);
+	//	iprintlnbold(player_index + "_" + sound_to_play);
+		self.vox_resp_riv_headdist_available = array_remove(self.vox_resp_riv_headdist_available,sound_to_play);	
+		wait(2);		
+		self do_player_playdialog(player_index, sound_to_play, waittime);
+		if (self.vox_resp_riv_headdist_available.size < 1 )
 		{
-			num_variants = get_number_variants(player_index + "vox_resp_riv_headdist");
-			self.vox_resp_riv_headdist = [];
-			for(i=0;i<num_variants;i++)
-			{
-				self.vox_resp_riv_headdist[self.vox_resp_riv_headdist.size] = "vox_resp_riv_headdist_" + i;	
-			}
 			self.vox_resp_riv_headdist_available = self.vox_resp_riv_headdist;
 		}
-		if(self.one_at_a_time_rival == 0)
-		{
-			self.one_at_a_time_rival = 1;
-			sound_to_play = random(self.vox_resp_riv_headdist_available);
-		//	iprintlnbold(player_index + "_" + sound_to_play);
-			self.vox_resp_riv_headdist_available = array_remove(self.vox_resp_riv_headdist_available,sound_to_play);	
-			wait(2);		
-			self do_player_playdialog(player_index, sound_to_play, waittime);
-			if (self.vox_resp_riv_headdist_available.size < 1 )
-			{
-				self.vox_resp_riv_headdist_available = self.vox_resp_riv_headdist;
-			}
-			self.one_at_a_time_rival = 0;
-		}
+		self.one_at_a_time_rival = 0;
+	}
 }
 play_projectile_dialog(player_index)
 {
-		
-		waittime = 1;
-		if(!IsDefined( self.one_at_a_time))
+	if ( is_true( level.no_player_dialog ) )
+	{
+		return;
+	}	
+	waittime = 1;
+	if(!IsDefined( self.one_at_a_time))
+	{
+		self.one_at_a_time = 0;
+	}
+	if(!IsDefined (self.vox_kill_explo))
+	{
+		num_variants = get_number_variants(player_index + "vox_kill_explo");
+		self.vox_kill_explo = [];
+		for(i=0;i<num_variants;i++)
 		{
-			self.one_at_a_time = 0;
+			self.vox_kill_explo[self.vox_kill_explo.size] = "vox_kill_explo_" + i;	
 		}
-		if(!IsDefined (self.vox_kill_explo))
+		self.vox_kill_explo_available = self.vox_kill_explo;
+	}
+	if ( self.one_at_a_time == 0 && self.vox_kill_explo_available.size > 0 )
+	{
+		self.one_at_a_time = 1;
+		sound_to_play = random(self.vox_kill_explo_available);
+//		iprintlnbold(player_index + "_" + sound_to_play);
+		self.vox_kill_explo_available = array_remove(self.vox_kill_explo_available,sound_to_play);			
+		self do_player_playdialog(player_index, sound_to_play, waittime);
+		if (self.vox_kill_explo_available.size < 1 )
 		{
-			num_variants = get_number_variants(player_index + "vox_kill_explo");
-			self.vox_kill_explo = [];
-			for(i=0;i<num_variants;i++)
-			{
-				self.vox_kill_explo[self.vox_kill_explo.size] = "vox_kill_explo_" + i;	
-			}
 			self.vox_kill_explo_available = self.vox_kill_explo;
 		}
-		if(self.one_at_a_time == 0)
-		{
-			self.one_at_a_time = 1;
-			sound_to_play = random(self.vox_kill_explo_available);
-	//		iprintlnbold(player_index + "_" + sound_to_play);
-			self.vox_kill_explo_available = array_remove(self.vox_kill_explo_available,sound_to_play);			
-			self do_player_playdialog(player_index, sound_to_play, waittime);
-			if (self.vox_kill_explo_available.size < 1 )
-			{
-				self.vox_kill_explo_available = self.vox_kill_explo;
-			}
-			self.one_at_a_time = 0;
-		}
+		self.one_at_a_time = 0;
+	}
 }
 play_explosion_dialog(player_index)
 {
-		
-		waittime = 0.25;
-		if(!IsDefined( self.one_at_a_time))
+	if ( is_true( level.no_player_dialog ) )
+	{
+		return;
+	}	
+	waittime = 0.25;
+	if(!IsDefined( self.one_at_a_time))
+	{
+		self.one_at_a_time = 0;
+	}
+	if(!IsDefined (self.vox_kill_explo))
+	{
+		num_variants = get_number_variants(player_index + "vox_kill_explo");
+		self.vox_kill_explo = [];
+		for(i=0;i<num_variants;i++)
 		{
-			self.one_at_a_time = 0;
+			self.vox_kill_explo[self.vox_kill_explo.size] = "vox_kill_explo_" + i;	
 		}
-		if(!IsDefined (self.vox_kill_explo))
+		self.vox_kill_explo_available = self.vox_kill_explo;
+	}
+	if ( self.one_at_a_time == 0 && self.vox_kill_explo_available.size > 0 )
+	{
+		self.one_at_a_time = 1;
+		sound_to_play = random(self.vox_kill_explo_available);
+//			iprintlnbold(player_index + "_" + sound_to_play);
+		self.vox_kill_explo_available = array_remove(self.vox_kill_explo_available,sound_to_play);			
+		self do_player_playdialog(player_index, sound_to_play, waittime);
+		if (self.vox_kill_explo_available.size < 1 )
 		{
-			num_variants = get_number_variants(player_index + "vox_kill_explo");
-			self.vox_kill_explo = [];
-			for(i=0;i<num_variants;i++)
-			{
-				self.vox_kill_explo[self.vox_kill_explo.size] = "vox_kill_explo_" + i;	
-			}
 			self.vox_kill_explo_available = self.vox_kill_explo;
 		}
-		if(self.one_at_a_time == 0)
-		{
-			self.one_at_a_time = 1;
-			sound_to_play = random(self.vox_kill_explo_available);
-//			iprintlnbold(player_index + "_" + sound_to_play);
-			self.vox_kill_explo_available = array_remove(self.vox_kill_explo_available,sound_to_play);			
-			self do_player_playdialog(player_index, sound_to_play, waittime);
-			if (self.vox_kill_explo_available.size < 1 )
-			{
-				self.vox_kill_explo_available = self.vox_kill_explo;
-			}
-			self.one_at_a_time = 0;
-		}
+		self.one_at_a_time = 0;
+	}
 }
 
 play_flamethrower_dialog(player_index)
 {
-		
-		waittime = 0.5;
-		if(!IsDefined( self.one_at_a_time))
+	if ( is_true( level.no_player_dialog ) )
+	{
+		return;
+	}	
+	waittime = 0.5;
+	if(!IsDefined( self.one_at_a_time))
+	{
+		self.one_at_a_time = 0;
+	}
+	if(!IsDefined (self.vox_kill_flame))
+	{
+		num_variants = get_number_variants(player_index + "vox_kill_flame");
+		self.vox_kill_flame = [];
+		for(i=0;i<num_variants;i++)
 		{
-			self.one_at_a_time = 0;
+			self.vox_kill_flame[self.vox_kill_flame.size] = "vox_kill_flame_" + i;	
 		}
-		if(!IsDefined (self.vox_kill_flame))
+		self.vox_kill_flame_available = self.vox_kill_flame;
+	}
+	if ( self.one_at_a_time == 0 && self.vox_kill_flame_available.size > 0 )
+	{
+		self.one_at_a_time = 1;
+		sound_to_play = random(self.vox_kill_flame_available);
+		self.vox_kill_flame_available = array_remove(self.vox_kill_flame_available,sound_to_play);			
+
+		self do_player_playdialog(player_index, sound_to_play, waittime);
+		if (self.vox_kill_flame_available.size < 1 )
 		{
-			num_variants = get_number_variants(player_index + "vox_kill_flame");
-			self.vox_kill_flame = [];
-			for(i=0;i<num_variants;i++)
-			{
-				self.vox_kill_flame[self.vox_kill_flame.size] = "vox_kill_flame_" + i;	
-			}
 			self.vox_kill_flame_available = self.vox_kill_flame;
 		}
-		if(self.one_at_a_time == 0)
-		{
-			self.one_at_a_time = 1;
-			sound_to_play = random(self.vox_kill_flame_available);
-			self.vox_kill_flame_available = array_remove(self.vox_kill_flame_available,sound_to_play);			
-
-			self do_player_playdialog(player_index, sound_to_play, waittime);
-			if (self.vox_kill_flame_available.size < 1 )
-			{
-				self.vox_kill_flame_available = self.vox_kill_flame;
-			}
-			self.one_at_a_time = 0;
-		}
+		self.one_at_a_time = 0;
+	}
 }
 play_closekill_dialog(player_index)
 {
-
-		waittime = 1;
-		if(!IsDefined( self.one_at_a_time))
+	if ( is_true( level.no_player_dialog ) )
+	{
+		return;
+	}
+	waittime = 1;
+	if(!IsDefined( self.one_at_a_time))
+	{
+		self.one_at_a_time = 0;
+	}
+	if(!IsDefined (self.vox_close))
+	{
+		num_variants = get_number_variants(player_index + "vox_close");
+		self.vox_close = [];
+		for(i=0;i<num_variants;i++)
 		{
-			self.one_at_a_time = 0;
+			self.vox_close[self.vox_close.size] = "vox_close_" + i;	
 		}
-		if(!IsDefined (self.vox_close))
+		self.vox_close_available = self.vox_close;
+	}
+	if(self.one_at_a_time == 0)
+	{
+		self.one_at_a_time = 1;
+		if (self.vox_close_available.size >= 1)
 		{
-			num_variants = get_number_variants(player_index + "vox_close");
-			self.vox_close = [];
-			for(i=0;i<num_variants;i++)
-			{
-				self.vox_close[self.vox_close.size] = "vox_close_" + i;	
-			}
+			sound_to_play = random(self.vox_close_available);
+			self.vox_close_available = array_remove(self.vox_close_available,sound_to_play);
+			self do_player_playdialog(player_index, sound_to_play, waittime);
+		}
+
+		if (self.vox_close_available.size < 1 )
+		{
 			self.vox_close_available = self.vox_close;
 		}
-		if(self.one_at_a_time == 0)
-		{
-			self.one_at_a_time = 1;
-			if (self.vox_close_available.size >= 1)
-			{
-				sound_to_play = random(self.vox_close_available);
-				self.vox_close_available = array_remove(self.vox_close_available,sound_to_play);
-				self do_player_playdialog(player_index, sound_to_play, waittime);
-			}
-
-			if (self.vox_close_available.size < 1 )
-			{
-				self.vox_close_available = self.vox_close;
-			}
-			self.one_at_a_time = 0;
-		}
+		self.one_at_a_time = 0;
+	}
 }
 get_number_variants(aliasPrefix)
 {
@@ -476,136 +498,156 @@ get_number_variants(aliasPrefix)
 }	
 play_headshot_dialog(player_index)
 {
-		
-		waittime = 0.25;
-		if(!IsDefined (self.vox_kill_headdist))
+	if ( is_true( level.no_player_dialog ) )
+	{
+		return;
+	}	
+	waittime = 0.25;
+	if(!IsDefined (self.vox_kill_headdist))
+	{
+		num_variants = get_number_variants(player_index + "vox_kill_headdist");
+		//iprintlnbold(num_variants);
+		self.vox_kill_headdist = [];
+		for(i=0;i<num_variants;i++)
 		{
-			num_variants = get_number_variants(player_index + "vox_kill_headdist");
-			//iprintlnbold(num_variants);
-			self.vox_kill_headdist = [];
-			for(i=0;i<num_variants;i++)
-			{
-				self.vox_kill_headdist[self.vox_kill_headdist.size] = "vox_kill_headdist_" + i;
-				//iprintlnbold("vox_kill_headdist_" + i);	
-			}
-			self.vox_kill_headdist_available = self.vox_kill_headdist;
+			self.vox_kill_headdist[self.vox_kill_headdist.size] = "vox_kill_headdist_" + i;
+			//iprintlnbold("vox_kill_headdist_" + i);	
 		}
+		self.vox_kill_headdist_available = self.vox_kill_headdist;
+	}
+	if ( self.vox_kill_headdist_available.size > 0 )
+	{
 		sound_to_play = random(self.vox_kill_headdist_available);
 		//iprintlnbold("LINE:" + player_index + sound_to_play);
 		self do_player_playdialog(player_index, sound_to_play, waittime);
 		self.vox_kill_headdist_available = array_remove(self.vox_kill_headdist_available,sound_to_play);
-	
+
 		if (self.vox_kill_headdist_available.size < 1 )
 		{
 			self.vox_kill_headdist_available = self.vox_kill_headdist;
 		}
-
+	}
 }
 play_tesla_dialog(player_index)
 {
-		
-		waittime = 0.25;
-		if(!IsDefined (self.vox_kill_tesla))
+	if ( is_true( level.no_player_dialog ) )
+	{
+		return;
+	}	
+	waittime = 0.25;
+	if(!IsDefined (self.vox_kill_tesla))
+	{
+		num_variants = get_number_variants(player_index + "vox_kill_tesla");
+		//iprintlnbold(num_variants);
+		self.vox_kill_tesla = [];
+		for(i=0;i<num_variants;i++)
 		{
-			num_variants = get_number_variants(player_index + "vox_kill_tesla");
-			//iprintlnbold(num_variants);
-			self.vox_kill_tesla = [];
-			for(i=0;i<num_variants;i++)
-			{
-				self.vox_kill_tesla[self.vox_kill_tesla.size] = "vox_kill_tesla_" + i;
-				//iprintlnbold("vox_kill_tesla_" + i);	
-			}
-			self.vox_kill_tesla_available = self.vox_kill_tesla;
+			self.vox_kill_tesla[self.vox_kill_tesla.size] = "vox_kill_tesla_" + i;
+			//iprintlnbold("vox_kill_tesla_" + i);	
 		}
+		self.vox_kill_tesla_available = self.vox_kill_tesla;
+	}
 
-		if(!isdefined (level.player_is_speaking))
-		{
-			level.player_is_speaking = 0;
-		}
-
+	if(!isdefined (level.player_is_speaking))
+	{
+		level.player_is_speaking = 0;
+	}
+	if ( self.vox_kill_tesla_available.size > 0 )
+	{
 		sound_to_play = random(self.vox_kill_tesla_available);
 		//iprintlnbold("LINE:" + player_index + sound_to_play);
 		self do_player_playdialog(player_index, sound_to_play, waittime);
 		self.vox_kill_tesla_available = array_remove(self.vox_kill_tesla_available,sound_to_play);
-	
+
 		if (self.vox_kill_tesla_available.size < 1 )
 		{
 			self.vox_kill_tesla_available = self.vox_kill_tesla;
 		}
-
+	}
 }
 play_raygun_dialog(player_index)
 {
-		
-		waittime = 0.05;
-		if(!IsDefined (self.vox_kill_ray))
+	if ( is_true( level.no_player_dialog ) )
+	{
+		return;
+	}	
+	waittime = 0.05;
+	if(!IsDefined (self.vox_kill_ray))
+	{
+		num_variants = get_number_variants(player_index + "vox_kill_ray");
+		//iprintlnbold(num_variants);
+		self.vox_kill_ray = [];
+		for(i=0;i<num_variants;i++)
 		{
-			num_variants = get_number_variants(player_index + "vox_kill_ray");
-			//iprintlnbold(num_variants);
-			self.vox_kill_ray = [];
-			for(i=0;i<num_variants;i++)
-			{
-				self.vox_kill_ray[self.vox_kill_ray.size] = "vox_kill_ray_" + i;
-				//iprintlnbold("vox_kill_ray_" + i);	
-			}
-			self.vox_kill_ray_available = self.vox_kill_ray;
+			self.vox_kill_ray[self.vox_kill_ray.size] = "vox_kill_ray_" + i;
+			//iprintlnbold("vox_kill_ray_" + i);	
 		}
+		self.vox_kill_ray_available = self.vox_kill_ray;
+	}
 
-		if(!isdefined (level.player_is_speaking))
-		{
-			level.player_is_speaking = 0;
-		}
-
+	if(!isdefined (level.player_is_speaking))
+	{
+		level.player_is_speaking = 0;
+	}
+	if ( self.vox_kill_ray_available.size > 0 )
+	{
 		sound_to_play = random(self.vox_kill_ray_available);
 	//	iprintlnbold("LINE:" + player_index + sound_to_play);
 		self do_player_playdialog(player_index, sound_to_play, waittime);
 		self.vox_kill_ray_available = array_remove(self.vox_kill_ray_available,sound_to_play);
-	
+
 		if (self.vox_kill_ray_available.size < 1 )
 		{
 			self.vox_kill_ray_available = self.vox_kill_ray;
 		}
-
+	}
 }
 play_insta_melee_dialog(player_index)
 {
-		
-		waittime = 0.25;
-		if(!IsDefined( self.one_at_a_time))
+	if ( is_true( level.no_player_dialog ) )
+	{
+		return;
+	}	
+	waittime = 0.25;
+	if(!IsDefined( self.one_at_a_time))
+	{
+		self.one_at_a_time = 0;
+	}
+	if(!IsDefined (self.vox_insta_melee))
+	{
+		num_variants = get_number_variants(player_index + "vox_insta_melee");
+		self.vox_insta_melee = [];
+		for(i=0;i<num_variants;i++)
 		{
-			self.one_at_a_time = 0;
+			self.vox_insta_melee[self.vox_insta_melee.size] = "vox_insta_melee_" + i;	
 		}
-		if(!IsDefined (self.vox_insta_melee))
+		self.vox_insta_melee_available = self.vox_insta_melee;
+	}
+	if ( self.one_at_a_time == 0 && self.vox_insta_melee_available.size > 0 )
+	{
+		self.one_at_a_time = 1;
+		sound_to_play = random(self.vox_insta_melee_available);
+		self.vox_insta_melee_available = array_remove(self.vox_insta_melee_available,sound_to_play);
+		if (self.vox_insta_melee_available.size < 1 )
 		{
-			num_variants = get_number_variants(player_index + "vox_insta_melee");
-			self.vox_insta_melee = [];
-			for(i=0;i<num_variants;i++)
-			{
-				self.vox_insta_melee[self.vox_insta_melee.size] = "vox_insta_melee_" + i;	
-			}
 			self.vox_insta_melee_available = self.vox_insta_melee;
 		}
-		if(self.one_at_a_time == 0)
-		{
-			self.one_at_a_time = 1;
-			sound_to_play = random(self.vox_insta_melee_available);
-			self.vox_insta_melee_available = array_remove(self.vox_insta_melee_available,sound_to_play);
-			if (self.vox_insta_melee_available.size < 1 )
-			{
-				self.vox_insta_melee_available = self.vox_insta_melee;
-			}
-			self do_player_playdialog(player_index, sound_to_play, waittime);
-			//self playsound(player_index + sound_to_play, "sound_done" + sound_to_play);			
-			//self waittill("sound_done" + sound_to_play);
-			wait(waittime);
-			self.one_at_a_time = 0;
+		self do_player_playdialog(player_index, sound_to_play, waittime);
+		//self playsound(player_index + sound_to_play, "sound_done" + sound_to_play);			
+		//self waittill("sound_done" + sound_to_play);
+		wait(waittime);
+		self.one_at_a_time = 0;
 
-		}
-		//This ensures that there is at least 3 seconds waittime before playing another VO.
+	}
+	//This ensures that there is at least 3 seconds waittime before playing another VO.
 
 }
 do_player_playdialog(player_index, sound_to_play, waittime, response)
 {
+	if ( is_true( level.no_player_dialog ) )
+	{
+		return;
+	}
 	index = maps\so\zm_common\_zm_weapons::get_player_index(self);
 	
 	if(!IsDefined(level.player_is_speaking))
@@ -625,4 +667,68 @@ do_player_playdialog(player_index, sound_to_play, waittime, response)
 			level thread setup_response_line( self, index, response ); 
 		}
 	}
+}
+
+play_no_money_purchase_dialog()
+{
+	if ( is_true( level.no_player_dialog ) )
+	{
+		return;
+	}
+	index = maps\so\zm_common\_zm_weapons::get_player_index(self);
+	
+	player_index = "plr_" + index + "_";
+	if(!IsDefined (self.vox_gen_sigh))
+	{
+		num_variants = get_number_variants(player_index + "vox_gen_sigh");
+		self.vox_gen_sigh = [];
+		for(i=0;i<num_variants;i++)
+		{
+			self.vox_gen_sigh[self.vox_gen_sigh.size] = "vox_gen_sigh_" + i;	
+		}
+		self.vox_gen_sigh_available = self.vox_gen_sigh;		
+	}
+	rand = randomintrange(0,6);
+	if ( rand < 3 && self.vox_gen_sigh_available.size > 0 )
+	{
+		sound_to_play = random(self.vox_gen_sigh_available);		
+		self.vox_gen_sigh_available = array_remove(self.vox_gen_sigh_available,sound_to_play);
+		if (self.vox_gen_sigh_available.size < 1 )
+		{
+			self.vox_gen_sigh_available = self.vox_gen_sigh;
+		}
+		wait(0.25);
+		self do_player_playdialog(player_index, sound_to_play, 0.25);
+	}	
+}
+
+play_no_money_perk_dialog()
+{
+	if ( is_true( level.no_player_dialog ) )
+	{
+		return;
+	}
+	index = maps\so\zm_common\_zm_weapons::get_player_index(self);
+	
+	player_index = "plr_" + index + "_";
+	if(!IsDefined (self.vox_nomoney_perk))
+	{
+		num_variants = get_number_variants(player_index + "vox_nomoney_perk");
+		self.vox_nomoney_perk = [];
+		for(i=0;i<num_variants;i++)
+		{
+			self.vox_nomoney_perk[self.vox_nomoney_perk.size] = "vox_nomoney_perk_" + i;	
+		}
+		self.vox_nomoney_perk_available = self.vox_nomoney_perk;		
+	}	
+	sound_to_play = random(self.vox_nomoney_perk_available);
+	
+	self.vox_nomoney_perk_available = array_remove(self.vox_nomoney_perk_available,sound_to_play);
+	
+	if (self.vox_nomoney_perk_available.size < 1 )
+	{
+		self.vox_nomoney_perk_available = self.vox_nomoney_perk;
+	}
+			
+	self do_player_playdialog(player_index, sound_to_play, 0.25);
 }
