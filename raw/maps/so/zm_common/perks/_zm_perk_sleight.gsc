@@ -26,7 +26,7 @@ turn_sleight_on()
 		machine[i] setmodel("zombie_vending_sleight_on");
 		machine[i] vibrate((0,-100,0), 0.3, 0.4, 3);
 		machine[i] playsound("perks_power_on");
-		machine[i] thread perk_fx( "sleight_light" );
+		machine[i] thread maps\so\zm_common\_zm_perks::perk_fx( "sleight_light" );
 	}
 
 	level notify( "specialty_fastreload_power_on" );

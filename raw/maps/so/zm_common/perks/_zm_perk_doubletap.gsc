@@ -26,7 +26,7 @@ turn_doubletap_on()
 		machine[i] setmodel("zombie_vending_doubletap_on");
 		machine[i] vibrate((0,-100,0), 0.3, 0.4, 3);
 		machine[i] playsound("perks_power_on");
-		machine[i] thread perk_fx( "doubletap_light" );
+		machine[i] thread maps\so\zm_common\_zm_perks::perk_fx( "doubletap_light" );
 	}
 	level notify( "specialty_rof_power_on" );
 }

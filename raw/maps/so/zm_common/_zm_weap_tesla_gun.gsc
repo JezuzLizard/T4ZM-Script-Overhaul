@@ -27,6 +27,11 @@ init()
 
 	level._effect["tesla_shock_eyes"]		= loadfx( "maps/zombie/fx_zombie_tesla_shock_eyes" );
 
+	level.tesla_gun_funcs = [];
+	level.tesla_gun_funcs[ "enemy_killed_by_tesla" ] = ::enemy_killed_by_tesla;
+	level.tesla_gun_funcs[ "is_tesla_damage" ] = ::is_tesla_damage;
+	level.tesla_gun_funcs[ "tesla_damage_init" ] = ::tesla_damage_init;
+
 	level.enemy_killed_by_tesla_gun_func = ::enemy_killed_by_tesla;
 
 	precacheshellshock( "electrocution" );

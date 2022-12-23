@@ -27,7 +27,7 @@ turn_revive_on()
 		machine[i] setmodel("zombie_vending_revive_on");
 		machine[i] playsound("perks_power_on");
 		machine[i] vibrate((0,-100,0), 0.3, 0.4, 3);
-		machine[i] thread perk_fx( "revive_light" );
+		machine[i] thread maps\so\zm_common\_zm_perks::perk_fx( "revive_light" );
 	}
 	
 	level notify( "specialty_quickrevive_power_on" );

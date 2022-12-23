@@ -987,7 +987,7 @@ array_limiter( array, total )
 
 array_validate( array )
 {
-	return IsDefined( array ) && isArray( array ) && array.size > 0
+	return IsDefined( array ) && isArray( array ) && array.size > 0;
 }
 
 add_later_round_spawners()

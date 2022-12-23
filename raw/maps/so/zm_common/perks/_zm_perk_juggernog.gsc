@@ -29,7 +29,7 @@ turn_jugger_on()
 		machine[i] setmodel("zombie_vending_jugg_on");
 		machine[i] vibrate((0,-100,0), 0.3, 0.4, 3);
 		machine[i] playsound("perks_power_on");
-		machine[i] thread perk_fx( "jugger_light" );
+		machine[i] thread maps\so\zm_common\_zm_perks::perk_fx( "jugger_light" );
 		
 	}
 	level notify( "specialty_armorvest_power_on" );
@@ -57,4 +57,9 @@ give_jugg()
 	self.maxhealth = level.zombie_vars["zombie_perk_juggernaut_health"];
 	self.health = level.zombie_vars["zombie_perk_juggernaut_health"];
 	//player.health = 160;
+}
+
+take_jugg()
+{
+	
 }

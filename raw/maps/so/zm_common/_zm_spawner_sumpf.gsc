@@ -16,7 +16,7 @@ init()
 	{
 		level.zombie_eyes_limited = 0;
 	}
-
+	
 	level._zm_spawner_funcs = [];
 	level._zm_spawner_funcs[ "add_spawn_funcs_to_zombie_spawners" ] = ::add_spawn_funcs_to_zombie_spawners;
 	level._zm_spawner_funcs[ "zombie_head_gib" ] = ::zombie_head_gib;
@@ -42,11 +42,9 @@ add_spawn_funcs_to_zombie_spawners()
 	}
 	
 	array_thread(zombies, ::add_spawn_function, ::zombie_spawn_init);
-	if ( !is_true( level.use_legacy_zombie_spawning ) )
-	{
-		array_thread(zombies, ::add_spawn_function, ::zombie_rise);
-	}
+	array_thread(zombies, ::add_spawn_function, ::zombie_rise);
 }
+
 
 #using_animtree( "generic_human" ); 
 is_spawner_targeted_by_blocker( ent )
@@ -74,28 +72,17 @@ is_spawner_targeted_by_blocker( ent )
 }
 
 // set up zombie walk cycles
-zombie_spawn_init( animname_set )
+zombie_spawn_init()
 {
-	if( !isDefined( animname_set ) )
-	{
-		animname_set = false;
-	}
-	
 	self.targetname = "zombie";
 	self.script_noteworthy = undefined;
-
-	if( !animname_set )
-	{
-		self.animname = "zombie"; 		
-	}
+	self.animname = "zombie"; 		
 	self.ignoreall = true; 
 	self.allowdeath = true; 			// allows death during animscripted calls
 	self.gib_override = true; 		// needed to make sure this guy does gibs
 	self.is_zombie = true; 			// needed for melee.gsc in the animscripts
 	self.has_legs = true; 			// Sumeet - This tells the zombie that he is allowed to stand anymore or not, gibbing can take 
 									// out both legs and then the only allowed stance should be prone.
-	self allowedStances( "stand" ); 
-
 	self.gibbed = false; 
 	self.head_gibbed = false;
 	
@@ -109,6 +96,7 @@ zombie_spawn_init( animname_set )
 	// This isn't working, might need an "empty" weapon
 	//self animscripts\shared::placeWeaponOn( self.weapon, "none" ); 
 
+	self allowedStances( "stand" ); 
 	self.disableArrivals = true; 
 	self.disableExits = true; 
 	self.grenadeawareness = 0;
@@ -139,20 +127,11 @@ zombie_spawn_init( animname_set )
 	self thread zombie_gib_on_damage(); 
 	self thread zombie_damage_failsafe();
 
-	// MM - mixed zombies test
-// 	if ( flag( "crawler_round" ) || 
-// 		 ( IsDefined( level.mixed_rounds_enabled ) && level.mixed_rounds_enabled == 1 &&
-// 		   level.zombie_total > 10 && 
-// 		   level.round_number > 5 && RandomInt(100) < 10 ) )
-// 	{
-// 		self thread make_crawler();
-// 	}
-
 //	self thread zombie_head_gib(); 
 	self thread delayed_zombie_eye_glow();	// delayed eye glow for ground crawlers (the eyes floated above the ground before the anim started)
 	self.deathFunction = ::zombie_death_animscript;
 	self.flame_damage_time = 0;
-	
+
 	self zombie_history( "zombie_spawn_init -> Spawned = " + self.origin );
 
 	self notify( "zombie_init_done" );
@@ -225,31 +204,35 @@ set_zombie_run_cycle()
 {
 	self set_run_speed();
 
-	death_anims = level._zombie_deaths[self.animname];
+	death_anims = [];
+	death_anims[death_anims.size] = %ch_dazed_a_death;
+	death_anims[death_anims.size] = %ch_dazed_b_death;
+	death_anims[death_anims.size] = %ch_dazed_c_death;
+	death_anims[death_anims.size] = %ch_dazed_d_death;
 
 	self.deathanim = random(death_anims);
 
-	//if(level.round_number < 3)
-	//{
-	//	self.zombie_move_speed = "walk";
-	//}
+	if(level.round_number < 3)
+	{
+		self.zombie_move_speed = "walk";
+	}
 
 	switch(self.zombie_move_speed)
 	{
 	case "walk":
 		var = randomintrange(1, 8);         
 		self set_run_anim( "walk" + var );                         
-		self.run_combatanim = level.scr_anim[self.animname]["walk" + var];
+		self.run_combatanim = level.scr_anim["zombie"]["walk" + var];
 		break;
 	case "run":                                
 		var = randomintrange(1, 6);
 		self set_run_anim( "run" + var );               
-		self.run_combatanim = level.scr_anim[self.animname]["run" + var];
+		self.run_combatanim = level.scr_anim["zombie"]["run" + var];
 		break;
 	case "sprint":                             
 		var = randomintrange(1, 4);
 		self set_run_anim( "sprint" + var );                       
-		self.run_combatanim = level.scr_anim[self.animname]["sprint" + var];
+		self.run_combatanim = level.scr_anim["zombie"]["sprint" + var];
 		break;
 	}
 }
@@ -281,16 +264,12 @@ zombie_think()
 	
 	//node = level.exterior_goals[randomint( level.exterior_goals.size )]; 
 	
-	// MM - 5/8/9 Add ability for risers to find_flesh immediately after spawning if the
-	//	rise struct has the script_noteworthy "find_flesh"
-	rise_struct_string = undefined;
-
 	//CHRIS_P - test dudes rising from ground 
-	if (GetDVarInt("zombie_rise_test") || (isDefined(self.script_string) && self.script_string == "riser" ))
+	if (GetDVarInt("zombie_rise_test") || (isDefined(self.script_string) && self.script_string == "riser" && randomint(100) > 25))
 	{
 		self.do_rise = 1;
 		//self notify("do_rise");
-		self waittill("risen", rise_struct_string );
+		self waittill("risen");
 	}
 	else
 	{
@@ -301,15 +280,6 @@ zombie_think()
 
 	desired_nodes = [];
 	self.entrance_nodes = [];
-
-	if ( IsDefined( level.max_barrier_search_dist_override ) )
-	{
-		max_dist = level.max_barrier_search_dist_override;
-	}
-	else
-	{
-		max_dist = 500;
-	}
 
 	if( IsDefined( self.script_forcegoal ) && self.script_forcegoal )
 	{
@@ -324,53 +294,10 @@ zombie_think()
 
 		self zombie_history( "zombie_think -> #1 entrance (script_forcegoal) origin = " + self.entrance_nodes[0].origin );
 	}
-	// DCS: for riser zombies to go to a door instead of to player (see next else if).
-	else if( (level.script == "nazi_zombie_factory" || level.script == "nazi_zombie_coast" || level.script == "nazi_zombie_paris") && ( IsDefined(rise_struct_string) ) && rise_struct_string == "riser_door")
-	{
-		origin = self.origin;
-
-		desired_origin = get_desired_origin();
-		if( IsDefined( desired_origin ) )
-		{
-			origin = desired_origin;
-		}
-
-		// Get the 3 closest nodes
-		nodes = get_array_of_closest( origin, level.exterior_goals, undefined, 3 );
-
-		// Figure out the distances between them, if any of them are greater than 256 units compared to the previous, drop it
-		desired_nodes[0] = nodes[0];
-		prev_dist = Distance( self.origin, nodes[0].origin );
-		for( i = 1; i < nodes.size; i++ )
-		{
-			dist = Distance( self.origin, nodes[i].origin );
-			if( ( dist - prev_dist ) > max_dist )
-			{
-				break;
-			}
-
-			prev_dist = dist;
-			desired_nodes[i] = nodes[i];
-		}
-
-		node = desired_nodes[0];
-		if( desired_nodes.size > 1 )
-		{
-			node = desired_nodes[RandomInt(desired_nodes.size)];
-		}
-
-		self.entrance_nodes = desired_nodes;
-
-		self zombie_history( "zombie_think -> #1 entrance origin = " + node.origin );
-
-		// Incase the guy does not move from spawn, then go to the closest one instead
-		self thread zombie_assure_node();
-	}
 	// JMA - this is used in swamp to spawn outdoor zombies and immediately rush the player
-	// JMA - if riser becomes a non-riser, make sure they go to a barrier first instead of chasing a player
-	else if ( ( ( level.script == "nazi_zombie_factory" || level.script == "nazi_zombie_coast" || level.script == "nazi_zombie_paris" || level.script == "nazi_zombie_theater" || level.script == "zombie_test_map") && 
-		IsDefined( self.script_string ) && self.script_string == "zombie_chaser" ) ||
-		( IsDefined(rise_struct_string) && rise_struct_string == "find_flesh" ) )
+	else if( (level.script == "nazi_zombie_sumpf" || level.script == "nazi_zombie_bridgetest" || level.script == "nazi_zombie_bridge_test" ||
+		 level.script == "nazi_zombie_drawbridge" || level.script == "nazi_zombie_sluicegate" || level.script == "nazi_zombie_pendulum" || level.script == "nazi_zombie_zipline") && 
+		 IsDefined( self.script_string ) && (self.script_string == "zombie_chaser" || self.script_string == "riser") )
 	{
 		self zombie_setup_attack_properties();
 		//if the zombie has a target, make them go there first
@@ -401,6 +328,7 @@ zombie_think()
 		nodes = get_array_of_closest( origin, level.exterior_goals, undefined, 3 );
 
 		// Figure out the distances between them, if any of them are greater than 256 units compared to the previous, drop it
+		max_dist = 500;
 		desired_nodes[0] = nodes[0];
 		prev_dist = Distance( self.origin, nodes[0].origin );
 		for( i = 1; i < nodes.size; i++ )
@@ -553,7 +481,7 @@ zombie_assure_node()
 	}	
 	// CHRISP - must add an additional check, since the 'self.entrance_nodes' array is not dynamically updated to accomodate for entrance points that can be turned on and off
 	// only do this if it's the asylum map
-	if(level.script == "nazi_zombie_asylum" || level.script == "nazi_zombie_sumpf" || level.script == "nazi_zombie_factory" || level.script == "nazi_zombie_paris" || level.script == "nazi_zombie_coast" || level.script == "nazi_zombie_theater")
+	if(level.script == "nazi_zombie_asylum" || level.script == "nazi_zombie_sumpf" || level.script == "nazi_zombie_factory")
 	{
 		wait(2);
 		// Get more nodes and try again
@@ -663,11 +591,7 @@ tear_into_building()
 
 		self.goalradius = 4;
 		self SetGoalPos( self.attacking_spot, self.first_node.angles );
-		self waittill( "goal" );
-		//	MM- 05/09
-		//	If you wait for "orientdone", you NEED to also have a timeout.
-		//	Otherwise, zombies could get stuck waiting to do their facing.
-		self waittill_notify_or_timeout( "orientdone", 1 );
+		self waittill( "orientdone" );
 
 		self zombie_history( "tear_into_building -> Reach position and orientated" );		
 
@@ -676,10 +600,6 @@ tear_into_building()
 		if( all_chunks_destroyed( self.first_node.barrier_chunks ) )
 		{
 			self zombie_history( "tear_into_building -> all chunks destroyed" );
-			for( i = 0; i < self.first_node.attack_spots_taken.size; i++ )
-			{
-				self.first_node.attack_spots_taken[i] = false;
-			}
 			return;
 		}
 
@@ -747,7 +667,7 @@ do_a_taunt()
 	
 	if( freq >= randomint(100) )
 	{
-		anime = random(level._zombie_board_taunt[self.animname]);
+		anime = random(level._zombie_board_taunt);
 		self animscripted("zombie_taunt",self.origin,self.angles,anime);
 		wait(getanimlength(anime));
 		self teleport(self.old_origin);
@@ -1018,6 +938,8 @@ zombie_tear_notetracks( msg, chunk, node )
 				PlayFx( level._effect["wood_chunk_destory"], chunk.origin + ( randomint( 40 ), randomint( 40 ), randomint( 20 ) ) );
 	
 				level thread maps\so\zm_common\_zm_blockers::remove_chunk( chunk, node, true );
+				chunk.successfully_destroyed = true;
+				chunk notify("destroyed");
 			}
 		}
 	}
@@ -1025,10 +947,12 @@ zombie_tear_notetracks( msg, chunk, node )
 
 check_for_zombie_death(zombie)
 {
-	self endon( "destroyed" );
-	zombie waittill( "death" );
-
+	self endon("destroyed");
+	
+	wait(2.5);
 	self.target_by_zombie = undefined;
+
+
 }
 
 
@@ -1197,140 +1121,14 @@ get_tear_anim( chunk, zombo )
 	}
 	else
 	{
+		anims = [];
+		anims[anims.size] = %ai_zombie_attack_crawl;
+		anims[anims.size] = %ai_zombie_attack_crawl_lunge;
 
-		if(isdefined(chunk.script_noteworthy))
-		{
-
-			if(zombo.attacking_spot_index == 0)
-			{
-				if(chunk.script_noteworthy == "1")
-				{
-
-					tear_anim = %ai_zombie_boardtear_crawl_m_1;
-
-				}
-				else if(chunk.script_noteworthy == "2")
-				{
-
-					tear_anim = %ai_zombie_boardtear_crawl_m_2;
-				}
-				else if(chunk.script_noteworthy == "3")
-				{
-
-					tear_anim = %ai_zombie_boardtear_crawl_m_3;
-				}
-				else if(chunk.script_noteworthy == "4")
-				{
-
-					tear_anim = %ai_zombie_boardtear_crawl_m_4;
-				}
-				else if(chunk.script_noteworthy == "5")
-				{
-
-					tear_anim = %ai_zombie_boardtear_crawl_m_5;
-				}
-				else if(chunk.script_noteworthy == "6")
-				{
-
-					tear_anim = %ai_zombie_boardtear_crawl_m_6;
-				}
-
-			}
-			else if(zombo.attacking_spot_index == 1)
-			{
-				if(chunk.script_noteworthy == "1")
-				{
-
-					tear_anim = %ai_zombie_boardtear_crawl_r_1;
-
-				}
-				else if(chunk.script_noteworthy == "3")
-				{
-
-					tear_anim = %ai_zombie_boardtear_crawl_r_3;
-				}
-				else if(chunk.script_noteworthy == "4")
-				{
-
-					tear_anim = %ai_zombie_boardtear_crawl_r_4;
-				}
-				else if(chunk.script_noteworthy == "5")
-				{
-
-					tear_anim = %ai_zombie_boardtear_crawl_r_5;
-				}
-				else if(chunk.script_noteworthy == "6")
-				{
-					tear_anim = %ai_zombie_boardtear_crawl_r_6;
-				}
-				else if(chunk.script_noteworthy == "2")
-				{
-
-					tear_anim = %ai_zombie_boardtear_crawl_r_2;
-				}
-
-			}
-			else if(zombo.attacking_spot_index == 2)
-			{
-				if(chunk.script_noteworthy == "1")
-				{
-
-					tear_anim = %ai_zombie_boardtear_crawl_l_1;
-
-				}
-				else if(chunk.script_noteworthy == "2")
-				{
-
-					tear_anim = %ai_zombie_boardtear_crawl_l_2;
-				}
-				else if(chunk.script_noteworthy == "4")
-				{
-
-					tear_anim = %ai_zombie_boardtear_crawl_l_4;
-				}
-				else if(chunk.script_noteworthy == "5")
-				{
-
-					tear_anim = %ai_zombie_boardtear_crawl_l_5;
-				}
-				else if(chunk.script_noteworthy == "6")
-				{
-					tear_anim = %ai_zombie_boardtear_crawl_l_6;
-				}
-				else if(chunk.script_noteworthy == "3")
-				{
-
-					tear_anim = %ai_zombie_boardtear_crawl_l_3;
-				}
-
-			}
-		}
-		else
-		{
-			anims = [];
-			anims[anims.size] = %ai_zombie_attack_crawl;
-			anims[anims.size] = %ai_zombie_attack_crawl_lunge;
-
-			tear_anim = anims[RandomInt( anims.size )];
-		}
-		
+		tear_anim = anims[RandomInt( anims.size )];
 	}
 
 	return tear_anim; 
-}
-
-cap_zombie_head_gibs()
-{
-	if( !isDefined( level.max_head_gibs_per_frame ) )
-	{
-		level.max_head_gibs_per_frame = 4;
-	}
-	
-	while( true )
-	{
-		level.head_gibs_this_frame = 0;
-		wait_network_frame();
-	}
 }
 
 zombie_head_gib( attacker )
@@ -1344,18 +1142,6 @@ zombie_head_gib( attacker )
 	{
 		return;
 	}
-	
-	if( !isDefined( level.head_gibs_this_frame ) )
-	{
-		level thread cap_zombie_head_gibs();
-	}
-	
-	if( level.head_gibs_this_frame >= level.max_head_gibs_per_frame )
-	{
-		return;
-	}
-
-	level.head_gibs_this_frame++;
 
 	self.head_gibbed = true;
 	self zombie_eye_glow_stop();
@@ -1518,7 +1304,7 @@ headshot_blood_fx()
 	wait( 0.3 );
 	if(IsDefined( self ))
 	{
-		if ( isDefined( level.tesla_gun_funcs ) && isDefined( level.tesla_gun_funcs[ "enemy_killed_by_tesla" ] ) && self [[ level.tesla_gun_funcs[ "enemy_killed_by_tesla" ] ]]() )
+		if ( isDefined( level.enemy_killed_by_tesla_gun_func ) && self [[ level.enemy_killed_by_tesla_gun_func ]]() )
 		{
 			PlayFxOnTag( level._effect["tesla_head_light"], self, fxTag );
 		}
@@ -1674,17 +1460,17 @@ zombie_gib_on_damage()
 						{
 							self.deathanim = %ai_zombie_crawl_death_v1;
 							self set_run_anim( "death3" );
-							self.run_combatanim = level.scr_anim[self.animname]["crawl_hand_1"];
-							self.crouchRunAnim = level.scr_anim[self.animname]["crawl_hand_1"];
-							self.crouchrun_combatanim = level.scr_anim[self.animname]["crawl_hand_1"];
+							self.run_combatanim = level.scr_anim["zombie"]["crawl_hand_1"];
+							self.crouchRunAnim = level.scr_anim["zombie"]["crawl_hand_1"];
+							self.crouchrun_combatanim = level.scr_anim["zombie"]["crawl_hand_1"];
 						}
 						else
 						{
 							self.deathanim = %ai_zombie_crawl_death_v1;
 							self set_run_anim( "death3" );
-							self.run_combatanim = level.scr_anim[self.animname]["crawl_hand_2"];
-							self.crouchRunAnim = level.scr_anim[self.animname]["crawl_hand_2"];
-							self.crouchrun_combatanim = level.scr_anim[self.animname]["crawl_hand_2"];
+							self.run_combatanim = level.scr_anim["zombie"]["crawl_hand_2"];
+							self.crouchRunAnim = level.scr_anim["zombie"]["crawl_hand_2"];
+							self.crouchrun_combatanim = level.scr_anim["zombie"]["crawl_hand_2"];
 						}
 
 
@@ -1693,41 +1479,41 @@ zombie_gib_on_damage()
 					{
 						self.deathanim = %ai_zombie_crawl_death_v1;
 						self set_run_anim( "death3" );
-						self.run_combatanim = level.scr_anim[self.animname]["crawl1"];
-						self.crouchRunAnim = level.scr_anim[self.animname]["crawl1"];
-						self.crouchrun_combatanim = level.scr_anim[self.animname]["crawl1"];
+						self.run_combatanim = level.scr_anim["zombie"]["crawl1"];
+						self.crouchRunAnim = level.scr_anim["zombie"]["crawl1"];
+						self.crouchrun_combatanim = level.scr_anim["zombie"]["crawl1"];
 					}
 					else if( which_anim == 1 ) 
 					{
 						self.deathanim = %ai_zombie_crawl_death_v2;
 						self set_run_anim( "death4" );
-						self.run_combatanim = level.scr_anim[self.animname]["crawl2"];
-						self.crouchRunAnim = level.scr_anim[self.animname]["crawl2"];
-						self.crouchrun_combatanim = level.scr_anim[self.animname]["crawl2"];
+						self.run_combatanim = level.scr_anim["zombie"]["crawl2"];
+						self.crouchRunAnim = level.scr_anim["zombie"]["crawl2"];
+						self.crouchrun_combatanim = level.scr_anim["zombie"]["crawl2"];
 					}
 					else if( which_anim == 2 ) 
 					{
 						self.deathanim = %ai_zombie_crawl_death_v1;
 						self set_run_anim( "death3" );
-						self.run_combatanim = level.scr_anim[self.animname]["crawl3"];
-						self.crouchRunAnim = level.scr_anim[self.animname]["crawl3"];
-						self.crouchrun_combatanim = level.scr_anim[self.animname]["crawl3"];
+						self.run_combatanim = level.scr_anim["zombie"]["crawl3"];
+						self.crouchRunAnim = level.scr_anim["zombie"]["crawl3"];
+						self.crouchrun_combatanim = level.scr_anim["zombie"]["crawl3"];
 					}
 					else if( which_anim == 3 ) 
 					{
 						self.deathanim = %ai_zombie_crawl_death_v2;
 						self set_run_anim( "death4" );
-						self.run_combatanim = level.scr_anim[self.animname]["crawl4"];
-						self.crouchRunAnim = level.scr_anim[self.animname]["crawl4"];
-						self.crouchrun_combatanim = level.scr_anim[self.animname]["crawl4"];
+						self.run_combatanim = level.scr_anim["zombie"]["crawl4"];
+						self.crouchRunAnim = level.scr_anim["zombie"]["crawl4"];
+						self.crouchrun_combatanim = level.scr_anim["zombie"]["crawl4"];
 					}
 					else if( which_anim == 4 ) 
 					{
 						self.deathanim = %ai_zombie_crawl_death_v1;
 						self set_run_anim( "death3" );
-						self.run_combatanim = level.scr_anim[self.animname]["crawl5"];
-						self.crouchRunAnim = level.scr_anim[self.animname]["crawl5"];
-						self.crouchrun_combatanim = level.scr_anim[self.animname]["crawl5"];
+						self.run_combatanim = level.scr_anim["zombie"]["crawl5"];
+						self.crouchRunAnim = level.scr_anim["zombie"]["crawl5"];
+						self.crouchrun_combatanim = level.scr_anim["zombie"]["crawl5"];
 					}
 										
 				}
@@ -1766,17 +1552,9 @@ zombie_should_gib( amount, attacker, type )
 		case "MOD_FALLING": 
 		case "MOD_SUICIDE": 
 		case "MOD_TRIGGER_HURT":
-		case "MOD_BURNED":	
+		case "MOD_BURNED":
+		case "MOD_MELEE":		
 			return false; 
-		case "MOD_MELEE":	
-			if( isPlayer( attacker ) && randomFloat( 1 ) > 0.25 && attacker HasPerk( "specialty_altmelee" ) )
-			{
-				return true;
-			}
-			else 
-			{
-				return false;
-			}
 	}
 
 	if( type == "MOD_PISTOL_BULLET" || type == "MOD_RIFLE_BULLET" )
@@ -1917,16 +1695,6 @@ init_gib_tags()
 	level.gib_tags = tags;
 }
 
-zombie_can_drop_powerups( zombie )
-{
-	if( zombie.damageweapon == "zombie_cymbal_monkey" )
-	{
-		return false;
-	}
-	
-	return true;
-}
-
 zombie_death_points( origin, mod, hit_location, player,zombie )
 {
 	//ChrisP - no points or powerups for killing zombies
@@ -1935,10 +1703,7 @@ zombie_death_points( origin, mod, hit_location, player,zombie )
 		return;
 	}
 	
-	if( zombie_can_drop_powerups( zombie ) )
-	{
-		level thread maps\so\zm_common\_zm_powerups::powerup_drop( origin );
-	}
+	level thread maps\so\zm_common\_zm_powerups::powerup_drop( origin );
 		
 	if( !IsDefined( player ) || !IsPlayer( player ) )
 	{
@@ -1949,10 +1714,572 @@ zombie_death_points( origin, mod, hit_location, player,zombie )
 	//add this check ( 3/24/09 - Chrisp)
 	if(level.script != "nazi_zombie_prototype")
 	{
-		level thread maps\so\zm_common\_zm_audio::play_death_vo(hit_location, player,mod,zombie);
+		level thread play_death_vo(hit_location, player,mod,zombie);
 	}
 
 	player maps\so\zm_common\_zm_score::player_add_points( "death", mod, hit_location ); 
+}
+designate_rival_hero(player, hero, rival)
+{
+	players = getplayers();
+
+//		iprintlnbold("designating_rival");
+
+	playHero = isdefined(players[hero]);
+	playRival = isdefined(players[rival]);
+	
+	if(playHero && playRival)
+	{
+		if(randomfloatrange(0,1) < .5)
+		{
+			playRival = false;
+		}
+		else
+		{
+			playHero = false;
+		}
+	}	
+	if(playHero)
+	{		
+		if( distance (player.origin, players[hero].origin) < 400)
+		{
+			player_responder = "plr_" + hero+"_";
+			players[hero] play_headshot_response_hero(player_responder);
+		}
+	}		
+	
+	if(playRival)
+	{
+		if( distance (player.origin, players[rival].origin) < 400)
+		{
+			player_responder = "plr_" + rival+"_";
+			players[rival] play_headshot_response_rival(player_responder);
+		}
+	}
+}
+play_death_vo(hit_location, player,mod,zombie)
+{
+	// CHRISP - adding some modifiers here so that it doens't play 100% of the time 
+	// and takes into account the damage type. 
+	//	default is 10% chance of saying something
+	//iprintlnbold(mod);
+	
+	//iprintlnbold(player);
+	
+	if( getdvar("zombie_death_vo_freq") == "" )
+	{
+		setdvar("zombie_death_vo_freq","100"); //TUEY moved to 50---We can take this out\tweak this later.
+	}
+	
+	chance = getdvarint("zombie_death_vo_freq");
+	
+	weapon = player GetCurrentWeapon();
+	//iprintlnbold (weapon);
+	
+	sound = undefined;
+	//just return and don't play a sound if the chance is not there
+	if(chance < randomint(100) )
+	{
+		return;
+	}
+
+	//TUEY - this funciton allows you to play a voice over when you kill a zombie and its last hit spot was something specific (like Headshot).
+	//players = getplayers();
+	index = maps\so\zm_common\_zm_weapons::get_player_index(player);
+	
+	players = getplayers();
+
+	if(!isdefined (level.player_is_speaking))
+	{
+		level.player_is_speaking = 0;
+	}
+	if(!isdefined(level.zombie_vars["zombie_insta_kill"] ))
+	{
+		level.zombie_vars["zombie_insta_kill"] = 0;
+	}
+	if(hit_location == "head" && level.zombie_vars["zombie_insta_kill"] != 1   )
+	{
+		//no VO for non bullet headshot kills
+		if( mod != "MOD_PISTOL_BULLET" &&	mod != "MOD_RIFLE_BULLET" )
+		{
+			return;
+		}					
+		//chrisp - far headshot sounds
+		if(distance(player.origin,zombie.origin) > 450)
+		{
+			//sound = "plr_" + index + "_vox_kill_headdist" + "_" + randomintrange(0, 11);
+			plr = "plr_" + index + "_";
+			player thread play_headshot_dialog (plr);
+
+			if(index == 0)
+			{	//DEMPSEY gets a headshot, response hero Tenko, rival The Doc
+			
+				designate_rival_hero(player,2,3);	
+			}
+			if(index == 1)	
+			{		
+				//Nickolai gets a headshot, response hero Dempsey, rival Tenko
+				designate_rival_hero(player,3,2);
+			}		
+			if(index == 2)
+			{
+				//Tenko gets a headshot, response hero The Doctor, rival Nickolai
+				designate_rival_hero(player,0,1);	
+			}
+			if(index == 3)
+			{
+				//The Doc gets a headshot, response hero Nickolai, rival Dempsey
+				designate_rival_hero(player,1,0);	
+			}
+			return;
+
+		}	
+		//remove headshot sounds for instakill
+		if (level.zombie_vars["zombie_insta_kill"] != 0)
+		{			
+			sound = undefined;
+		}
+
+	}
+	if(weapon == "ray_gun")
+	{
+		//Ray Gun Kills
+		if(distance(player.origin,zombie.origin) > 348 && level.zombie_vars["zombie_insta_kill"] == 0)
+		{
+			rand = randomintrange(0, 100);
+			if(rand < 28)
+			{
+				plr = "plr_" + index + "_";
+				player play_raygun_dialog(plr);
+				
+			}
+			
+		}	
+		return;
+	}
+	if(weapon == "ray_gun")
+	{
+		//Ray Gun Kills
+		if(distance(player.origin,zombie.origin) > 348 && level.zombie_vars["zombie_insta_kill"] == 0)
+		{
+			rand = randomintrange(0, 100);
+			if(rand < 28)
+			{
+				plr = "plr_" + index + "_";
+				player play_raygun_dialog(plr);
+				
+			}
+			
+		}	
+		return;
+	}
+	if( mod == "MOD_BURNED" )
+	{
+		//TUEY play flamethrower death sounds
+		
+		//	iprintlnbold(mod);
+		plr = "plr_" + index + "_";
+		player play_flamethrower_dialog (plr);
+		return;
+	}	
+	//check for close range kills, and play a special sound, unless instakill is on 
+	if(distance(player.origin,zombie.origin) < 64 && level.zombie_vars["zombie_insta_kill"] == 0 && mod != "MOD_BURNED")
+	{
+		//sound = "plr_" + index + "_vox_close" + "_" + randomintrange(0, 6);
+		rand = randomintrange(0, 100);
+		if(rand < 40)
+		{
+			plr = "plr_" + index + "_";
+			player play_closekill_dialog (plr);				
+
+		}	
+		return;
+	
+	}	
+	
+	//special case for close range melee attacks while insta-kill is on
+	if (level.zombie_vars["zombie_insta_kill"] != 0)
+	{
+		if( mod == "MOD_MELEE" || mod == "MOD_BAYONET" || mod == "MOD_UNKNOWN" && distance(player.origin,zombie.origin) < 64)
+		{
+			plr = "plr_" + index + "_";
+			player play_insta_melee_dialog(plr);
+			//sound = "plr_" + index + "_vox_melee_insta" + "_" + randomintrange(0, 5); 
+			return;
+		}
+		
+	}
+	if( mod == "MOD_PROJECTILE")
+	{	
+		//Plays explosion dialog
+		plr = "plr_" + index + "_";
+		player play_explosion_dialog(plr);
+
+	}
+	//Explosive Kills
+	if((mod == "MOD_GRENADE_SPLASH" || mod == "MOD_GRENADE") && level.zombie_vars["zombie_insta_kill"] == 0 )
+	{
+		//Plays explosion dialog
+		plr = "plr_" + index + "_";
+		player play_explosion_dialog(plr);
+		return;
+
+	}
+
+	
+/*
+	//This keeps multiple voice overs from playing on the same player (both killstreaks and headshots).
+	if (level.player_is_speaking != 1 && isDefined(sound) && level.zombie_vars["zombie_insta_kill"] != 0)
+	{	
+		level.player_is_speaking = 1;
+		player playsound(sound, "sound_done");			
+		player waittill("sound_done");
+		//This ensures that there is at least 2 seconds waittime before playing another VO.
+		wait(2);		
+		level.player_is_speaking = 0;
+	}
+	//This allows us to play VO's faster if the player is in Instakill and killing at a short distance.
+	else if (level.player_is_speaking != 1 && isDefined(sound) && level.zombie_vars["zombie_insta_kill"] == 0)
+	{
+		level.player_is_speaking = 1;
+		player playsound(sound, "sound_done");			
+		player waittill("sound_done");
+		//This ensures that there is at least 3 seconds waittime before playing another VO.
+		wait(0.5);		
+		level.player_is_speaking = 0;
+
+	}	
+*/
+}
+play_headshot_response_hero(player_index)
+{
+		
+		waittime = 0;
+		if(!IsDefined( self.one_at_a_time_hero))
+		{
+			self.one_at_a_time_hero = 0;
+		}
+		if(!IsDefined (self.vox_resp_hr_headdist))
+		{
+			num_variants = maps\so\zm_common\_zm_audio::get_number_variants(player_index + "vox_resp_hr_headdist");
+		//	iprintlnbold(num_variants);
+			self.vox_resp_hr_headdist = [];
+			for(i=0;i<num_variants;i++)
+			{
+				self.vox_resp_hr_headdist[self.vox_resp_hr_headdist.size] = "vox_resp_hr_headdist_" + i;	
+			}
+			self.vox_resp_hr_headdist_available = self.vox_resp_hr_headdist;
+		}
+		if(self.one_at_a_time_hero == 0)
+		{
+			self.one_at_a_time_hero = 1;
+			sound_to_play = random(self.vox_resp_hr_headdist_available);
+		//	iprintlnbold(player_index + "_" + sound_to_play);
+		
+			wait(2);
+			self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, waittime);
+			self.vox_resp_hr_headdist_available = array_remove(self.vox_resp_hr_headdist_available,sound_to_play);			
+			if (self.vox_resp_hr_headdist_available.size < 1 )
+			{
+				self.vox_resp_hr_headdist_available = self.vox_resp_hr_headdist;
+			}
+			self.one_at_a_time_hero = 0;
+		}
+}
+play_headshot_response_rival(player_index)
+{
+		
+		waittime = 0;
+		if(!IsDefined( self.one_at_a_time_rival))
+		{
+			self.one_at_a_time_rival = 0;
+		}
+		if(!IsDefined (self.vox_resp_riv_headdist))
+		{
+			num_variants = maps\so\zm_common\_zm_audio::get_number_variants(player_index + "vox_resp_riv_headdist");
+			self.vox_resp_riv_headdist = [];
+			for(i=0;i<num_variants;i++)
+			{
+				self.vox_resp_riv_headdist[self.vox_resp_riv_headdist.size] = "vox_resp_riv_headdist_" + i;	
+			}
+			self.vox_resp_riv_headdist_available = self.vox_resp_riv_headdist;
+		}
+		if(self.one_at_a_time_rival == 0)
+		{
+			self.one_at_a_time_rival = 1;
+			sound_to_play = random(self.vox_resp_riv_headdist_available);
+		//	iprintlnbold(player_index + "_" + sound_to_play);
+			self.vox_resp_riv_headdist_available = array_remove(self.vox_resp_riv_headdist_available,sound_to_play);	
+			wait(2);		
+			self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, waittime);
+			if (self.vox_resp_riv_headdist_available.size < 1 )
+			{
+				self.vox_resp_riv_headdist_available = self.vox_resp_riv_headdist;
+			}
+			self.one_at_a_time_rival = 0;
+		}
+}
+play_projectile_dialog(player_index)
+{
+		
+		waittime = 1;
+		if(!IsDefined( self.one_at_a_time))
+		{
+			self.one_at_a_time = 0;
+		}
+		if(!IsDefined (self.vox_kill_explo))
+		{
+			num_variants = maps\so\zm_common\_zm_audio::get_number_variants(player_index + "vox_kill_explo");
+			self.vox_kill_explo = [];
+			for(i=0;i<num_variants;i++)
+			{
+				self.vox_kill_explo[self.vox_kill_explo.size] = "vox_kill_explo_" + i;	
+			}
+			self.vox_kill_explo_available = self.vox_kill_explo;
+		}
+		if(self.one_at_a_time == 0)
+		{
+			self.one_at_a_time = 1;
+			sound_to_play = random(self.vox_kill_explo_available);
+	//		iprintlnbold(player_index + "_" + sound_to_play);
+			self.vox_kill_explo_available = array_remove(self.vox_kill_explo_available,sound_to_play);			
+			self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, waittime);
+			if (self.vox_kill_explo_available.size < 1 )
+			{
+				self.vox_kill_explo_available = self.vox_kill_explo;
+			}
+			self.one_at_a_time = 0;
+		}
+}
+play_explosion_dialog(player_index)
+{
+		
+		waittime = 0.25;
+		if(!IsDefined( self.one_at_a_time))
+		{
+			self.one_at_a_time = 0;
+		}
+		if(!IsDefined (self.vox_kill_explo))
+		{
+			num_variants = maps\so\zm_common\_zm_audio::get_number_variants(player_index + "vox_kill_explo");
+			self.vox_kill_explo = [];
+			for(i=0;i<num_variants;i++)
+			{
+				self.vox_kill_explo[self.vox_kill_explo.size] = "vox_kill_explo_" + i;	
+			}
+			self.vox_kill_explo_available = self.vox_kill_explo;
+		}
+		if(self.one_at_a_time == 0)
+		{
+			self.one_at_a_time = 1;
+			sound_to_play = random(self.vox_kill_explo_available);
+//			iprintlnbold(player_index + "_" + sound_to_play);
+			self.vox_kill_explo_available = array_remove(self.vox_kill_explo_available,sound_to_play);			
+			self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, waittime);
+			if (self.vox_kill_explo_available.size < 1 )
+			{
+				self.vox_kill_explo_available = self.vox_kill_explo;
+			}
+			self.one_at_a_time = 0;
+		}
+}
+play_flamethrower_dialog(player_index)
+{
+		
+		waittime = 0.5;
+		if(!IsDefined( self.one_at_a_time))
+		{
+			self.one_at_a_time = 0;
+		}
+		if(!IsDefined (self.vox_kill_flame))
+		{
+			num_variants = maps\so\zm_common\_zm_audio::get_number_variants(player_index + "vox_kill_flame");
+			self.vox_kill_flame = [];
+			for(i=0;i<num_variants;i++)
+			{
+				self.vox_kill_flame[self.vox_kill_flame.size] = "vox_kill_flame_" + i;	
+			}
+			self.vox_kill_flame_available = self.vox_kill_flame;
+		}
+		if(self.one_at_a_time == 0)
+		{
+			self.one_at_a_time = 1;
+			sound_to_play = random(self.vox_kill_flame_available);
+			self.vox_kill_flame_available = array_remove(self.vox_kill_flame_available,sound_to_play);			
+
+			self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, waittime);
+			if (self.vox_kill_flame_available.size < 1 )
+			{
+				self.vox_kill_flame_available = self.vox_kill_flame;
+			}
+			self.one_at_a_time = 0;
+		}
+}
+play_closekill_dialog(player_index)
+{
+
+		waittime = 1;
+		if(!IsDefined( self.one_at_a_time))
+		{
+			self.one_at_a_time = 0;
+		}
+		if(!IsDefined (self.vox_close))
+		{
+			num_variants = maps\so\zm_common\_zm_audio::get_number_variants(player_index + "vox_close");
+			self.vox_close = [];
+			for(i=0;i<num_variants;i++)
+			{
+				self.vox_close[self.vox_close.size] = "vox_close_" + i;	
+			}
+			self.vox_close_available = self.vox_close;
+		}
+		if(self.one_at_a_time == 0)
+		{
+			self.one_at_a_time = 1;
+			if (self.vox_close_available.size >= 1)
+			{
+				sound_to_play = random(self.vox_close_available);
+				self.vox_close_available = array_remove(self.vox_close_available,sound_to_play);
+				self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, waittime);
+			}
+
+			if (self.vox_close_available.size < 1 )
+			{
+				self.vox_close_available = self.vox_close;
+			}
+			self.one_at_a_time = 0;
+		}
+}
+
+play_headshot_dialog(player_index)
+{
+		
+		waittime = 0.25;
+		if(!IsDefined (self.vox_kill_headdist))
+		{
+			num_variants = maps\so\zm_common\_zm_audio::get_number_variants(player_index + "vox_kill_headdist");
+			//iprintlnbold(num_variants);
+			self.vox_kill_headdist = [];
+			for(i=0;i<num_variants;i++)
+			{
+				self.vox_kill_headdist[self.vox_kill_headdist.size] = "vox_kill_headdist_" + i;
+				//iprintlnbold("vox_kill_headdist_" + i);	
+			}
+			self.vox_kill_headdist_available = self.vox_kill_headdist;
+		}
+		sound_to_play = random(self.vox_kill_headdist_available);
+		//iprintlnbold("LINE:" + player_index + sound_to_play);
+		self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, waittime);
+		self.vox_kill_headdist_available = array_remove(self.vox_kill_headdist_available,sound_to_play);
+	
+		if (self.vox_kill_headdist_available.size < 1 )
+		{
+			self.vox_kill_headdist_available = self.vox_kill_headdist;
+		}
+
+}
+play_tesla_dialog(player_index)
+{
+		
+		waittime = 0.25;
+		if(!IsDefined (self.vox_kill_tesla))
+		{
+			num_variants = maps\so\zm_common\_zm_audio::get_number_variants(player_index + "vox_kill_tesla");
+			//iprintlnbold(num_variants);
+			self.vox_kill_tesla = [];
+			for(i=0;i<num_variants;i++)
+			{
+				self.vox_kill_tesla[self.vox_kill_tesla.size] = "vox_kill_tesla_" + i;
+				//iprintlnbold("vox_kill_tesla_" + i);	
+			}
+			self.vox_kill_tesla_available = self.vox_kill_tesla;
+		}
+
+		if(!isdefined (level.player_is_speaking))
+		{
+			level.player_is_speaking = 0;
+		}
+
+		sound_to_play = random(self.vox_kill_tesla_available);
+		//iprintlnbold("LINE:" + player_index + sound_to_play);
+		self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, waittime);
+		self.vox_kill_tesla_available = array_remove(self.vox_kill_tesla_available,sound_to_play);
+	
+		if (self.vox_kill_tesla_available.size < 1 )
+		{
+			self.vox_kill_tesla_available = self.vox_kill_tesla;
+		}
+
+}
+play_raygun_dialog(player_index)
+{
+		
+		waittime = 0.05;
+		if(!IsDefined (self.vox_kill_ray))
+		{
+			num_variants = maps\so\zm_common\_zm_audio::get_number_variants(player_index + "vox_kill_ray");
+			//iprintlnbold(num_variants);
+			self.vox_kill_ray = [];
+			for(i=0;i<num_variants;i++)
+			{
+				self.vox_kill_ray[self.vox_kill_ray.size] = "vox_kill_ray_" + i;
+				//iprintlnbold("vox_kill_ray_" + i);	
+			}
+			self.vox_kill_ray_available = self.vox_kill_ray;
+		}
+
+		if(!isdefined (level.player_is_speaking))
+		{
+			level.player_is_speaking = 0;
+		}
+
+		sound_to_play = random(self.vox_kill_ray_available);
+	//	iprintlnbold("LINE:" + player_index + sound_to_play);
+		self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, waittime);
+		self.vox_kill_ray_available = array_remove(self.vox_kill_ray_available,sound_to_play);
+	
+		if (self.vox_kill_ray_available.size < 1 )
+		{
+			self.vox_kill_ray_available = self.vox_kill_ray;
+		}
+
+}
+play_insta_melee_dialog(player_index)
+{
+		
+		waittime = 0.25;
+		if(!IsDefined( self.one_at_a_time))
+		{
+			self.one_at_a_time = 0;
+		}
+		if(!IsDefined (self.vox_insta_melee))
+		{
+			num_variants = maps\so\zm_common\_zm_audio::get_number_variants(player_index + "vox_insta_melee");
+			self.vox_insta_melee = [];
+			for(i=0;i<num_variants;i++)
+			{
+				self.vox_insta_melee[self.vox_insta_melee.size] = "vox_insta_melee_" + i;	
+			}
+			self.vox_insta_melee_available = self.vox_insta_melee;
+		}
+		if(self.one_at_a_time == 0)
+		{
+			self.one_at_a_time = 1;
+			sound_to_play = random(self.vox_insta_melee_available);
+			self.vox_insta_melee_available = array_remove(self.vox_insta_melee_available,sound_to_play);
+			if (self.vox_insta_melee_available.size < 1 )
+			{
+				self.vox_insta_melee_available = self.vox_insta_melee;
+			}
+			self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, waittime);
+			//self playsound(player_index + sound_to_play, "sound_done" + sound_to_play);			
+			//self waittill("sound_done" + sound_to_play);
+			wait(waittime);
+			self.one_at_a_time = 0;
+
+		}
+		//This ensures that there is at least 3 seconds waittime before playing another VO.
+
 }
 
 // Called from animscripts\death.gsc
@@ -1981,10 +2308,6 @@ zombie_death_animscript()
 	if( self.damagemod == "MOD_BURNED" )
 	{
 		self thread animscripts\death::flame_death_fx();
-	}
-	if( self.damagemod == "MOD_GRENADE" || self.damagemod == "MOD_GRENADE_SPLASH" ) 
-	{
-		level notify( "zombie_grenade_death", self.origin );
 	}
 
 	return false;
@@ -2068,11 +2391,11 @@ zombie_damage( mod, hit_location, hit_origin, player )
 	{
 		if ( isdefined( player ) && isalive( player ) )
 		{
-			self DoDamage( level.round_number + randomintrange( 100, 500 ), self.origin, player);
+			self DoDamage( level.round_number + randomint( 100, 500 ), self.origin, player);
 		}
 		else
 		{
-			self DoDamage( level.round_number + randomintrange( 100, 500 ), self.origin, undefined );
+			self DoDamage( level.round_number + randomint( 100, 500 ), self.origin, undefined );
 		}
 	}
 	else if( mod == "MOD_PROJECTILE" || mod == "MOD_EXPLOSIVE" || mod == "MOD_PROJECTILE_SPLASH" || mod == "MOD_PROJECTILE_SPLASH")
@@ -2098,36 +2421,7 @@ zombie_damage( mod, hit_location, hit_origin, player )
 		}
 	}
 	
-	//AUDIO Plays a sound when Crawlers are created
-	if( IsDefined( self.a.gib_ref ) && (self.a.gib_ref == "no_legs") && isalive( self ) )
-	{
-		if ( isdefined( player ) )
-		{
-			rand = randomintrange(0, 100);
-			if(rand < 10)
-			{
-				index = maps\so\zm_common\_zm_weapons::get_player_index(player);
-				plr = "plr_" + index + "_";
-				player thread create_and_play_dialog( plr, "vox_crawl_spawn", 0.25, "resp_cspawn" );
-			}
-		}
-	}
-	else if( IsDefined( self.a.gib_ref ) && ( (self.a.gib_ref == "right_arm") || (self.a.gib_ref == "left_arm") ) )
-	{
-		if( self.has_legs && isalive( self ) )
-		{
-			if ( isdefined( player ) )
-			{
-				rand = randomintrange(0, 100);
-				if(rand < 3)
-				{
-					index = maps\so\zm_common\_zm_weapons::get_player_index(player);
-					plr = "plr_" + index + "_";
-					player thread create_and_play_dialog( plr, "vox_shoot_limb", 0.25 );
-				}
-			}
-		}
-	}	
+	
 	self thread maps\so\zm_common\_zm_powerups::check_for_instakill( player );
 }
 
@@ -2231,23 +2525,14 @@ zombie_death_event( zombie )
 		}
 		
 		if ( IsDefined( zombie.sound_damage_player ) && zombie.sound_damage_player == zombie.attacker )
-		{	
+		{
+			
 			zombie.attacker thread play_closeDamage_dialog();	
 		}
-		
+
 		zombie.attacker notify("zom_kill");
 	}
 	
-	if( isdefined( zombie.attacker ) && isplayer( zombie.attacker ) )
-	{
-		damageloc = zombie.damagelocation;
-		damagemod = zombie.damagemod;
-		attacker = zombie.attacker;
-		weapon = zombie.damageWeapon;
-
-		bbPrint( "zombie_kills: round %d zombietype zombie damagetype %s damagelocation %s playername %s playerweapon %s playerx %f playery %f playerz %f zombiex %f zombiey %f zombiez %f",
-				level.round_number, damagemod, damageloc, attacker.playername, weapon, attacker.origin, zombie.origin );
-	}
 }
 play_closeDamage_dialog()
 {
@@ -2308,7 +2593,7 @@ find_flesh()
 		return;
 	}
 
-	self.ignore_player = undefined;
+		self.ignore_player = undefined;
 
 	self zombie_history( "find flesh -> start" );
 
@@ -2341,52 +2626,36 @@ find_flesh()
 //		{
 //			self.ignore_player = self.favoriteenemy;
 //		}
-
-		zombie_poi = self get_zombie_point_of_interest( self.origin );
 		
 		players = get_players();
-		
-		//PI_CHANGE_BEGIN - 6/18/09 JV It was requested that we use the poi functionality to set the "wait" point while all players  
-		//are in the process of teleportation. It should not intefere with the monkey.  The way it should work is, if all players are in teleportation,
-		//zombies should go and wait at the stage, but if there is a valid player not in teleportation, they should go to him
-		if (isDefined(level.zombieTheaterTeleporterSeekLogicFunc) )
-		{
-       		temp_poi = self [[ level.zombieTheaterTeleporterSeekLogicFunc ]](players, zombie_poi);
-       		if (IsDefined(temp_poi))
-       			zombie_poi = temp_poi;
-       	}
-       	//PI_CHANGE_END
-
-					
+				
 		// If playing single player, never ignore the player
 		if( players.size == 1 )
 		{
 			self.ignore_player = undefined;
 		}
-			
+
 		player = get_closest_valid_player( self.origin, self.ignore_player ); 
 		
-		if( !isDefined( player ) && !isDefined( zombie_poi ) )
+		if( !IsDefined( player ) )
 		{
 			self zombie_history( "find flesh -> can't find player, continue" );
 			if( IsDefined( self.ignore_player ) )
 			{
 				self.ignore_player = undefined;
-				self.ignore_player = [];
 			}
 
 			wait( 1 ); 
 			continue; 
 		}
-		
+
 		self.ignore_player = undefined;
 
-		self.enemyoverride = zombie_poi;
 		self.favoriteenemy = player;
 		self thread zombie_pathing();
 
 		self.zombie_path_timer = GetTime() + ( RandomFloatRange( 1, 3 ) * 1000 );
-		while( GetTime() < self.zombie_path_timer ) 
+		while( GetTime() < self.zombie_path_timer )
 		{
 			wait( 0.1 );
 		}
@@ -2405,36 +2674,13 @@ zombie_pathing()
 	self endon( "zombie_acquire_enemy" );
 	level endon( "intermission" );
 
-	assert( IsDefined( self.favoriteenemy ) || IsDefined( self.enemyoverride ) );
+	assert( IsDefined( self.favoriteenemy ) );
+	self.favoriteenemy endon( "disconnect" );
 
 	self thread zombie_follow_enemy();
 	self waittill( "bad_path" );
-	
-	if( isDefined( self.enemyoverride ) ) 
-	{
-		debug_print( "Zombie couldn't path to point of interest at origin: " + self.enemyoverride[0] + " Falling back to breadcrumb system" );
-		if( isDefined( self.enemyoverride[1] ) )
-		{
-			self.enemyoverride = self.enemyoverride[1] invalidate_attractor_pos( self.enemyoverride, self );
-			self.zombie_path_timer = 0;
-			return;
-		}
-	}
-	else
-	{
-		debug_print( "Zombie couldn't path to player at origin: " + self.favoriteenemy.origin + " Falling back to breadcrumb system" );
-	}
-	
-	if( !isDefined( self.favoriteenemy ) )
-	{
-		self.zombie_path_timer = 0;
-		return;
-	}
-	else
-	{
-		self.favoriteenemy endon( "disconnect" );
-	}
 
+	debug_print( "Zombie couldn't path to player at origin: " + self.favoriteenemy.origin + " Falling back to breadcrumb system" );
 	crumb_list = self.favoriteenemy.zombie_breadcrumbs;
 	bad_crumbs = [];
 
@@ -2576,31 +2822,16 @@ zombie_follow_enemy()
 
 	while( 1 )
 	{
-		if( isDefined( self.enemyoverride ) && isDefined( self.enemyoverride[1] ) )
+		if( IsDefined( self.favoriteenemy ) )
 		{
-			if( distanceSquared( self.origin, self.enemyoverride[0] ) > 1*1 )
-			{
-				self OrientMode( "face motion" );
-			}
-			else
-			{
-				self OrientMode( "face point", self.enemyoverride[1].origin );
-			}
-			self.ignoreall = true;
-			self SetGoalPos( self.enemyoverride[0] );
-		}
-		else if( IsDefined( self.favoriteenemy ) )
-		{
-			self.ignoreall = false;
-			self OrientMode( "face default" );
 			self SetGoalPos( self.favoriteenemy.origin );
 		}
 		
 		// PI_CHANGE_BEGIN
 		// JMA - while on the zipline, get zipline destination and use it as the goal
-		if( (isDefined(level.script) && level.script == "nazi_zombie_sumpf") )
+		if( isDefined(level.script) && level.script == "nazi_zombie_sumpf" )
 		{			
-			if( (isDefined(self.favoriteenemy.on_zipline) &&  self.favoriteenemy.on_zipline == true) )
+			if( isDefined(self.favoriteenemy.on_zipline) &&  self.favoriteenemy.on_zipline == true )
 			{
 				crumb_list = self.favoriteenemy.zombie_breadcrumbs;
 				bad_crumbs = [];
@@ -2629,13 +2860,13 @@ zombie_eye_glow()
 		return;
 	}
 
-/*	if(!isdefined(level._numZombEyeGlows))
+	if(!isdefined(level._numZombEyeGlows))
 	{
 		level._numZombEyeGlows = 0;
 	}
 	
-//	if(level.zombie_eyes_limited && level._numZombEyeGlows > 8)
-//		return;
+	if(level.zombie_eyes_limited && level._numZombEyeGlows > 8)
+		return;
 
 	if ( level.zombie_eyes_disabled )
 	{
@@ -2652,7 +2883,7 @@ zombie_eye_glow()
 	self.fx_eye_glow = Spawn( "script_model", self GetTagOrigin( linkTag ) );
 	self.fx_eye_glow.angles = self GetTagAngles( linkTag );
 	self.fx_eye_glow SetModel( fxModel );
-	self.fx_eye_glow LinkTo( self, linkTag ); 
+	self.fx_eye_glow LinkTo( self, linkTag );
 
 	// TEMP for testing
 	//self.fx_eye_glow thread maps\_debug::drawTagForever( fxTag );
@@ -2660,20 +2891,16 @@ zombie_eye_glow()
 	PlayFxOnTag( level._effect["eye_glow"], self.fx_eye_glow, fxTag );
 	
 	level._numZombEyeGlows ++;
-	addtagname(linkTag);
-	self haseyes(1);*/
 }
 
 // Called when either the Zombie dies or if his head gets blown off
 zombie_eye_glow_stop()
 {
-/*	if( IsDefined( self.fx_eye_glow ) )
+	if( IsDefined( self.fx_eye_glow ) )
 	{
 		self.fx_eye_glow Delete();
 		level._numZombEyeGlows --;
-	} 
-	
-	self haseyes(0);*/
+	}
 }
 
 
@@ -2734,8 +2961,7 @@ do_zombie_rise()
 	self linkto(self.anchor);
 
 	// JMA - this is used in swamp to only spawn risers in active player zones
-	if( ( level.script == "nazi_zombie_sumpf" || level.script == "nazi_zombie_factory" || level.script == "nazi_zombie_paris" || level.script == "nazi_zombie_coast" || level.script == "nazi_zombie_theater") && 
-		IsDefined( level.zombie_rise_spawners ) )
+	if( level.script == "nazi_zombie_sumpf" && IsDefined( level.zombie_rise_spawners ) )
 	{
 		spots = level.zombie_rise_spawners;
 	}
@@ -2761,11 +2987,6 @@ do_zombie_rise()
 		spot.angles = (0, 0, 0);
 	}
 	#/
-
-	if( !isDefined( spot.angles ) )
-	{
-		spot.angles = (0, 0, 0);
-	}
 
 	anim_org = spot.origin;
 	anim_ang = spot.angles;
@@ -2807,13 +3028,13 @@ do_zombie_rise()
 	//self animMode("nogravity");
 	//self setFlaggedAnimKnoballRestart("rise", level.scr_anim["zombie"]["rise_walk"], %body, 1, .1, 1);	// no "noclip" mode for these anim functions
 
-	self AnimScripted("rise", self.origin, spot.angles, self get_rise_anim());
+	self AnimScripted("rise", self.origin, self.angles, self get_rise_anim());
 	self animscripts\shared::DoNoteTracks("rise", ::handle_rise_notetracks, undefined, spot);
 
 	self notify("rise_anim_finished");
 	spot notify("stop_zombie_rise_fx");
 	self.in_the_ground = false;
-	self notify("risen", spot.script_noteworthy );
+	self notify("risen");
 }
 
 hide_pop()
@@ -2958,7 +3179,7 @@ get_rise_anim()
 {
 	///* TESTING: put this block back in
 	speed = self.zombie_move_speed;
-	return random(level._zombie_rise_anims[self.animname][self.zombie_rise_version][speed]);
+	return random(level._zombie_rise_anims[self.zombie_rise_version][speed]);
 	//*/
 
 	//return %ai_zombie_traverse_ground_v1_crawlfast;
@@ -2976,141 +3197,12 @@ get_rise_death_anim()
 
 	if (self.zombie_rise_death_out)
 	{
-		possible_anims = level._zombie_rise_death_anims[self.animname][self.zombie_rise_version]["out"];
+		possible_anims = level._zombie_rise_death_anims[self.zombie_rise_version]["out"];
 	}
 	else
 	{
-		possible_anims = level._zombie_rise_death_anims[self.animname][self.zombie_rise_version]["in"];
+		possible_anims = level._zombie_rise_death_anims[self.zombie_rise_version]["in"];
 	}
 
 	return random(possible_anims);
-}
-
-
-
-
-// gib limbs if enough firepower occurs
-make_crawler()
-{
-	//	self endon( "death" ); 
-	if( !IsDefined( self ) )
-	{
-		return;
-	}
-
-	self.has_legs = false; 
-	self AllowedStances( "crouch" ); 
-
-	damage_type[0] = "right_foot";
-	damage_type[1] = "left_foot";
-	
-	refs = []; 
-	switch( damage_type[ RandomInt(damage_type.size) ] )
-	{
-	case "right_leg_upper":
-	case "right_leg_lower":
-	case "right_foot":
-		// Addition "right_leg" refs so that the no_legs happens less and is more rare
-		refs[refs.size] = "right_leg";
-		refs[refs.size] = "right_leg";
-		refs[refs.size] = "right_leg";
-		refs[refs.size] = "no_legs"; 
-		break; 
-
-	case "left_leg_upper":
-	case "left_leg_lower":
-	case "left_foot":
-		// Addition "left_leg" refs so that the no_legs happens less and is more rare
-		refs[refs.size] = "left_leg";
-		refs[refs.size] = "left_leg";
-		refs[refs.size] = "left_leg";
-		refs[refs.size] = "no_legs";
-		break; 
-	}
-
-	if( refs.size )
-	{
-		self.a.gib_ref = animscripts\death::get_random( refs ); 
-
-		// Don't stand if a leg is gone
-		if( ( self.a.gib_ref == "no_legs" || self.a.gib_ref == "right_leg" || self.a.gib_ref == "left_leg" ) && self.health > 0 )
-		{
-			self.has_legs = false; 
-			self AllowedStances( "crouch" ); 
-
-			which_anim = RandomInt( 5 ); 
-			if(self.a.gib_ref == "no_legs")
-			{
-
-				if(randomint(100) < 50)
-				{
-					self.deathanim = %ai_zombie_crawl_death_v1;
-					self set_run_anim( "death3" );
-					self.run_combatanim = level.scr_anim[self.animname]["crawl_hand_1"];
-					self.crouchRunAnim = level.scr_anim[self.animname]["crawl_hand_1"];
-					self.crouchrun_combatanim = level.scr_anim[self.animname]["crawl_hand_1"];
-				}
-				else
-				{
-					self.deathanim = %ai_zombie_crawl_death_v1;
-					self set_run_anim( "death3" );
-					self.run_combatanim = level.scr_anim[self.animname]["crawl_hand_2"];
-					self.crouchRunAnim = level.scr_anim[self.animname]["crawl_hand_2"];
-					self.crouchrun_combatanim = level.scr_anim[self.animname]["crawl_hand_2"];
-				}
-
-
-			}
-			else if( which_anim == 0 ) 
-			{
-				self.deathanim = %ai_zombie_crawl_death_v1;
-				self set_run_anim( "death3" );
-				self.run_combatanim = level.scr_anim[self.animname]["crawl1"];
-				self.crouchRunAnim = level.scr_anim[self.animname]["crawl1"];
-				self.crouchrun_combatanim = level.scr_anim[self.animname]["crawl1"];
-			}
-			else if( which_anim == 1 ) 
-			{
-				self.deathanim = %ai_zombie_crawl_death_v2;
-				self set_run_anim( "death4" );
-				self.run_combatanim = level.scr_anim[self.animname]["crawl2"];
-				self.crouchRunAnim = level.scr_anim[self.animname]["crawl2"];
-				self.crouchrun_combatanim = level.scr_anim[self.animname]["crawl2"];
-			}
-			else if( which_anim == 2 ) 
-			{
-				self.deathanim = %ai_zombie_crawl_death_v1;
-				self set_run_anim( "death3" );
-				self.run_combatanim = level.scr_anim[self.animname]["crawl3"];
-				self.crouchRunAnim = level.scr_anim[self.animname]["crawl3"];
-				self.crouchrun_combatanim = level.scr_anim[self.animname]["crawl3"];
-			}
-			else if( which_anim == 3 ) 
-			{
-				self.deathanim = %ai_zombie_crawl_death_v2;
-				self set_run_anim( "death4" );
-				self.run_combatanim = level.scr_anim[self.animname]["crawl4"];
-				self.crouchRunAnim = level.scr_anim[self.animname]["crawl4"];
-				self.crouchrun_combatanim = level.scr_anim[self.animname]["crawl4"];
-			}
-			else if( which_anim == 4 ) 
-			{
-				self.deathanim = %ai_zombie_crawl_death_v1;
-				self set_run_anim( "death3" );
-				self.run_combatanim = level.scr_anim[self.animname]["crawl5"];
-				self.crouchRunAnim = level.scr_anim[self.animname]["crawl5"];
-				self.crouchrun_combatanim = level.scr_anim[self.animname]["crawl5"];
-			}
-
-		}
-	}
-
-//	if( self.health > 0 )
-//	{
-//		// force gibbing if the zombie is still alive
-//		self thread animscripts\death::do_gib();
-//
-//		//stat tracking
-//		attacker.stats["zombie_gibs"]++;
-//	}
 }

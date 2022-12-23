@@ -199,7 +199,7 @@ powerup_hud_monitor()
 					hudelem.y = hudelem.y - 35; 
 					hudelem.alpha = 0.8;
 					hudelem.flashing = false;
-					hudelem setshader( powerup_hud_fields[ powerup_hud_field_keys[ powerup_hud_field_key_index ] ].shader;, 32, 32);
+					hudelem setshader( powerup_hud_fields[ powerup_hud_field_keys[ powerup_hud_field_key_index ] ].shader, 32, 32);
 					player.powerup_hud[ powerup_hud_field_keys[ powerup_hud_field_key_index ] ] = hudelem;
 				}
 /#
@@ -308,20 +308,6 @@ get_next_powerup()
 			continue;
 		}
 		return powerup;
-	}
-
-	return powerup;
-}
-
-get_next_powerup()
-{
-	powerup = level.zombie_powerup_array[level.zombie_powerup_index];
-	level.zombie_powerup_index++;
-
-	if ( level.zombie_powerup_index >= level.zombie_powerup_array.size )
-	{
-		level.zombie_powerup_index = 0;
-		randomize_powerups();
 	}
 
 	return powerup;
@@ -1496,7 +1482,7 @@ register_powerup_basic_info( powerup, model, hint, func_should_drop_with_regular
 	precachemodel( model );
 	precachestring( hint );
 	level._custom_powerups[ powerup ].powerup_name = powerup;
-	level._custom_powerups[ powerup ].model_name = model,
+	level._custom_powerups[ powerup ].model_name = model;
 	level._custom_powerups[ powerup ].hint = hint;
 	level._custom_powerups[ powerup ].func_should_drop_with_regular_powerups = func_should_drop_with_regular_powerups;
 	level._custom_powerups[ powerup ].solo = solo;

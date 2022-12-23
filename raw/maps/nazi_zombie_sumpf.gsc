@@ -104,12 +104,15 @@ main()
 	level.custom_map_perk_models[ "revive" ] = "zombie_vending_revive_on_price";
 	level.custom_map_perk_models[ "doubletap" ] = "zombie_vending_doubletap_price";
 	level.custom_map_perk_models[ "sleight" ] = "zombie_vending_sleight_on_price";
-	maps\so\zm_common\_zm_perks::enable_doubletap_perk_for_level();
-	maps\so\zm_common\_zm_perks::enable_juggernog_perk_for_level();
-	maps\so\zm_common\_zm_perks::enable_revive_perk_for_level();
-	maps\so\zm_common\_zm_perks::enable_sleight_perk_for_level();
-	maps\so\zm_common\_zm_spawner::init();
+	maps\so\zm_common\perks\_zm_perk_doubletap::enable_doubletap_perk_for_level();
+	maps\so\zm_common\perks\_zm_perk_juggernog::enable_juggernog_perk_for_level();
+	maps\so\zm_common\perks\_zm_perk_revive::enable_revive_perk_for_level();
+	maps\so\zm_common\perks\_zm_perk_sleight::enable_sleight_perk_for_level();
+	maps\so\zm_common\_zm_spawner_sumpf::init();
 	maps\so\zm_common\_zm::init_zm();
+	maps\so\zm_common\_zm_ai_dogs::init();
+	maps\so\zm_common\_zm_weap_tesla_gun::init();
+
 	//init_sounds();
 	init_zombie_sumpf();
 	
@@ -361,8 +364,8 @@ spawn_initial_outside_zombies( name )
 		// JMA - make sure spawn_zombie doesn't fail
 		if( IsDefined( ai ) )
 		{
-			ai maps\so\zm_common\_zm_spawner::zombie_setup_attack_properties();
-			ai thread maps\so\zm_common\_zm_spawner::find_flesh();
+			ai maps\so\zm_common\_zm_spawner_sumpf::zombie_setup_attack_properties();
+			ai thread maps\so\zm_common\_zm_spawner_sumpf::find_flesh();
 			wait_network_frame();
 		}
 	}

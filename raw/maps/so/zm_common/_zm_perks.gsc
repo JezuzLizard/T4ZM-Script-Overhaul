@@ -227,7 +227,12 @@ wait_for_player_to_take( player, weapon, packa_timer )
 			if( !player maps\_laststand::player_is_in_laststand() && !( isDefined( player.is_drinking ) && player.is_drinking > 0 ) && player getCurrentWeapon() != "mine_bouncing_betty" )
 			{
 				self notify( "pap_taken" );
-				weapon_limit = get_player_weapon_limit( player );
+				weapon_limit = 2;
+
+				if ( isDefined( level.get_player_weapon_limit_func ) )
+				{
+					weapon_limit = [[ level.get_player_weapon_limit_func ]]( player );
+				}
 				primaries = player GetWeaponsListPrimaries();
 				if( isDefined( primaries ) && primaries.size >= weapon_limit )
 				{
@@ -519,11 +524,11 @@ vending_trigger_think()
 			continue;
 		}
 
-		self thread vending_trigger_post_think( player, perk );
+		self thread vending_trigger_post_think( player, perk, cost );
 	}
 }
 
-vending_trigger_post_think( player, perk )
+vending_trigger_post_think( player, perk, cost )
 {
 	level endon( "end_game" );
 	player endon( "disconnect" );
@@ -551,7 +556,7 @@ vending_trigger_post_think( player, perk )
 	// TODO: race condition?
 	if ( player maps\_laststand::player_is_in_laststand() )
 	{
-		continue;
+		return;
 	}
 	if ( array_validate( level._custom_perks ) && isdefined( level._custom_perks[perk] ) && isdefined( level._custom_perks[perk].player_thread_give ) )
 		self thread [[ level._custom_perks[perk].player_thread_give ]]();
@@ -771,7 +776,7 @@ perk_give_bottle_end( gun, perk )
 
 	self waittill( "weapon_change_complete" );
 
-	if ( !self maps\mp\zombies\_zm_laststand::player_is_in_laststand() && !( isdefined( self.intermission ) && self.intermission ) )
+	if ( !self maps\_laststand::player_is_in_laststand() && !( isdefined( self.intermission ) && self.intermission ) )
 		self decrement_is_drinking();
 }
 
@@ -843,6 +848,7 @@ machine_watcher()
 machine_watcher_factory(vending_name, perk)
 {
 	level waittill(vending_name);
+	temp_script_sound = "";
 	switch(vending_name)
 	{
 		case "Pack_A_Punch_on":
@@ -856,7 +862,10 @@ machine_watcher_factory(vending_name, perk)
 			break;
 	}
 
-
+	if ( temp_script_sound == "" )
+	{
+		return;
+	}
 	temp_machines = getstructarray("perksacola", "targetname");
 	for (x = 0; x < temp_machines.size; x++)
 	{
@@ -868,10 +877,6 @@ machine_watcher_factory(vending_name, perk)
 
 play_vendor_stings(sound)
 {	
-	if(!IsDefined (level.speed_jingle))
-	{
-		level.speed_jingle = 0;
-	}
 	if(!IsDefined (level.packa_jingle))
 	{
 		level.packa_jingle = 0;
@@ -895,7 +900,7 @@ play_vendor_stings(sound)
 		}
 		else if ( array_validate( level._custom_perks ) && isDefined( level._custom_perks[ self.script_noteworthy ] ) )
 		{
-			if ( sound == level._custom_perks[ self.script_noteworthy ].jingle && !level._custom_perks[ keys[ i ] ].jingle_active )
+			if ( sound == level._custom_perks[ self.script_noteworthy ].jingle && !level._custom_perks[ self.script_noteworthy ].jingle_active )
 			{
 				level._custom_perks[ self.script_noteworthy ].jingle_active = true;
 				temp_sound = spawn("script_origin", self.origin);
@@ -941,7 +946,7 @@ perks_a_cola_jingle()
 			
 			if ( array_validate( level._custom_perks ) && isDefined( level._custom_perks[ self.script_noteworthy ] ) )
 			{
-				if ( self.script_sound == level._custom_perks[ self.script_noteworthy ].jingle && !level._custom_perks[ keys[ i ] ].jingle_active )
+				if ( self.script_sound == level._custom_perks[ self.script_noteworthy ].jingle && !level._custom_perks[ self.script_noteworthy ].jingle_active )
 				{
 					level._custom_perks[ self.script_noteworthy ].jingle_active = true;
 					temp_sound = spawn("script_origin", self.origin);
@@ -1061,7 +1066,6 @@ register_perk_basic_info( str_perk, str_perk_alias, n_perk_cost, str_hint_string
 register_perk_machine( str_perk, func_perk_machine_thread )
 {
 	assert( isdefined( str_perk ), "str_perk is a required argument for register_perk_machine!" );
-	assert( isdefined( func_perk_machine_setup ), "func_perk_machine_setup is a required argument for register_perk_machine!" );
 	assert( isdefined( func_perk_machine_thread ), "func_perk_machine_thread is a required argument for register_perk_machine!" );
 	_register_undefined_perk( str_perk );
 
