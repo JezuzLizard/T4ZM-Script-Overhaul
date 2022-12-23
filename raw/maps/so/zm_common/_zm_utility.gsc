@@ -1562,8 +1562,6 @@ float_print3d( msg, time )
 }
 do_player_vo(snd, variation_count)
 {
-
-	
 	index = maps\so\zm_common\_zm_weapons::get_player_index(self);	
 	sound = "plr_" + index + "_" + snd; 
 	if(IsDefined (variation_count))
@@ -1587,6 +1585,7 @@ do_player_vo(snd, variation_count)
 }
 player_killstreak_timer()
 {
+	self endon( "disconnect" );
 	if(getdvar ("zombie_kills") == "") 
 	{
 		setdvar ("zombie_kills", "7");
@@ -1620,7 +1619,7 @@ player_killstreak_timer()
 }
 timer_actual(kills, time)
 {
-
+	self endon( "disconnect" );
 	timer = gettime() + (time * 1000);
 	while(getTime() < timer)
 	{
@@ -1652,37 +1651,38 @@ timer_actual(kills, time)
 }
 play_killstreak_dialog()
 {
-		index = maps\so\zm_common\_zm_weapons::get_player_index(self);
-		player_index = "plr_" + index + "_";	
+	self endon( "disconnect" );
+	index = maps\so\zm_common\_zm_weapons::get_player_index(self);
+	player_index = "plr_" + index + "_";	
 
-		//num_variants = 12;
-		waittime = 0.25;
-		if(!IsDefined (self.vox_killstreak))
+	//num_variants = 12;
+	waittime = 0.25;
+	if(!IsDefined (self.vox_killstreak))
+	{
+		num_variants = maps\so\zm_common\_zm_audio::get_number_variants(player_index + "vox_killstreak");
+		self.vox_killstreak = [];
+		for(i=0;i<num_variants;i++)
 		{
-			num_variants = maps\so\zm_common\_zm_audio::get_number_variants(player_index + "vox_killstreak");
-			self.vox_killstreak = [];
-			for(i=0;i<num_variants;i++)
-			{
-				self.vox_killstreak[self.vox_killstreak.size] = "vox_killstreak_" + i;	
-			}
-			self.vox_killstreak_available = self.vox_killstreak;
+			self.vox_killstreak[self.vox_killstreak.size] = "vox_killstreak_" + i;	
 		}
-		sound_to_play = random(self.vox_killstreak_available);
-		self.vox_killstreak_available = array_remove(self.vox_killstreak_available,sound_to_play);
+		self.vox_killstreak_available = self.vox_killstreak;
+	}
+	sound_to_play = random(self.vox_killstreak_available);
+	self.vox_killstreak_available = array_remove(self.vox_killstreak_available,sound_to_play);
 
-	//	iprintlnbold("LINE:" + player_index + sound_to_play);
+//	iprintlnbold("LINE:" + player_index + sound_to_play);
 
-		self do_player_killstreak_dialog(player_index, sound_to_play, waittime);
+	self do_player_killstreak_dialog(player_index, sound_to_play, waittime);
 
-		//self playsound(player_index + sound_to_play, "sound_done" + sound_to_play);			
-		//self waittill("sound_done" + sound_to_play);
+	//self playsound(player_index + sound_to_play, "sound_done" + sound_to_play);			
+	//self waittill("sound_done" + sound_to_play);
 
-		wait(waittime);
-		if (self.vox_killstreak_available.size < 1 )
-		{
-			self.vox_killstreak_available = self.vox_killstreak;
-		}
-		//This ensures that there is at least 3 seconds waittime before playing another VO.
+	wait(waittime);
+	if (self.vox_killstreak_available.size < 1 )
+	{
+		self.vox_killstreak_available = self.vox_killstreak;
+	}
+	//This ensures that there is at least 3 seconds waittime before playing another VO.
 
 }
 do_player_killstreak_dialog(player_index, sound_to_play, waittime)
@@ -1917,23 +1917,6 @@ achievement_notify( notify_name )
 is_true( value )
 {
 	return isDefined( value ) && value;
-}
-
-get_player_weapon_limit( player )
-{
-	if ( isdefined( level.get_player_weapon_limit ) )
-		return [[ level.get_player_weapon_limit ]]( player );
-
-	weapon_limit = 2;
-
-	if ( isDefined( level.additionalprimaryweapon_perk_name ) && level.additionalprimaryweapon_perk_name != "" )
-	{
-		if ( player hasperk( level.additionalprimaryweapon_perk_name ) )
-			weapon_limit = level.additionalprimaryweapon_limit;
-	}
-
-
-	return weapon_limit;
 }
 
 get_player_perk_purchase_limit()

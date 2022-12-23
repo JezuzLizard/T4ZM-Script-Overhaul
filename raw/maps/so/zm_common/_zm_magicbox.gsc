@@ -55,7 +55,7 @@ treasure_chest_init()
 		//init time chest accessed amount.
 		
 		level.chest_accessed = 0;
-		if(level.script == "nazi_zombie_sumpf" || level.script == "nazi_zombie_factory" || level.script == "nazi_zombie_coast")
+		if(level.script == "nazi_zombie_sumpf" || level.script == "nazi_zombie_factory")
 		{
 			// Anchor target will grab the weapon spawn point inside the box, so the fx will be centered on it too
 			anchor = GetEnt(level.chests[level.chest_index].target, "targetname");
@@ -182,7 +182,7 @@ show_magic_box()
 	anchor = GetEnt(self.target, "targetname");
 	anchorTarget = GetEnt(anchor.target, "targetname");
 
-	if(isDefined(level.script) && (level.script != "nazi_zombie_sumpf") && (level.script != "nazi_zombie_factory") && (level.script != "nazi_zombie_coast") )
+	if(isDefined(level.script) && (level.script != "nazi_zombie_sumpf") && (level.script != "nazi_zombie_factory") )
 	{
 		playfx( level._effect["poltergeist"],pieces[0].origin);
 	}
@@ -494,19 +494,18 @@ treasure_chest_move(lid)
 	}
 	else
 	{
-	//Get the normal of the box using the positional data of the box and lid
-	direction = pieces[3].origin - pieces[1].origin;
-	direction = (direction[1], direction[0], 0);
-	
-	if(direction[1] < 0 || (direction[0] > 0 && direction[1] > 0))
-	{
-			direction = (direction[0], direction[1] * -1, 0);
-	}
-	else if(direction[0] < 0)
-	{
-			direction = (direction[0] * -1, direction[1], 0);
-	}
-	
+		//Get the normal of the box using the positional data of the box and lid
+		direction = pieces[3].origin - pieces[1].origin;
+		direction = (direction[1], direction[0], 0);
+		
+		if(direction[1] < 0 || (direction[0] > 0 && direction[1] > 0))
+		{
+				direction = (direction[0], direction[1] * -1, 0);
+		}
+		else if(direction[0] < 0)
+		{
+				direction = (direction[0] * -1, direction[1], 0);
+		}
 		anchor Vibrate( direction, 10, 0.5, 5);
 	}
 	
@@ -617,7 +616,7 @@ treasure_chest_move(lid)
 fire_sale_fix()
 {
 	self.old_cost = 950;
-	self thread show_chest();
+	self thread show_magic_box();
 	self.zombie_cost = 10;
 	wait 0.1;
 

@@ -705,8 +705,12 @@ weapon_give( weapon, is_upgrade )
 		is_upgrade = false;
 	}
 
-	weapon_limit = get_player_weapon_limit( self );
+	weapon_limit = 2;
 
+	if ( isDefined( level.get_player_weapon_limit_func ) )
+	{
+		weapon_limit = [[ level.get_player_weapon_limit_func ]]( self );
+	}
 	// This should never be true for the first time.
 	if( primaryWeapons.size >= weapon_limit ) // he has two weapons
 	{

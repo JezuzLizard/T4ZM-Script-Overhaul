@@ -87,11 +87,22 @@ main()
 	{
 		level.Player_Spawn_func = ::blank;
 	}
-	if ( !isDefineD( level.zm_custom_map_spawn_point_override ) )
+	if ( !isDefined( level.zm_custom_map_spawn_point_override ) )
 	{
 		level.zm_custom_map_spawn_point_override = ::spawn_point_override;
 	}
-
+	if ( !isDefined( level.custom_map_perk_vox ) )
+	{
+		level.custom_map_perk_vox = [];
+	}
+	level.custom_map_perk_vox[ "juggernog" ] = "vox_drink_jugga";
+	level.custom_map_perk_vox[ "revive" ] = "vox_drink_revive";
+	level.custom_map_perk_vox[ "doubletap" ] = "vox_drink_double";
+	level.custom_map_perk_vox[ "sleight" ] = "vox_drink_speed";
+	maps\so\zm_common\_zm_perks::enable_doubletap_perk_for_level();
+	maps\so\zm_common\_zm_perks::enable_juggernog_perk_for_level();
+	maps\so\zm_common\_zm_perks::enable_revive_perk_for_level();
+	maps\so\zm_common\_zm_perks::enable_sleight_perk_for_level();
 	maps\so\zm_common\_zm_spawner_asylum::init();
 	maps\so\zm_common\_zm::init_zm();	
 	level.burning_zombies = [];

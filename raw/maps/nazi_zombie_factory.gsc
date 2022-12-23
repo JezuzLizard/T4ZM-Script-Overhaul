@@ -96,6 +96,10 @@ main()
 		level.zm_custom_map_weapon_add_func = ::factory_add_weapons;
 	}
 	level.init_zombie_spawner_name = "receiver_zone_spawners";
+	maps\so\zm_common\_zm_perks::enable_doubletap_perk_for_level();
+	maps\so\zm_common\_zm_perks::enable_juggernog_perk_for_level();
+	maps\so\zm_common\_zm_perks::enable_revive_perk_for_level();
+	maps\so\zm_common\_zm_perks::enable_sleight_perk_for_level();
 	maps\so\zm_common\_zm_spawner::init();
 	maps\so\zm_common\_zm::init_zm();
 	maps\so\zm_common\_zm_ai_dogs::init();
