@@ -961,6 +961,7 @@ power_electric_switch()
 	//TO DO (TUEY) - kick off a 'switch' on client script here that operates similiarly to Berlin2 subway.
 	master_switch playsound("switch_flip");
 	flag_set( "electricity_on" );
+	flag_set( "power_on" );
 	wait_network_frame();
 	clientnotify( "revive_on" );
 	wait_network_frame();

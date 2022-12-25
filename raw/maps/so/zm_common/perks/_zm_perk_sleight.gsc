@@ -25,6 +25,7 @@ turn_sleight_on()
 	machine = getentarray("vending_sleight", "targetname");
 	level waittill("sleight_on");
 
+	level._custom_perks[ "specialty_fastreload" ].powered_on = true;
 	for( i = 0; i < machine.size; i++ )
 	{
 		machine[i] setmodel("zombie_vending_sleight_on");

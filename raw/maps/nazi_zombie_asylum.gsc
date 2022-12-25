@@ -1770,6 +1770,7 @@ master_electric_switch()
 	clientnotify("doubletap_on");
 	clientnotify("jugger_on");
 	level notify("switch_flipped");
+	flag_set( "power_on" );
 	maps\_audio::disable_bump_trigger("switch_door_trig");
 	level thread play_the_numbers();
 	left_org = getent("audio_swtch_left", "targetname");

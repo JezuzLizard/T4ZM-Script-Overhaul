@@ -496,37 +496,7 @@ perk_vo(type)
 }
 machine_watcher()
 {
-	//PI ESM - support for two level switches for Factory
-	if (isDefined(level.script) && level.script == "nazi_zombie_factory" || level.script == "nazi_zombie_paris" || level.script == "nazi_zombie_coast")
-	{
-		level thread machine_watcher_factory("Pack_A_Punch_on", "specialty_weapupgrade");
-		if ( array_validate( level._custom_perks ) )
-		{
-			keys = getArrayKeys( level._custom_perks );
-			for ( i = 0; i < keys.size; i++ )
-			{
-				level thread machine_watcher_factory( level._custom_perks[ keys[ i ] ].alias + "_on", keys[ i ] );
-			}
-		}
-	}
-	else
-	{		
-		level waittill("master_switch_activated");
-		array_thread(getentarray( "zombie_vending", "targetname" ), ::perks_a_cola_jingle);	
-				
-	}		
-	
-}
-
-//PI ESM - added for support for two switches in factory
-machine_watcher_factory(vending_name, perk)
-{
-	level waittill(vending_name);
-	trigger = getEnt( perk, "script_noteworthy" );
-	if ( isDefined( trigger ) )
-	{
-		trigger thread perks_a_cola_jingle();
-	}
+	level thread perks_a_cola_jingle();
 }
 
 //rewrite to use for loop TODO
@@ -567,58 +537,70 @@ play_vendor_stings(sound)
 //rewrite to use for loop TODO
 perks_a_cola_jingle()
 {	
-	self thread play_random_broken_sounds();
+	flag_wait( "power_on" );
+	packapunch = getEnt( "specialty_weapupgrade", "script_noteworthy" );
+	packapunch thread play_random_broken_sounds();
+	perk_keys = getArrayKeys( level._custom_perks );
+	for ( i = 0; i < perk_keys.size; i++ )
+	{
+		perk = getEnt( perk_keys[ i ], "script_noteworthy" );
+		perk thread play_random_broken_sounds();
+	}
 	if (!IsDefined (level.eggs))
 	{
 		level.eggs = 0;
 	}
-	while(1)
+	while ( true )
 	{
-		//wait(randomfloatrange(60, 120));
-		wait(randomfloatrange(31,45));
-		if(randomint(100) < 15 && level.eggs == 0)
+		wait ( randomfloatrange( 31,45 ) );
+		if ( level.eggs == 1 )
 		{
-			level notify ("jingle_playing");
-			//playfx (level._effect["electric_short_oneshot"], self.origin);
-			playsoundatposition ("electrical_surge", self.origin);
-			
-			if(self.jingle.script_sound == level._custom_packapunch.jingle && !level._custom_packapunch.jingle_active) 
-			{
-				level._custom_packapunch.jingle_active = true;
-				temp_org_packa = spawn("script_origin", self.origin);
-				temp_org_packa playsound (level._custom_packapunch.jingle, "sound_done");
-				temp_org_packa waittill("sound_done");
-				level._custom_packapunch.jingle_active = false;
-				temp_org_packa delete();
-			}
-			
-			if ( array_validate( level._custom_perks ) && isDefined( level._custom_perks[ self.script_noteworthy ] ) )
-			{
-				if ( self.jingle.script_sound == level._custom_perks[ self.script_noteworthy ].jingle && !level._custom_perks[ self.script_noteworthy ].jingle_active )
-				{
-					level._custom_perks[ self.script_noteworthy ].jingle_active = true;
-					temp_sound = spawn("script_origin", self.origin);
-					temp_sound playsound (level._custom_perks[ self.script_noteworthy ].jingle, "sound_done");
-					temp_sound waittill("sound_done");
-					level._custom_perks[ self.script_noteworthy ].jingle_active = false;
-					temp_sound delete();
-				}
-			}
-
-			self thread play_random_broken_sounds();
-		}		
-	}	
+			continue;
+		}
+		if ( randomint( 100 ) > 15 )
+		{
+			continue;
+		}
+		level notify( "jingle_playing" );
+		random_perk_keys = array_randomize( getArrayKeys( level._custom_perks ) );
+		if ( isDefined( level._custom_packapunch ) && level._custom_packapunch.powered_on && randomInt( random_perk_keys.size + 1 ) == 0 )
+		{
+			packapunch = getEnt( "specialty_weapupgrade", "script_noteworthy" );
+			level._custom_packapunch.jingle_active = true;
+			temp_org_packa = spawn( "script_origin", packapunch.origin );
+			temp_org_packa playsound( level._custom_packapunch.jingle, "sound_done" );
+			temp_org_packa waittill( "sound_done" );
+			level._custom_packapunch.jingle_active = false;
+			temp_org_packa delete();
+			packapunch thread play_random_broken_sounds();
+		}
+		else if ( level._custom_perks[ random_perk_keys[ 0 ] ].powered_on )
+		{
+			perk = getEnt( random_perk_keys[ 0 ], "script_noteworthy" );
+			level._custom_perks[ perk.script_noteworthy ].jingle_active = true;
+			temp_sound = spawn( "script_origin", perk.origin );
+			temp_sound playsound( level._custom_perks[ perk.script_noteworthy ].jingle, "sound_done" );
+			temp_sound waittill( "sound_done" );
+			level._custom_perks[ perk.script_noteworthy ].jingle_active = false;
+			temp_sound delete();
+		}
+		for ( i = 0; i < random_perk_keys.size; i++ )
+		{
+			perk = getEnt( random_perk_keys[ i ], "script_noteworthy" );
+			perk thread play_random_broken_sounds();
+		}
+	}
 }
 
 play_random_broken_sounds()
 {
-	level endon ("jingle_playing");
-	assert( isDefined( self.jingle ) || isDefined( self.jingle.script_sound ), self.script_noteworthy + " has no jingle defined" );
-	if (self.jingle.script_sound == "mx_revive_jingle")
+	level endon( "jingle_playing" );
+	//assert( isDefined( self.jingle ) || isDefined( self.jingle.script_sound ), self.script_noteworthy + " has no jingle defined" );
+	if ( isDefined( level._custom_perks[ self.script_noteworthy ] ) && level._custom_perks[ self.script_noteworthy ].jingle == "mx_revive_jingle")
 	{
-		while(1)
+		while ( true )
 		{
-			wait(randomfloatrange(7, 18));
+			wait ( randomfloatrange( 7, 18 ) );
 			playsoundatposition ("broken_random_jingle", self.origin);
 		//playfx (level._effect["electric_short_oneshot"], self.origin);
 			playsoundatposition ("electrical_surge", self.origin);
@@ -627,9 +609,9 @@ play_random_broken_sounds()
 	}
 	else
 	{
-		while(1)
+		while ( true )
 		{
-			wait(randomfloatrange(7, 18));
+			wait ( randomfloatrange( 7, 18 ) );
 		// playfx (level._effect["electric_short_oneshot"], self.origin);
 			playsoundatposition ("electrical_surge", self.origin);
 		}
@@ -646,6 +628,7 @@ register_packapunch_basic_info( str_alias, str_hint_string, n_packapunch_cost, s
 	level._custom_packapunch.stinger = str_packapunch_stinger;
 	level._custom_packapunch.jingle_active = false;
 	level._custom_packapunch.script_noteworthy = "specialty_weapupgrade";
+	level._custom_packapunch.powered_on = false;
 }
 
 register_packapunch_machine( func_packapunch_machine_thread )
@@ -693,6 +676,7 @@ register_perk_basic_info( str_perk, str_perk_alias, n_perk_cost, str_hint_string
 	level._custom_perks[str_perk].jingle_active = false;
 	level._custom_perks[str_perk].stinger = str_perk_stinger;
 	level._custom_perks[str_perk].dialog = str_perk_dialog;
+	level._custom_perks[str_perk].powered_on = false;
 }
 
 register_perk_machine( str_perk, func_perk_machine_thread )

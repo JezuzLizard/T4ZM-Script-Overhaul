@@ -24,7 +24,7 @@ turn_doubletap_on()
 {
 	machine = getentarray("vending_doubletap", "targetname");
 	level waittill("doubletap_on");
-	
+	level._custom_perks[ "specialty_rof" ].powered_on = true;
 	for( i = 0; i < machine.size; i++ )
 	{
 		machine[i] setmodel("zombie_vending_doubletap_on");

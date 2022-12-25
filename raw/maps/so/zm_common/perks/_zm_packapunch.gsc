@@ -320,7 +320,7 @@ upgrade_knuckle_crack_end( gun )
 turn_PackAPunch_on()
 {
 	level waittill("Pack_A_Punch_on");
-
+	level._custom_packapunch.powered_on = true;
 	vending_upgrade_trigger = GetEntArray("zombie_vending_upgrade", "targetname");
 	for(i=0; i<vending_upgrade_trigger.size; i++ )
 	{

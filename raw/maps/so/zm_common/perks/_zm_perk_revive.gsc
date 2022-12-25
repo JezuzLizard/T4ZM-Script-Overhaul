@@ -25,7 +25,7 @@ turn_revive_on()
 	machine = getentarray("vending_revive", "targetname");
 	level waittill("revive_on");
 
-
+	level._custom_perks[ "specialty_quickrevive" ].powered_on = true;
 	for( i = 0; i < machine.size; i++ )
 	{
 		machine[i] setmodel("zombie_vending_revive_on");

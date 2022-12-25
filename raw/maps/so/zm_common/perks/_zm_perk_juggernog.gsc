@@ -27,7 +27,7 @@ turn_jugger_on()
 	machine = getentarray("vending_jugg", "targetname");
 	//temp until I can get the wire to jugger.
 	level waittill("juggernog_on");
-
+	level._custom_perks[ "specialty_armorvest" ].powered_on = true;
 	for( i = 0; i < machine.size; i++ )
 	{
 		machine[i] setmodel("zombie_vending_jugg_on");
