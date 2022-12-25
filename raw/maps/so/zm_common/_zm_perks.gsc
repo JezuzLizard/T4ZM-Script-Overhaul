@@ -306,6 +306,7 @@ vending_set_hintstring( perk )
 	}
 }
 
+//rewrite to use for loop TODO
 perk_think( perk )
 {
 	/#
@@ -322,9 +323,7 @@ perk_think( perk )
 
 		if ( array_validate( level._custom_perks ) && isdefined( level._custom_perks[perk] ) && isdefined( level._custom_perks[perk].player_thread_take ) )
 			self thread [[ level._custom_perks[perk].player_thread_take ]]();
-
 		self UnsetPerk( perk );
-		self.maxhealth = 100;
 		self perk_hud_destroy( perk );
 		//self iprintln( "Perk Lost: " + perk );
 }
@@ -659,7 +658,7 @@ register_packapunch_precache_func( func_precache )
 	level._custom_packapunch.precache_func = func_precache;
 }
 
-register_perk_location( str_perk, origin, angles, model )
+register_perk_location( origin, angles, model )
 {
 	_register_undefined_packapunch()
 	level._custom_packapunch.origin = origin;
@@ -747,7 +746,7 @@ _register_undefined_perk( str_perk )
 
 spawn_and_link_perk_kvps()
 {
-	if ( !is_true( level.zm_custom_map_dont_respawn_mapents_perks ) )
+	if ( is_true( level.zm_custom_map_respawn_mapents_perks ) )
 	{
 		old_bump_triggers = getEntArray( "audio_bump_trigger", "targetname" );
 		if ( isDefined( old_bump_triggers ) )
@@ -806,7 +805,7 @@ spawn_and_link_perk_kvps()
 			jingle.script_sound = level._custom_perks[ keys[ i ] ].jingle;
 			trigger.jingle = jingle;
 		}
-		else if ( !is_true( level.zm_custom_map_dont_respawn_mapents_perks ) )
+		else if ( is_true( level.zm_custom_map_respawn_mapents_perks ) )
 		{
 			assert( isDefined( level._custom_perks[ keys[ i ] ].jingle ), "jingle is required to respawn a perk" );
 			old_trigger = getEnt( keys[ i ], "script_noteworthy" );
@@ -846,7 +845,101 @@ spawn_and_link_perk_kvps()
 
 spawn_and_link_packapunch_kvps()
 {
+	if ( is_true( level._custom_packapunch.dynamically_spawned ) )
+	{
+		assert( isDefined( level._custom_packapunch.origin ), "origin is required to dynamically spawn packapunch" );
+		assert( isDefined( level._custom_packapunch.angles ), "angles is required to dynamically spawn packapunch" );
+		assert( isDefined( level._custom_packapunch.model ), "model is required to dynamically spawn packapunch" );
+		assert( isDefined( level._custom_packapunch.alias ), "alias is required to dynamically spawn packapunch" );
+		assert( isDefined( level._custom_packapunch.origin ), "origin is required to dynamically spawn packapunch" );
+		assert( isDefined( level._custom_packapunch.jingle ), "jingle is required to dynamically spawn packapunch" );
+		old_trigger = getEnt( level._custom_packapunch.script_noteworthy, "script_noteworthy" );
+		if ( isDefined( old_trigger ) )
+		{
+			old_machine = getEnt( old_trigger.target, "targetname" );
+			if ( isDefined( old_machine ) )
+			{
+				old_flag = GetEnt( old_machine.target, "targetname" );
+				if ( isDefined( old_flag ) )
+				{
+					old_flag delete();
+				}
+				old_machine delete();
+			}
+			old_trigger delete();
+		}
+		trigger = spawn( "trigger_radius", level._custom_packapunch.origin + ( 0, 0, 30 ), 0, 20, 70 );
+		trigger.script_noteworthy = keys[ i ];
+		trigger.targetname = "zombie_vending";
+		trigger.target = "vending_" + level._custom_packapunch.alias;
 
+		machine = spawn( "script_model", level._custom_packapunch.origin );
+		machine.angles = level._custom_packapunch.angles;
+		machine setModel( level._custom_packapunch.model );
+		trigger.machine = machine;
+
+		flag = spawn( "script_model", ( 0, 0, 0 ) );
+		flag.targetname = "weapupgrade_flag_targ";
+		flag setModel( "zombie_sign_please_wait" );
+		flag.angles = level._custom_packapunch.angles + ( 0, 180, 180 );
+		flag.origin = level._custom_packapunch.origin + ( anglesToForward( level._custom_packapunch.angles ) * 29 ) + ( anglesToRight( level._custom_packapunch.angles ) * -13.5 ) + ( anglesToUp( level._custom_packapunch.angles ) * 49.5 );
+		machine.target = flag.targetname;
+
+		clip = spawnCollision( "collision_geo_32x32x128", "collider", level._custom_packapunch.origin - ( 0, 0, -64 ), level._custom_packapunch.angles );
+		trigger.clip = clip;
+
+		jingle = spawnStruct();
+		jingle.origin = level._custom_packapunch.origin;
+		jingle.angles = level._custom_packapunch.angles;
+		jingle.script_sound = level._custom_packapunch.jingle;
+		trigger.jingle = jingle;
+
+	}
+	else if ( is_true( level.zm_custom_map_respawn_mapents_perks ) )
+	{
+		assert( isDefined( level._custom_packapunch.jingle ), "jingle is required to respawn packapunch" );
+		old_trigger = getEnt( level._custom_packapunch.script_noteworthy, "script_noteworthy" );
+		if ( !isDefined( old_trigger ) )
+		{
+			return;
+		}
+		old_trigger_origin = old_trigger.origin;
+		old_trigger_angles = old_trigger.angles;
+		old_trigger_target = old_trigger.target;
+		old_trigger delete();
+
+		new_trigger = spawn( "trigger_radius", old_trigger_origin, 0, 20, 70 );
+		new_trigger.script_noteworthy = level._custom_packapunch.script_noteworthy;
+		new_trigger.targetname = "zombie_vending";
+		new_trigger.target = old_trigger_target;
+
+		old_machine = getEnt( old_trigger_target, "targetname" );
+		old_machine_origin = old_machine.origin;
+		old_machine_angles = old_machine.angles;
+		old_machine_model = old_machine.model;
+		if ( isDefined( old_machine ) )
+		{
+			old_machine delete();
+		}
+
+		new_machine = spawn( "script_model", old_machine_origin );
+		new_machine.angles = old_machine_angles;
+		new_machine setModel( old_machine_model );
+		new_trigger.machine = new_machine;
+
+		flag = spawn( "script_model", ( 0, 0, 0 ) );
+		flag.targetname = "weapupgrade_flag_targ";
+		flag setModel( "zombie_sign_please_wait" );
+		flag.angles = old_machine_angles + ( 0, 180, 180 );
+		flag.origin = old_machine_origin + ( anglesToForward( old_machine_angles ) * 29 ) + ( anglesToRight( old_machine_angles ) * -13.5 ) + ( anglesToUp( old_machine_angles ) * 49.5 );
+		machine.target = flag.targetname;
+
+		jingle = spawnStruct();
+		jingle.origin = new_trigger.origin;
+		jingle.angles = new_trigger.angles;
+		jingle.script_sound = level._custom_perks[ keys[ i ] ].jingle;
+		new_trigger.jingle = jingle;
+	}
 }
 
 delete_perk( str_perk )

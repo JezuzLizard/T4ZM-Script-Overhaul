@@ -1,12 +1,16 @@
+#include maps\_utility; 
+#include common_scripts\utility; 
+#include maps\so\zm_common\_zm_utility;
+
 enable_packapunch_for_level()
 {
 	if( !isDefined( level.packapunch_timeout ) )
 	{
 		level.packapunch_timeout = 15;
 	}
-	register_packapunch_basic_info( "Pack_A_Punch", &"ZOMBIE_PERK_PACKAPUNCH", 5000, "mx_packa_jingle", "mx_packa_sting" );
-	register_packapunch_machine( ::turn_PackAPunch_on );
-	register_packapunch_precache_func( ::packapunch_precache );
+	maps\so\zm_common\_zm_perks::register_packapunch_basic_info( "Pack_A_Punch", &"ZOMBIE_PERK_PACKAPUNCH", 5000, "mx_packa_jingle", "mx_packa_sting" );
+	maps\so\zm_common\_zm_perks::register_packapunch_machine( ::turn_PackAPunch_on );
+	maps\so\zm_common\_zm_perks::register_packapunch_precache_func( ::packapunch_precache );
 	if ( isDefined( level.zm_custom_map_perk_machine_loc_funcs ) && isDefined( level.zm_custom_map_perk_machine_loc_funcs[ "specialty_weapupgrade" ] ) )
 	{
 		level [[ level.zm_custom_map_perk_machine_loc_funcs[ "specialty_weapupgrade" ] ]]();
@@ -75,14 +79,12 @@ vending_upgrade()
 	packa_timer = spawn("script_origin", self.origin);
 	packa_rollers playloopsound("packa_rollers_loop");
 	
-	self SetHintString( &"ZOMBIE_PERK_PACKAPUNCH" );
-	cost = level.zombie_vars["zombie_perk_cost"];
-	
+	self SetHintString( level._custom_packapunch.hint );
 	for( ;; )
 	{
 		self waittill( "trigger", player );
 		index = maps\so\zm_common\_zm_weapons::get_player_index(player);	
-		cost = 5000;
+		cost = level._custom_packapunch.cost;
 		plr = "plr_" + index + "_";
 		
 		if( !player maps\so\zm_common\_zm_weapons::can_buy_weapon() )
@@ -124,7 +126,7 @@ vending_upgrade()
 			continue;
 		}
 		player maps\so\zm_common\_zm_score::minus_to_player_score( cost ); 
-		self achievement_notify("perk_used");
+		self maps\so\zm_common\_zm_utility::achievement_notify("perk_used");
 		sound = "bottle_dispense3d";
 		playsoundatposition(sound, self.origin);
 		rand = randomintrange(1,100);
@@ -134,7 +136,7 @@ vending_upgrade()
 			player thread play_packa_wait_dialog(plr);
 		}
 		
-		self thread play_vendor_stings("mx_packa_sting");
+		self thread maps\so\zm_common\_zm_perks::play_vendor_stings("mx_packa_sting");
 		
 		origin = self.origin;
 		angles = self.angles;
@@ -165,7 +167,7 @@ vending_upgrade()
 		
 		self.current_weapon = "";
 		weaponmodel delete();
-		self SetHintString( &"ZOMBIE_PERK_PACKAPUNCH" );
+		self SetHintString( level._custom_packapunch.hint );
 		self setvisibletoall();
 	}
 }
