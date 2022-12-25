@@ -225,7 +225,6 @@ vending_trigger_post_think( player, perk, cost )
 
 	// restore player controls and movement
 	player perk_give_bottle_end( gun, perk );
-	player.is_drinking = undefined;
 	// TODO: race condition?
 	if ( player maps\_laststand::player_is_in_laststand() )
 	{
@@ -302,13 +301,14 @@ vending_set_hintstring( perk )
 	if ( array_validate( level._custom_perks ) )
 	{
 		if ( isdefined( level._custom_perks[perk] ) && isdefined( level._custom_perks[perk].cost ) && isdefined( level._custom_perks[perk].hint_string ) )
-			self sethintstring( level._custom_perks[perk].hint_string, level._custom_perks[perk].cost );
+			self sethintstring( level._custom_perks[perk].hint_string );
 	}
 }
 
 //rewrite to use for loop TODO
 perk_think( perk )
 {
+	self endon( "disconnect" );
 	/#
 		if ( GetDVarInt( "zombie_cheat" ) >= 5 )
 		{
@@ -377,6 +377,7 @@ perk_hud_destroy( perk )
 
 perk_give_bottle_begin( perk )
 {
+	self endon( "disconnect" );
 	self increment_is_drinking();
 
 	self AllowLean( false );
@@ -406,6 +407,7 @@ perk_give_bottle_begin( perk )
 
 perk_give_bottle_end( gun, perk )
 {
+	self endon( "disconnect" );
 	assert( gun != "zombie_perk_bottle_doubletap" );
 	assert( gun != "zombie_perk_bottle_revive" );
 	assert( gun != "zombie_perk_bottle_jugg" );
@@ -611,7 +613,7 @@ perks_a_cola_jingle()
 play_random_broken_sounds()
 {
 	level endon ("jingle_playing");
-	assert( isDefined( self.jingle ) || isDefined( self.jingle.script_sound ), self.script_noteworthy + " has no jingle defined" )
+	assert( isDefined( self.jingle ) || isDefined( self.jingle.script_sound ), self.script_noteworthy + " has no jingle defined" );
 	if (self.jingle.script_sound == "mx_revive_jingle")
 	{
 		while(1)
@@ -658,9 +660,9 @@ register_packapunch_precache_func( func_precache )
 	level._custom_packapunch.precache_func = func_precache;
 }
 
-register_perk_location( origin, angles, model )
+register_packapunch_location( origin, angles, model )
 {
-	_register_undefined_packapunch()
+	_register_undefined_packapunch();
 	level._custom_packapunch.origin = origin;
 	level._custom_packapunch.angles = angles;
 	level._custom_packapunch.model = model;
@@ -809,6 +811,10 @@ spawn_and_link_perk_kvps()
 		{
 			assert( isDefined( level._custom_perks[ keys[ i ] ].jingle ), "jingle is required to respawn a perk" );
 			old_trigger = getEnt( keys[ i ], "script_noteworthy" );
+			if ( !isDefined( old_trigger ) )
+			{
+				continue;
+			}
 			old_trigger_origin = old_trigger.origin;
 			old_trigger_angles = old_trigger.angles;
 			old_trigger_target = old_trigger.target;
@@ -829,7 +835,7 @@ spawn_and_link_perk_kvps()
 			new_machine setModel( old_machine_model );
 			new_trigger.machine = new_machine;
 
-			new_bump_trigger = spawn( "trigger_radius", temp_origin, 0, 35, 64 );
+			new_bump_trigger = spawn( "trigger_radius", old_trigger_origin, 0, 35, 64 );
 			new_bump_trigger.targetname = "audio_bump_trigger";
 			new_bump_trigger.script_sound = "perks_rattle";
 			new_trigger.bump = new_bump_trigger;
@@ -869,7 +875,7 @@ spawn_and_link_packapunch_kvps()
 			old_trigger delete();
 		}
 		trigger = spawn( "trigger_radius", level._custom_packapunch.origin + ( 0, 0, 30 ), 0, 20, 70 );
-		trigger.script_noteworthy = keys[ i ];
+		trigger.script_noteworthy = "specialty_weapupgrade";
 		trigger.targetname = "zombie_vending";
 		trigger.target = "vending_" + level._custom_packapunch.alias;
 
@@ -932,12 +938,12 @@ spawn_and_link_packapunch_kvps()
 		flag setModel( "zombie_sign_please_wait" );
 		flag.angles = old_machine_angles + ( 0, 180, 180 );
 		flag.origin = old_machine_origin + ( anglesToForward( old_machine_angles ) * 29 ) + ( anglesToRight( old_machine_angles ) * -13.5 ) + ( anglesToUp( old_machine_angles ) * 49.5 );
-		machine.target = flag.targetname;
+		new_machine.target = flag.targetname;
 
 		jingle = spawnStruct();
 		jingle.origin = new_trigger.origin;
 		jingle.angles = new_trigger.angles;
-		jingle.script_sound = level._custom_perks[ keys[ i ] ].jingle;
+		jingle.script_sound = level._custom_packapunch.jingle;
 		new_trigger.jingle = jingle;
 	}
 }
@@ -988,19 +994,4 @@ move_perk( str_perk, origin, angles )
 	}
 	trigger.origin = origin;
 	trigger.angles = angles;	
-}
-
-link_vending_kvps( triggers )
-{
-	for ( i = 0; i < triggers.size; i++ )
-	{
-		perk_machine = getEnt( triggers[ i ].target, "targetname" );
-		assert( isDefined( perk_machine ) );
-		triggers[ i ].machine = perk_machine;
-		bump_triggers = getEntArray( "perksacola", "targetname" );
-		for ( j = 0; j < bump_triggers.size; j++ )
-		{
-			if ( bump_triggers[ j ].script_string == triggers[ i ]. )
-		}
-	}
 }

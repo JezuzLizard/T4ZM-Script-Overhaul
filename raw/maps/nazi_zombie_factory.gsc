@@ -100,6 +100,7 @@ main()
 	maps\so\zm_common\perks\_zm_perk_juggernog::enable_juggernog_perk_for_level();
 	maps\so\zm_common\perks\_zm_perk_revive::enable_revive_perk_for_level();
 	maps\so\zm_common\perks\_zm_perk_sleight::enable_sleight_perk_for_level();
+	maps\so\zm_common\perks\_zm_packapunch::enable_packapunch_for_level();
 	if ( isDefined( level.zm_custom_map_perk_machines_func ) )
 	{
 		level [[ level.zm_custom_map_perk_machines_func ]]();
