@@ -4,16 +4,13 @@
 
 init()
 {
+	spawn_and_link_perk_kvps();
+
 	vending_triggers = GetEntArray( "zombie_vending", "targetname" );
 	
 	if ( vending_triggers.size < 1 )
 	{
 		return;
-	}
-
-	if( !isDefined( level.packapunch_timeout ) )
-	{
-		level.packapunch_timeout = 15;
 	}
 
 	if ( array_validate( level._custom_perks ) )
@@ -26,10 +23,6 @@ init()
 				level [[ level._custom_perks[a_keys[i]].precache_func ]]();
 		}
 	}
-
-	spawn_dynamically_defined_perks();
-
-	link_vending_kvps( vending_triggers );
 
 	// this map uses atleast 1 perk machine
 	array_thread( vending_triggers, ::vending_trigger_think );
@@ -47,7 +40,8 @@ init()
 	}	
 		
 	level thread machine_watcher();
-	level.speed_jingle = 0;
+
+	spawn_and_link_packapunch_kvps();
 
 	vending_upgrade_trigger = GetEntArray("zombie_vending_upgrade", "targetname");
 
@@ -55,344 +49,19 @@ init()
 	{
 		return;
 	}
-	PrecacheItem( "zombie_knuckle_crack" );
-	precachemodel("zombie_vending_packapunch_on");
-	level._effect["packapunch_fx"] = loadfx("maps/zombie/fx_zombie_packapunch");
-	PrecacheString( &"ZOMBIE_PERK_PACKAPUNCH" );
 
-	array_thread( vending_upgrade_trigger, ::vending_upgrade );
-	level thread turn_PackAPunch_on();	
-
-	level.packa_jingle = 0;
-}
-
-third_person_weapon_upgrade( current_weapon, origin, angles, packa_rollers, perk_machine )
-{
-	forward = anglesToForward( angles );
-	interact_pos = origin + (forward*-25);
-	
-	worldgun = spawn( "script_model", interact_pos );
-	worldgun.angles  = self.angles;
-	worldgun setModel( GetWeaponModel( current_weapon ) );
-	PlayFx( level._effect["packapunch_fx"], origin+(0,1,-34), forward );
-	
-	worldgun rotateto( angles+(0,90,0), 0.35, 0, 0 );
-	wait( 0.5 );
-	worldgun moveto( origin, 0.5, 0, 0 );
-	packa_rollers playsound( "packa_weap_upgrade" );
-	if( isDefined( perk_machine.wait_flag ) )
+	if ( isDefined( level._custom_packapunch ) && isDefined( level._custom_packapunch.precache_func ) )
 	{
-		perk_machine.wait_flag rotateto( perk_machine.wait_flag.angles+(179, 0, 0), 0.25, 0, 0 );
+		level thread [[ level._custom_packapunch.precache_func ]]();
 	}
-	wait( 0.35 );
-	worldgun delete();
-	wait( 3 );
-	packa_rollers playsound( "packa_weap_ready" );
-	worldgun = spawn( "script_model", origin );
-	worldgun.angles  = angles+(0,90,0);
-	worldgun setModel( GetWeaponModel( current_weapon+"_upgraded" ) );
-	worldgun moveto( interact_pos, 0.5, 0, 0 );
-	if( isDefined( perk_machine.wait_flag ) )
+
+	array_thread( vending_upgrade_trigger, maps\so\zm_common\perks\_zm_packapunch::vending_upgrade );
+	if ( isDefined( level._custom_packapunch ) && isDefined( level._custom_packapunch.machine_thread ) )
 	{
-		perk_machine.wait_flag rotateto( perk_machine.wait_flag.angles-(179, 0, 0), 0.25, 0, 0 );
-	}
-	wait( 0.5 );
-	worldgun moveto( origin, level.packapunch_timeout, 0, 0);
-	return worldgun;
-}
-
-vending_upgrade()
-{
-	perk_machine = GetEnt( self.target, "targetname" );
-	if( isDefined( perk_machine.target ) )
-	{
-		perk_machine.wait_flag = GetEnt( perk_machine.target, "targetname" );
-	}
-	
-	self UseTriggerRequireLookAt();
-	self SetHintString( &"ZOMBIE_FLAMES_UNAVAILABLE" );
-	self SetCursorHint( "HINT_NOICON" );
-	level waittill("Pack_A_Punch_on");
-	
-	self thread maps\so\zm_common\_zm_weapons::decide_hide_show_hint();
-	
-	packa_rollers = spawn("script_origin", self.origin);
-	packa_timer = spawn("script_origin", self.origin);
-	packa_rollers playloopsound("packa_rollers_loop");
-	
-	self SetHintString( &"ZOMBIE_PERK_PACKAPUNCH" );
-	cost = level.zombie_vars["zombie_perk_cost"];
-	
-	for( ;; )
-	{
-		self waittill( "trigger", player );
-		index = maps\so\zm_common\_zm_weapons::get_player_index(player);	
-		cost = 5000;
-		plr = "plr_" + index + "_";
-		
-		if( !player maps\so\zm_common\_zm_weapons::can_buy_weapon() )
-		{
-			wait( 0.1 );
-			continue;
-		}
-		
-		if (player maps\_laststand::player_is_in_laststand() )
-		{
-			wait( 0.1 );
-			continue;
-		}
-		
-		if( player isThrowingGrenade() )
-		{
-			wait( 0.1 );
-			continue;
-		}
-		
-		if( player isSwitchingWeapons() )
-		{
-			wait(0.1);
-			continue;
-		}
-		
-		current_weapon = player getCurrentWeapon();
-
-		if( !IsDefined( level.zombie_include_weapons[current_weapon] ) || !IsDefined( level.zombie_include_weapons[current_weapon + "_upgraded"] ) )
-		{
-			continue;
-		}
-
-		if ( player.score < cost )
-		{
-			//player iprintln( "Not enough points to buy Perk: " + perk );
-			self playsound("deny");
-			player thread maps\so\zm_common\_zm_audio::play_no_money_perk_dialog();
-			continue;
-		}
-		player maps\so\zm_common\_zm_score::minus_to_player_score( cost ); 
-		self achievement_notify("perk_used");
-		sound = "bottle_dispense3d";
-		playsoundatposition(sound, self.origin);
-		rand = randomintrange(1,100);
-		
-		if( rand <= 8 )
-		{
-			player thread play_packa_wait_dialog(plr);
-		}
-		
-		self thread play_vendor_stings("mx_packa_sting");
-		
-		origin = self.origin;
-		angles = self.angles;
-		
-		if( isDefined(perk_machine))
-		{
-			origin = perk_machine.origin+(0,0,35);
-			angles = perk_machine.angles+(0,90,0);
-		}
-		
-		self disable_trigger();
-		
-		player thread do_knuckle_crack();
-
-		// Remember what weapon we have.  This is needed to check unique weapon counts.
-		self.current_weapon = current_weapon;
-											
-		weaponmodel = player third_person_weapon_upgrade( current_weapon, origin, angles, packa_rollers, perk_machine );
-		
-		self enable_trigger();
-		self SetHintString( &"ZOMBIE_GET_UPGRADED" );
-		self setvisibletoplayer( player );
-		
-		self thread wait_for_player_to_take( player, current_weapon, packa_timer );
-		self thread wait_for_timeout( packa_timer );
-		
-		self waittill_either( "pap_timeout", "pap_taken" );
-		
-		self.current_weapon = "";
-		weaponmodel delete();
-		self SetHintString( &"ZOMBIE_PERK_PACKAPUNCH" );
-		self setvisibletoall();
+		level thread [[ level._custom_packapunch.machine_thread ]]();
 	}
 }
 
-wait_for_player_to_take( player, weapon, packa_timer )
-{
-	index = maps\so\zm_common\_zm_weapons::get_player_index(player);
-	plr = "plr_" + index + "_";
-	
-	self endon( "pap_timeout" );
-	while( true )
-	{
-		packa_timer playloopsound( "ticktock_loop" );
-		self waittill( "trigger", trigger_player );
-		packa_timer stoploopsound(.05);
-		if( trigger_player == player ) 
-		{
-			if( !player maps\_laststand::player_is_in_laststand() && !( isDefined( player.is_drinking ) && player.is_drinking > 0 ) && player getCurrentWeapon() != "mine_bouncing_betty" )
-			{
-				self notify( "pap_taken" );
-				weapon_limit = 2;
-
-				if ( isDefined( level.get_player_weapon_limit_func ) )
-				{
-					weapon_limit = [[ level.get_player_weapon_limit_func ]]( player );
-				}
-				primaries = player GetWeaponsListPrimaries();
-				if( isDefined( primaries ) && primaries.size >= weapon_limit )
-				{
-					player maps\so\zm_common\_zm_weapons::weapon_give( weapon+"_upgraded" );
-				}
-				else
-				{
-					player GiveWeapon( weapon+"_upgraded" );
-					player GiveMaxAmmo( weapon+"_upgraded" );
-				}
-				
-				player SwitchToWeapon( weapon+"_upgraded" );
-				player achievement_notify( "DLC3_ZOMBIE_PAP_ONCE" );
-				player achievement_notify( "DLC3_ZOMBIE_TWO_UPGRADED" );
-				player thread play_packa_get_dialog(plr);
-				return;
-			}
-		}
-		wait( 0.05 );
-	}
-}
-
-wait_for_timeout( packa_timer )
-{
-	self endon( "pap_taken" );
-	
-	wait( level.packapunch_timeout );
-	
-	self notify( "pap_timeout" );
-	packa_timer stoploopsound(.05);
-	packa_timer playsound( "packa_deny" );
-}
-
-do_knuckle_crack()
-{
-	gun = self upgrade_knuckle_crack_begin();
-	self waittill_any( "fake_death", "death", "player_downed", "weapon_change_complete" );
-	
-	self upgrade_knuckle_crack_end( gun );
-	self.is_drinking = undefined;
-}
-
-upgrade_knuckle_crack_begin()
-{
-	self increment_is_drinking();
-
-	self AllowLean( false );
-	self AllowAds( false );
-	self AllowSprint( false );
-	self AllowProne( false );		
-	self AllowMelee( false );
-	
-	if ( self GetStance() == "prone" )
-	{
-		self SetStance( "crouch" );
-	}
-
-	primaries = self GetWeaponsListPrimaries();
-
-	gun = self GetCurrentWeapon();
-	weapon = "zombie_knuckle_crack";
-	
-	if ( gun != "none" && gun != "mine_bouncing_betty" )
-	{
-		self TakeWeapon( gun );
-	}
-	else
-	{
-		return;
-	}
-
-	if( primaries.size <= 1 )
-	{
-		self GiveWeapon( "zombie_colt" );
-	}
-	
-	self GiveWeapon( weapon );
-	self SwitchToWeapon( weapon );
-
-	return gun;
-}
-
-upgrade_knuckle_crack_end( gun )
-{
-	assert( gun != "zombie_perk_bottle_doubletap" );
-	assert( gun != "zombie_perk_bottle_revive" );
-	assert( gun != "zombie_perk_bottle_jugg" );
-	assert( gun != "zombie_perk_bottle_sleight" );
-	assert( gun != "syrette" );
-
-	self AllowLean( true );
-	self AllowAds( true );
-	self AllowSprint( true );
-	self AllowProne( true );		
-	self AllowMelee( true );
-	weapon = "zombie_knuckle_crack";
-
-	// TODO: race condition?
-	if ( self maps\_laststand::player_is_in_laststand() )
-	{
-		self TakeWeapon(weapon);
-		return;
-	}
-
-	self decrement_is_drinking();
-	self TakeWeapon(weapon);
-	primaries = self GetWeaponsListPrimaries();
-	if ( isDefined( self.is_drinking ) && self.is_drinking > 0 )
-		return;	
-	else if( isDefined( primaries ) && primaries.size > 0 )
-	{
-		self SwitchToWeapon( primaries[0] );
-	}
-	else
-	{
-		self SwitchToWeapon( "zombie_colt" );
-	}
-}
-
-// PI_CHANGE_BEGIN
-// JMA - in order to have multiple Pack-A-Punch machines in a map we're going to have
-//			to run a thread on each on.
-//	NOTE:  In the .map, you'll have to make sure that each Pack-A-Punch machine has a unique targetname
-turn_PackAPunch_on()
-{
-	level waittill("Pack_A_Punch_on");
-
-	vending_upgrade_trigger = GetEntArray("zombie_vending_upgrade", "targetname");
-	for(i=0; i<vending_upgrade_trigger.size; i++ )
-	{
-		perk = getent(vending_upgrade_trigger[i].target, "targetname");
-		if(isDefined(perk))
-		{
-			perk thread activate_PackAPunch();
-		}
-	}
-}
-
-activate_PackAPunch()
-{
-	self setmodel("zombie_vending_packapunch_on");
-	self playsound("perks_power_on");
-	self vibrate((0,-100,0), 0.3, 0.4, 3);
-	/*
-	self.flag = spawn( "script_model", machine GetTagOrigin( "tag_flag" ) );
-	self.angles = machine GetTagAngles( "tag_flag" );
-	self.flag setModel( "zombie_sign_please_wait" );
-	self.flag linkto( machine );
-	self.flag.origin = (0, 40, 40);
-	self.flag.angles = (0, 0, 0);
-	*/
-	timer = 0;
-	duration = 0.05;
-
-	level notify( "Carpenter_On" );
-}
 // PI_CHANGE_END
 
 perk_fx( fx )
@@ -829,7 +498,7 @@ machine_watcher()
 	//PI ESM - support for two level switches for Factory
 	if (isDefined(level.script) && level.script == "nazi_zombie_factory" || level.script == "nazi_zombie_paris" || level.script == "nazi_zombie_coast")
 	{
-		level thread machine_watcher_factory("Pack_A_Punch_on");
+		level thread machine_watcher_factory("Pack_A_Punch_on", "specialty_weapupgrade");
 		if ( array_validate( level._custom_perks ) )
 		{
 			keys = getArrayKeys( level._custom_perks );
@@ -852,63 +521,40 @@ machine_watcher()
 machine_watcher_factory(vending_name, perk)
 {
 	level waittill(vending_name);
-	temp_script_sound = "";
-	switch(vending_name)
+	trigger = getEnt( perk, "script_noteworthy" );
+	if ( isDefined( trigger ) )
 	{
-		case "Pack_A_Punch_on":
-			temp_script_sound = "mx_packa_jingle";
-			break;		
-		default:
-			if ( array_validate( level._custom_perks ) && isDefined( level._custom_perks[ perk ] ) && isDefined( level._custom_perks[ perk ].jingle ) )
-			{
-				temp_script_sound = level._custom_perks[ perk ].jingle;
-			}
-			break;
+		trigger thread perks_a_cola_jingle();
 	}
-
-	if ( temp_script_sound == "" )
-	{
-		return;
-	}
-	temp_machines = getstructarray("perksacola", "targetname");
-	for (x = 0; x < temp_machines.size; x++)
-	{
-		if (temp_machines[x].script_sound == temp_script_sound)
-			temp_machines[x] thread perks_a_cola_jingle();
-	}
-
 }
 
+//rewrite to use for loop TODO
 play_vendor_stings(sound)
 {	
-	if(!IsDefined (level.packa_jingle))
-	{
-		level.packa_jingle = 0;
-	}
 	if(!IsDefined (level.eggs))
 	{
 		level.eggs = 0;
 	}
 	if (level.eggs == 0)
 	{
-		if(sound == "mx_packa_sting" && level.packa_jingle == 0) 
+		if ( isDefined( level._custom_packapunch ) && sound == level._custom_packapunch.stinger && !level._custom_packapunch.jingle_active ) 
 		{
-			level.packa_jingle = 1;
+			level._custom_packapunch.jingle_active = true;
 //			iprintlnbold("stinger packapunch:" + level.packa_jingle);
-			temp_org_pack_s = spawn("script_origin", self.origin);		
+			temp_org_pack_s = spawn("script_origin", level._custom_packapunch.origin);		
 			temp_org_pack_s playsound (sound, "sound_done");
 			temp_org_pack_s waittill("sound_done");
-			level.packa_jingle = 0;
+			level._custom_packapunch.jingle_active = false;
 			temp_org_pack_s delete();
 //			iprintlnbold("stinger packapunch:"  + level.packa_jingle);
 		}
 		else if ( array_validate( level._custom_perks ) && isDefined( level._custom_perks[ self.script_noteworthy ] ) )
 		{
-			if ( sound == level._custom_perks[ self.script_noteworthy ].jingle && !level._custom_perks[ self.script_noteworthy ].jingle_active )
+			if ( sound == level._custom_perks[ self.script_noteworthy ].stinger && !level._custom_perks[ self.script_noteworthy ].jingle_active )
 			{
 				level._custom_perks[ self.script_noteworthy ].jingle_active = true;
 				temp_sound = spawn("script_origin", self.origin);
-				temp_sound playsound (self.script_sound, "sound_done");
+				temp_sound playsound (sound, "sound_done");
 				temp_sound waittill("sound_done");
 				level._custom_perks[ self.script_noteworthy ].jingle_active = false;
 				temp_sound delete();
@@ -917,13 +563,10 @@ play_vendor_stings(sound)
 	}
 }
 
+//rewrite to use for loop TODO
 perks_a_cola_jingle()
 {	
 	self thread play_random_broken_sounds();
-	if(!IsDefined(self.perk_jingle_playing))
-	{
-		self.perk_jingle_playing = 0;
-	}
 	if (!IsDefined (level.eggs))
 	{
 		level.eggs = 0;
@@ -938,23 +581,23 @@ perks_a_cola_jingle()
 			//playfx (level._effect["electric_short_oneshot"], self.origin);
 			playsoundatposition ("electrical_surge", self.origin);
 			
-			if(self.script_sound == "mx_packa_jingle" && level.packa_jingle == 0) 
+			if(self.jingle.script_sound == level._custom_packapunch.jingle && !level._custom_packapunch.jingle_active) 
 			{
-				level.packa_jingle = 1;
+				level._custom_packapunch.jingle_active = true;
 				temp_org_packa = spawn("script_origin", self.origin);
-				temp_org_packa playsound (self.script_sound, "sound_done");
+				temp_org_packa playsound (level._custom_packapunch.jingle, "sound_done");
 				temp_org_packa waittill("sound_done");
-				level.packa_jingle = 0;
+				level._custom_packapunch.jingle_active = false;
 				temp_org_packa delete();
 			}
 			
 			if ( array_validate( level._custom_perks ) && isDefined( level._custom_perks[ self.script_noteworthy ] ) )
 			{
-				if ( self.script_sound == level._custom_perks[ self.script_noteworthy ].jingle && !level._custom_perks[ self.script_noteworthy ].jingle_active )
+				if ( self.jingle.script_sound == level._custom_perks[ self.script_noteworthy ].jingle && !level._custom_perks[ self.script_noteworthy ].jingle_active )
 				{
 					level._custom_perks[ self.script_noteworthy ].jingle_active = true;
 					temp_sound = spawn("script_origin", self.origin);
-					temp_sound playsound (self.script_sound, "sound_done");
+					temp_sound playsound (level._custom_perks[ self.script_noteworthy ].jingle, "sound_done");
 					temp_sound waittill("sound_done");
 					level._custom_perks[ self.script_noteworthy ].jingle_active = false;
 					temp_sound delete();
@@ -969,11 +612,8 @@ perks_a_cola_jingle()
 play_random_broken_sounds()
 {
 	level endon ("jingle_playing");
-	if (!isdefined (self.script_sound))
-	{
-		self.script_sound = "null";
-	}
-	if (self.script_sound == "mx_revive_jingle")
+	assert( isDefined( self.jingle ) || isDefined( self.jingle.script_sound ), self.script_noteworthy + " has no jingle defined" )
+	if (self.jingle.script_sound == "mx_revive_jingle")
 	{
 		while(1)
 		{
@@ -995,57 +635,44 @@ play_random_broken_sounds()
 	}
 }
 
-play_packa_wait_dialog(player_index)
+register_packapunch_basic_info( str_alias, str_hint_string, n_packapunch_cost, str_packapunch_jingle, str_packapunch_stinger )
 {
-	waittime = 0.05;
-	if(!IsDefined (self.vox_perk_packa_wait))
-	{
-		num_variants = maps\so\zm_common\_zm_audio::get_number_variants(player_index + "vox_perk_packa_wait");
-		self.vox_perk_packa_wait = [];
-		for(i=0;i<num_variants;i++)
-		{
-			self.vox_perk_packa_wait[self.vox_perk_packa_wait.size] = "vox_perk_packa_wait_" + i;
-		}
-		self.vox_perk_packa_wait_available = self.vox_perk_packa_wait;
-	}
-	if(!isdefined (level.player_is_speaking))
-	{
-		level.player_is_speaking = 0;
-	}
-	sound_to_play = random(self.vox_perk_packa_wait_available);
-	self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, waittime);
-	self.vox_perk_packa_wait_available = array_remove(self.vox_perk_packa_wait_available,sound_to_play);
-	
-	if (self.vox_perk_packa_wait_available.size < 1 )
-	{
-		self.vox_perk_packa_wait_available = self.vox_perk_packa_wait;
-	}
+	_register_undefined_packapunch();
+	level._custom_packapunch.alias = str_alias;
+	level._custom_packapunch.hint = str_hint_string;
+	level._custom_packapunch.cost = n_packapunch_cost;
+	level._custom_packapunch.jingle = str_packapunch_jingle;
+	level._custom_packapunch.stinger = str_packapunch_stinger;
+	level._custom_packapunch.jingle_active = false;
+	level._custom_packapunch.script_noteworthy = "specialty_weapupgrade";
 }
 
-play_packa_get_dialog(player_index)
+register_packapunch_machine( func_packapunch_machine_thread )
 {
-	waittime = 0.05;
-	if(!IsDefined (self.vox_perk_packa_get))
+	_register_undefined_packapunch();
+	level._custom_packapunch.machine_thread = func_packapunch_machine_thread;
+}
+
+register_packapunch_precache_func( func_precache )
+{
+	_register_undefined_packapunch();
+	level._custom_packapunch.precache_func = func_precache;
+}
+
+register_perk_location( str_perk, origin, angles, model )
+{
+	_register_undefined_packapunch()
+	level._custom_packapunch.origin = origin;
+	level._custom_packapunch.angles = angles;
+	level._custom_packapunch.model = model;
+	level._custom_packapunch.dynamically_spawned = true;
+}
+
+_register_undefined_packapunch()
+{
+	if ( !isDefined( level._custom_packapunch ) )
 	{
-		num_variants = maps\so\zm_common\_zm_audio::get_number_variants(player_index + "vox_perk_packa_get");
-		self.vox_perk_packa_get = [];
-		for(i=0;i<num_variants;i++)
-		{
-			self.vox_perk_packa_get[self.vox_perk_packa_get.size] = "vox_perk_packa_get_" + i;
-		}
-		self.vox_perk_packa_get_available = self.vox_perk_packa_get;
-	}
-	if(!isdefined (level.player_is_speaking))
-	{
-		level.player_is_speaking = 0;
-	}
-	sound_to_play = random(self.vox_perk_packa_get_available);
-	self maps\so\zm_common\_zm_audio::do_player_playdialog(player_index, sound_to_play, waittime);
-	self.vox_perk_packa_get_available = array_remove(self.vox_perk_packa_get_available,sound_to_play);
-	
-	if (self.vox_perk_packa_get_available.size < 1 )
-	{
-		self.vox_perk_packa_get_available = self.vox_perk_packa_get;
+		level._custom_packapunch = spawnStruct();
 	}
 }
 
@@ -1118,8 +745,22 @@ _register_undefined_perk( str_perk )
 		level._custom_perks[str_perk] = spawnstruct();
 }
 
-spawn_dynamically_defined_perks()
+spawn_and_link_perk_kvps()
 {
+	if ( !is_true( level.zm_custom_map_dont_respawn_mapents_perks ) )
+	{
+		old_bump_triggers = getEntArray( "audio_bump_trigger", "targetname" );
+		if ( isDefined( old_bump_triggers ) )
+		{
+			for ( i = 0; i < old_bump_triggers.size; i++ )
+			{
+				if ( isDefined( old_bump_triggers[ i ].script_sound ) && old_bump_triggers[ i ].script_sound == "perks_rattle" )
+				{
+					old_bump_triggers[ i ] delete();
+				}
+			}
+		}
+	}
 	keys = getArrayKeys( level._custom_perks );
 	for ( i = 0; i < keys.size; i++ )
 	{
@@ -1130,22 +771,82 @@ spawn_dynamically_defined_perks()
 			assert( isDefined( level._custom_perks[ keys[ i ] ].model ), "model is required to dynamically spawn a perk" );
 			assert( isDefined( level._custom_perks[ keys[ i ] ].alias ), "alias is required to dynamically spawn a perk" );
 			assert( isDefined( level._custom_perks[ keys[ i ] ].origin ), "origin is required to dynamically spawn a perk" );
+			assert( isDefined( level._custom_perks[ keys[ i ] ].jingle ), "jingle is required to dynamically spawn a perk" );
+			old_trigger = getEnt( keys[ i ], "script_noteworthy" );
+			if ( isDefined( old_trigger ) )
+			{
+				old_machine = getEnt( old_trigger.target, "targetname" );
+				if ( isDefined( old_machine ) )
+				{
+					old_machine delete();
+				}
+				old_trigger delete();
+			}
 			trigger = spawn( "trigger_radius", level._custom_perks[ keys[ i ] ].origin + ( 0, 0, 30 ), 0, 20, 70 );
 			trigger.script_noteworthy = keys[ i ];
 			trigger.targetname = "zombie_vending";
 			trigger.target = "vending_" + level._custom_perks[ keys[ i ] ].alias;
+
 			machine = spawn( "script_model", level._custom_perks[ keys[ i ] ].origin );
 			machine.angles = level._custom_perks[ keys[ i ] ].angles;
 			machine setModel( level._custom_perks[ keys[ i ] ].model );
 			trigger.machine = machine;
+
 			clip = spawnCollision( "collision_geo_32x32x128", "collider", level._custom_perks[ keys[ i ] ].origin - ( 0, 0, -64 ), level._custom_perks[ keys[ i ] ].angles );
 			trigger.clip = clip;
+
 			bump_trigger = spawn( "trigger_radius", level._custom_perks[ keys[ i ] ].origin, 0, 35, 64 );
 			bump_trigger.targetname = "audio_bump_trigger";
 			bump_trigger.script_sound = "perks_rattle";
 			trigger.bump = bump_trigger;
+
+			jingle = spawnStruct();
+			jingle.origin = level._custom_perks[ keys[ i ] ].origin;
+			jingle.angles = level._custom_perks[ keys[ i ] ].angles;
+			jingle.script_sound = level._custom_perks[ keys[ i ] ].jingle;
+			trigger.jingle = jingle;
+		}
+		else if ( !is_true( level.zm_custom_map_dont_respawn_mapents_perks ) )
+		{
+			assert( isDefined( level._custom_perks[ keys[ i ] ].jingle ), "jingle is required to respawn a perk" );
+			old_trigger = getEnt( keys[ i ], "script_noteworthy" );
+			old_trigger_origin = old_trigger.origin;
+			old_trigger_angles = old_trigger.angles;
+			old_trigger_target = old_trigger.target;
+			old_trigger delete();
+
+			new_trigger = spawn( "trigger_radius", old_trigger_origin, 0, 20, 70 );
+			new_trigger.script_noteworthy = keys[ i ];
+			new_trigger.targetname = "zombie_vending";
+			new_trigger.target = old_trigger_target;
+
+			old_machine = getEnt( old_trigger_target, "targetname" );
+			old_machine_origin = old_machine.origin;
+			old_machine_angles = old_machine.angles;
+			old_machine_model = old_machine.model;
+
+			new_machine = spawn( "script_model", old_machine_origin );
+			new_machine.angles = old_machine_angles;
+			new_machine setModel( old_machine_model );
+			new_trigger.machine = new_machine;
+
+			new_bump_trigger = spawn( "trigger_radius", temp_origin, 0, 35, 64 );
+			new_bump_trigger.targetname = "audio_bump_trigger";
+			new_bump_trigger.script_sound = "perks_rattle";
+			new_trigger.bump = new_bump_trigger;
+
+			jingle = spawnStruct();
+			jingle.origin = new_trigger.origin;
+			jingle.angles = new_trigger.angles;
+			jingle.script_sound = level._custom_perks[ keys[ i ] ].jingle;
+			new_trigger.jingle = jingle;
 		}
 	}
+}
+
+spawn_and_link_packapunch_kvps()
+{
+
 }
 
 delete_perk( str_perk )
