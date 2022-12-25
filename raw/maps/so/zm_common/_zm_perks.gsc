@@ -27,6 +27,10 @@ init()
 		}
 	}
 
+	spawn_dynamically_defined_perks();
+
+	link_vending_kvps( vending_triggers );
+
 	// this map uses atleast 1 perk machine
 	array_thread( vending_triggers, ::vending_trigger_think );
 	array_thread( vending_triggers, ::electric_perks_dialog);
@@ -1069,8 +1073,7 @@ register_perk_machine( str_perk, func_perk_machine_thread )
 	assert( isdefined( func_perk_machine_thread ), "func_perk_machine_thread is a required argument for register_perk_machine!" );
 	_register_undefined_perk( str_perk );
 
-	if ( !isdefined( level._custom_perks[str_perk].perk_machine_thread ) )
-		level._custom_perks[str_perk].perk_machine_thread = func_perk_machine_thread;
+	level._custom_perks[str_perk].perk_machine_thread = func_perk_machine_thread;
 }
 
 register_perk_precache_func( str_perk, func_precache )
@@ -1079,8 +1082,7 @@ register_perk_precache_func( str_perk, func_precache )
 	assert( isdefined( func_precache ), "func_precache is a required argument for register_perk_precache_func!" );
 	_register_undefined_perk( str_perk );
 
-	if ( !isdefined( level._custom_perks[str_perk].precache_func ) )
-		level._custom_perks[str_perk].precache_func = func_precache;
+	level._custom_perks[str_perk].precache_func = func_precache;
 }
 
 register_perk_threads( str_perk, func_give_player_perk, func_take_player_perk )
@@ -1089,14 +1091,22 @@ register_perk_threads( str_perk, func_give_player_perk, func_take_player_perk )
 	assert( isdefined( func_give_player_perk ), "func_give_player_perk is a required argument for register_perk_threads!" );
 	_register_undefined_perk( str_perk );
 
-	if ( !isdefined( level._custom_perks[str_perk].player_thread_give ) )
-		level._custom_perks[str_perk].player_thread_give = func_give_player_perk;
+	level._custom_perks[str_perk].player_thread_give = func_give_player_perk;
 
 	if ( isdefined( func_take_player_perk ) )
 	{
-		if ( !isdefined( level._custom_perks[str_perk].player_thread_take ) )
-			level._custom_perks[str_perk].player_thread_take = func_take_player_perk;
+		level._custom_perks[str_perk].player_thread_take = func_take_player_perk;
 	}
+}
+
+register_perk_location( str_perk, origin, angles, model )
+{
+	_register_undefined_perk( str_perk );
+	level._custom_perks[str_perk].origin = origin;
+	level._custom_perks[str_perk].angles = angles;
+	level._custom_perks[str_perk].script_noteworthy = str_perk;
+	level._custom_perks[str_perk].model = model;
+	level._custom_perks[str_perk].dynamically_spawned = true;
 }
 
 _register_undefined_perk( str_perk )
@@ -1106,4 +1116,97 @@ _register_undefined_perk( str_perk )
 
 	if ( !isdefined( level._custom_perks[str_perk] ) )
 		level._custom_perks[str_perk] = spawnstruct();
+}
+
+spawn_dynamically_defined_perks()
+{
+	keys = getArrayKeys( level._custom_perks );
+	for ( i = 0; i < keys.size; i++ )
+	{
+		if ( is_true( level._custom_perks[ keys[ i ] ].dynamically_spawned ) )
+		{
+			assert( isDefined( level._custom_perks[ keys[ i ] ].origin ), "origin is required to dynamically spawn a perk" );
+			assert( isDefined( level._custom_perks[ keys[ i ] ].angles ), "angles is required to dynamically spawn a perk" );
+			assert( isDefined( level._custom_perks[ keys[ i ] ].model ), "model is required to dynamically spawn a perk" );
+			assert( isDefined( level._custom_perks[ keys[ i ] ].alias ), "alias is required to dynamically spawn a perk" );
+			assert( isDefined( level._custom_perks[ keys[ i ] ].origin ), "origin is required to dynamically spawn a perk" );
+			trigger = spawn( "trigger_radius", level._custom_perks[ keys[ i ] ].origin + ( 0, 0, 30 ), 0, 20, 70 );
+			trigger.script_noteworthy = keys[ i ];
+			trigger.targetname = "zombie_vending";
+			trigger.target = "vending_" + level._custom_perks[ keys[ i ] ].alias;
+			machine = spawn( "script_model", level._custom_perks[ keys[ i ] ].origin );
+			machine.angles = level._custom_perks[ keys[ i ] ].angles;
+			machine setModel( level._custom_perks[ keys[ i ] ].model );
+			trigger.machine = machine;
+			clip = spawnCollision( "collision_geo_32x32x128", "collider", level._custom_perks[ keys[ i ] ].origin - ( 0, 0, -64 ), level._custom_perks[ keys[ i ] ].angles );
+			trigger.clip = clip;
+			bump_trigger = spawn( "trigger_radius", level._custom_perks[ keys[ i ] ].origin, 0, 35, 64 );
+			bump_trigger.targetname = "audio_bump_trigger";
+			bump_trigger.script_sound = "perks_rattle";
+			trigger.bump = bump_trigger;
+		}
+	}
+}
+
+delete_perk( str_perk )
+{
+	trigger = getEnt( str_perk, "script_noteworthy" );
+	if ( !isDefined( trigger ) )
+	{
+		return;
+	}
+	if ( isDefined( trigger.clip ) )
+	{
+		trigger.clip delete();
+	}
+	if ( isDefined( trigger.machine ) )
+	{
+		trigger.machine delete();
+	}
+	if ( isDefined( trigger.bump ) )
+	{
+		trigger.bump delete();
+	}
+	trigger delete();
+}
+
+move_perk( str_perk, origin, angles )
+{
+	trigger = getEnt( str_perk, "script_noteworthy" );
+	if ( !isDefined( trigger ) )
+	{
+		return;
+	}
+	if ( isDefined( trigger.clip ) )
+	{
+		trigger.clip.origin = origin;
+		trigger.clip.angles = angles;
+	}
+	if ( isDefined( trigger.machine ) )
+	{
+		trigger.machine.origin = origin;
+		trigger.machine.angles = angles;
+	}
+	if ( isDefined( trigger.bump ) )
+	{
+		trigger.bump.origin = origin;
+		trigger.bump.angles = angles;
+	}
+	trigger.origin = origin;
+	trigger.angles = angles;	
+}
+
+link_vending_kvps( triggers )
+{
+	for ( i = 0; i < triggers.size; i++ )
+	{
+		perk_machine = getEnt( triggers[ i ].target, "targetname" );
+		assert( isDefined( perk_machine ) );
+		triggers[ i ].machine = perk_machine;
+		bump_triggers = getEntArray( "perksacola", "targetname" );
+		for ( j = 0; j < bump_triggers.size; j++ )
+		{
+			if ( bump_triggers[ j ].script_string == triggers[ i ]. )
+		}
+	}
 }

@@ -69,6 +69,10 @@ main()
 	{
 		level.no_player_dialog = true;
 	}
+	if ( isDefined( level.zm_custom_map_perk_machines_func ) )
+	{
+		level [[ level.zm_custom_map_perk_machines_func ]]();
+	}
 	maps\so\zm_common\_zm_spawner_prototype::init();
 	maps\so\zm_common\_zm::init_zm();
 	maps\so\zm_common\_zm_utility::add_sound( "break_stone", "break_stone" );

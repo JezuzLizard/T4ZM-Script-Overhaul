@@ -16,6 +16,10 @@ enable_juggernog_perk_for_level()
 	maps\so\zm_common\_zm_perks::register_perk_machine( "specialty_armorvest", ::turn_jugger_on );
 	maps\so\zm_common\_zm_perks::register_perk_precache_func( "specialty_armorvest", ::juggernog_precache );
 	maps\so\zm_common\_zm_perks::register_perk_threads( "specialty_armorvest", ::give_jugg, ::take_jugg );
+	if ( isDefined( level.zm_custom_map_perk_machine_loc_funcs ) && isDefined( level.zm_custom_map_perk_machine_loc_funcs[ "specialty_armorvest" ] ) )
+	{
+		level [[ level.zm_custom_map_perk_machine_loc_funcs[ "specialty_armorvest" ] ]]();
+	}
 }
 
 turn_jugger_on()

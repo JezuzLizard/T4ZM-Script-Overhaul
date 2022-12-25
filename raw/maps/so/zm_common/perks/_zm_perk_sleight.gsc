@@ -14,6 +14,10 @@ enable_sleight_perk_for_level()
 	maps\so\zm_common\_zm_perks::register_perk_machine( "specialty_fastreload", ::turn_sleight_on );
 	maps\so\zm_common\_zm_perks::register_perk_precache_func( "specialty_fastreload", ::sleight_precache );
 	maps\so\zm_common\_zm_perks::register_perk_threads( "specialty_fastreload", ::sleight_give, ::sleight_take );
+	if ( isDefined( level.zm_custom_map_perk_machine_loc_funcs ) && isDefined( level.zm_custom_map_perk_machine_loc_funcs[ "specialty_fastreload" ] ) )
+	{
+		level [[ level.zm_custom_map_perk_machine_loc_funcs[ "specialty_fastreload" ] ]]();
+	}
 }
 
 turn_sleight_on()
