@@ -345,12 +345,10 @@ perk_hud_create( perk )
 		}
 	}
 #/
-	printConsole( "perk_hud_create() perk: " + perk );
 	shader = "";
 	if ( array_validate( level._custom_perks ) && isDefined( level._custom_perks[ perk ] ) && isDefined( level._custom_perks[ perk ].shader ) )
 	{
 		shader = level._custom_perks[ perk ].shader;
-		printConsole( "perk_hud_create() shader: " + shader );
 	}
 	hud = create_simple_hud( self );
 	hud.foreground = true; 
@@ -735,6 +733,10 @@ _register_undefined_perk( str_perk )
 
 spawn_and_link_perk_kvps()
 {
+	if ( !isDefined( level._custom_perks ) || level._custom_perks.size <= 0 )
+	{
+		return;
+	}
 	if ( is_true( level.zm_custom_map_respawn_mapents_perks ) )
 	{
 		old_bump_triggers = getEntArray( "audio_bump_trigger", "targetname" );

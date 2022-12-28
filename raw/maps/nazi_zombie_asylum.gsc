@@ -849,7 +849,7 @@ include_weapons()
 	include_weapon( "ray_gun" );
 	
 	//bouncing betties
-	include_weapon("mine_bouncing_betty");
+	include_weapon("mine_bouncing_betty", false);
 	
 }
 

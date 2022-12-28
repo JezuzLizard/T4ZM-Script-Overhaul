@@ -41,7 +41,7 @@ main()
 	{
 		level.custom_introscreen = ::prototype_custom_intro_screen;
 	}
-	if ( isDefined( level.zm_custom_map_fx_init ) )
+	if ( !isDefined( level.zm_custom_map_fx_init ) )
 	{
 		level.zm_custom_map_fx_init = ::init_fx;
 	}

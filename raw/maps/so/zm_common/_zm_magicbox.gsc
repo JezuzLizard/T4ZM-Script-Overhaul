@@ -14,7 +14,7 @@ treasure_chest_init()
 	flag_init("moving_chest_enabled");
 	flag_init("moving_chest_now");
 	
-	
+	level.chest_accessed = 0;
 	level.chests = GetEntArray( "treasure_chest_use", "targetname" );
 
 	if (level.chests.size > 1)
@@ -50,11 +50,10 @@ treasure_chest_init()
 			}
 			
 			level.chest_index++;     
-	}
+		}
 
 		//init time chest accessed amount.
 		
-		level.chest_accessed = 0;
 		if(level.script == "nazi_zombie_sumpf" || level.script == "nazi_zombie_factory")
 		{
 			// Anchor target will grab the weapon spawn point inside the box, so the fx will be centered on it too
@@ -707,17 +706,17 @@ treasure_chest_ChooseRandomWeapon( player )
 	filtered = [];
 	for( i = 0; i < keys.size; i++ )
 	{
+		if( !IsDefined( keys[i] ) )
+		{
+			continue;
+		}
+
 		if( !get_is_in_box( keys[i] ) )
 		{
 			continue;
 		}
 		
 		if( player has_weapon_or_upgrade( keys[i] ) )
-		{
-			continue;
-		}
-
-		if( !IsDefined( keys[i] ) )
 		{
 			continue;
 		}
@@ -770,17 +769,17 @@ treasure_chest_ChooseWeightedRandomWeapon( player )
 	filtered = [];
 	for( i = 0; i < keys.size; i++ )
 	{
+		if( !IsDefined( keys[i] ) )
+		{
+			continue;
+		}
+
 		if( !get_is_in_box( keys[i] ) )
 		{
 			continue;
 		}
 		
 		if( player has_weapon_or_upgrade( keys[i] ) )
-		{
-			continue;
-		}
-
-		if( !IsDefined( keys[i] ) )
 		{
 			continue;
 		}

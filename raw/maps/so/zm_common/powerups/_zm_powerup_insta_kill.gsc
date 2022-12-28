@@ -127,11 +127,16 @@ time_remaning_on_insta_kill_powerup()
 	// time it down!
 	while ( level.zombie_vars["zombie_powerup_insta_kill_time"] >= 0)
 	{
-		wait 0.1;
-		level.zombie_vars["zombie_powerup_insta_kill_time"] = level.zombie_vars["zombie_powerup_insta_kill_time"] - 0.1;
-		if ( is_true( level.use_legacy_powerup_system ) )
+		if ( !is_true( level.use_legacy_powerup_system ) )
 		{
-			self setvalue( level.zombie_vars["zombie_powerup_insta_kill_time"] );	
+			wait 0.1;
+			level.zombie_vars["zombie_powerup_insta_kill_time"] = level.zombie_vars["zombie_powerup_insta_kill_time"] - 0.1;
+		}
+		else 
+		{
+			wait 1;
+			level.zombie_vars["zombie_powerup_insta_kill_time"] = level.zombie_vars["zombie_powerup_insta_kill_time"] - 1;
+			self setvalue( level.zombie_vars["zombie_powerup_insta_kill_time"] );
 		}
 	}
 

@@ -1585,7 +1585,7 @@ zombie_death_points( origin, mod, hit_location, player,zombie )
 		return;
 	}
 	
-	level thread maps\_zombiemode_powerups::powerup_drop( origin );
+	level thread maps\so\zm_common\_zm_powerups::powerup_drop( origin );
 	
 	if( !IsDefined( player ) || !IsPlayer( player ) )
 	{

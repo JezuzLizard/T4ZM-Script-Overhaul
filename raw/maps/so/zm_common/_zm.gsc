@@ -9,6 +9,11 @@ init_zm()
 {
 	common_precache();
 
+	if ( isDefined( level.zm_custom_map_fx_init ) )
+	{
+		level [[ level.zm_custom_map_fx_init ]]();
+	}
+
 	init_strings();
 	init_levelvars();
 	init_animscripts();
@@ -38,11 +43,6 @@ init_zm()
 	
 	level.custom_intermission = ::player_intermission; 
 	level.reset_clientdvars = ::onPlayerConnect_clientDvars;
-
-	if ( isDefined( level.zm_custom_map_fx_init ) )
-	{
-		level [[ level.zm_custom_map_fx_init ]]();
-	}
 
 	maps\_load::main();
 

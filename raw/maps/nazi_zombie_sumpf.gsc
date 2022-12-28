@@ -336,7 +336,7 @@ include_weapons()
 	include_weapon( "tesla_gun" );
 	
 	//bouncing betties
-	include_weapon("mine_bouncing_betty");
+	include_weapon("mine_bouncing_betty", false);
 	
 	// limited weapons
 	maps\so\zm_common\_zm_weapons::add_limited_weapon( "zombie_colt", 0 );

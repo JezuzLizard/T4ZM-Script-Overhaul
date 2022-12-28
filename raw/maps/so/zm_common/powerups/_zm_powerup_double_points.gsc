@@ -116,11 +116,17 @@ time_remaining_on_point_doubler_powerup()
 	// time it down!
 	while ( level.zombie_vars["zombie_powerup_point_doubler_time"] >= 0)
 	{
-		wait 0.1;
-		level.zombie_vars["zombie_powerup_point_doubler_time"] = level.zombie_vars["zombie_powerup_point_doubler_time"] - 0.1;
-		if ( is_true( level.use_legacy_powerup_system ) )
+		if ( !is_true( level.use_legacy_powerup_system ) )
 		{
-			self setvalue( level.zombie_vars["zombie_powerup_point_doubler_time"] );	
+			wait 0.1;
+			level.zombie_vars["zombie_powerup_point_doubler_time"] = level.zombie_vars["zombie_powerup_point_doubler_time"] - 0.1;
+			
+		}
+		else
+		{
+			wait 1;
+			level.zombie_vars["zombie_powerup_point_doubler_time"] = level.zombie_vars["zombie_powerup_point_doubler_time"] - 1;
+			self setvalue( level.zombie_vars["zombie_powerup_point_doubler_time"] );
 		}
 	}
 
