@@ -1,11 +1,14 @@
+#include maps\_utility; 
+#include common_scripts\utility;
 #include maps\so\zm_common\_zm_utility;
 
 enable_insta_kill_powerup_for_level()
 {
 	maps\so\zm_common\_zm_powerups::register_powerup_basic_info( "insta_kill", "zombie_skull", &"ZOMBIE_POWERUP_INSTA_KILL", ::func_should_always_drop, false, false, false );
 	maps\so\zm_common\_zm_powerups::register_powerup_setup( "insta_kill", ::insta_kill_precache, ::insta_kill_setup );
-	maps\so\zm_common\_zm_powerups::register_powerup_grab_info( "insta_kill", ::insta_kill_grab, undefined, undefined )
+	maps\so\zm_common\_zm_powerups::register_powerup_grab_info( "insta_kill", ::insta_kill_grab, undefined, undefined );
 	maps\so\zm_common\_zm_powerups::register_powerup_hud_info( "insta_kill", "specialty_instakill_zombies", "zombie_powerup_insta_kill_time", "zombie_powerup_insta_kill_on" );
+	maps\so\zm_common\_zm_powerups::register_powerup_player_setup( "insta_kill", ::insta_kill_player_setup );
 }
 
 func_should_always_drop()
@@ -28,6 +31,14 @@ insta_kill_setup()
 	set_zombie_var( "zombie_powerup_insta_kill_time", 	30 );	// length of insta kill
 }
 
+insta_kill_player_setup()
+{
+	if ( !is_true( level.use_legacy_powerup_system ) )
+	{
+		self maps\so\zm_common\_zm_powerups::register_powerup_hud_player_info( "insta_kill" );
+	}
+}
+
 insta_kill_grab( powerup, player )
 {
 	level thread insta_kill_powerup( powerup );
@@ -46,7 +57,7 @@ insta_kill_powerup( drop_item )
 	level.zombie_vars["zombie_insta_kill"] = 1;
 	wait( 30 );
 	level.zombie_vars["zombie_insta_kill"] = 0;
-	players = get_players();
+	players = getPlayers();
 	for(i = 0; i < players.size; i++)
 	{
 		players[i] notify("insta_kill_over");
@@ -105,7 +116,7 @@ time_remaning_on_insta_kill_powerup()
 	temp_enta playloopsound("insta_kill_loop");	
 
 	/*
-	players = get_players();
+	players = getPlayers();
 	for (i = 0; i < players.size; i++)
 	{
 	players[i] playloopsound ("insta_kill_loop");
@@ -124,7 +135,7 @@ time_remaning_on_insta_kill_powerup()
 		}
 	}
 
-	players = get_players();
+	players = getPlayers();
 	for (i = 0; i < players.size; i++)
 	{
 		//players[i] stoploopsound (2);

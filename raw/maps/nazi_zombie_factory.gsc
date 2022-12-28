@@ -154,7 +154,7 @@ main()
 	teleporter_init();
 	
 	//AUDIO: Initiating Killstreak Dialog and Zombie Behind Vocals
-	players = get_players(); 
+	players = getPlayers(); 
 	
 	for( i = 0; i < players.size; i++ )
 	{
@@ -765,7 +765,7 @@ factory_ray_gun_weighting_func()
 //	Slightly elevate the chance to get it until someone has it, then make it even
 factory_cymbal_monkey_weighting_func()
 {
-	players = get_players();
+	players = getPlayers();
 	count = 0;
 	for( i = 0; i < players.size; i++ )
 	{
@@ -1033,7 +1033,7 @@ electric_trap_dialog()
 	while(1)
 	{
 		wait(0.5);
-		players = get_players();
+		players = getPlayers();
 		for(i = 0; i < players.size; i++)
 		{		
 			dist = distancesquared(players[i].origin, self.origin );
@@ -1987,7 +1987,7 @@ play_giant_mythos_lines()
 		{
 			if( vox_rand <= 2 )
 			{
-				players = get_players();
+				players = getPlayers();
 				p = randomint(players.size);
 				index = maps\so\zm_common\_zm_weapons::get_player_index(players[p]);
 				plr = "plr_" + index + "_";

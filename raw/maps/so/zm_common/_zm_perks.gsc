@@ -82,7 +82,7 @@ electric_perks_dialog()
 	while(1)
 	{
 		wait(0.5);
-		players = get_players();
+		players = getPlayers();
 		for(i = 0; i < players.size; i++)
 		{		
 			dist = distancesquared(players[i].origin, self.origin );
@@ -231,7 +231,7 @@ vending_trigger_post_think( player, perk, cost )
 		return;
 	}
 	if ( array_validate( level._custom_perks ) && isdefined( level._custom_perks[perk] ) && isdefined( level._custom_perks[perk].player_thread_give ) )
-		self thread [[ level._custom_perks[perk].player_thread_give ]]();
+		player thread [[ level._custom_perks[perk].player_thread_give ]]();
 	player SetPerk( perk );
 	player thread perk_vo(perk);
 	player setblur( 4, 0.1 );
@@ -263,7 +263,7 @@ check_player_has_perk(perk)
 		dist = 128 * 128;
 		while(true)
 		{
-			players = get_players();
+			players = getPlayers();
 			for( i = 0; i < players.size; i++ )
 			{
 				if(DistanceSquared( players[i].origin, self.origin ) < dist)
@@ -336,36 +336,36 @@ perk_hud_create( perk )
 		self.perk_hud = [];
 	}
 
-	/#
-		if ( GetDVarInt( "zombie_cheat" ) >= 5 )
+/#
+	if ( GetDVarInt( "zombie_cheat" ) >= 5 )
+	{
+		if ( IsDefined( self.perk_hud[ perk ] ) )
 		{
-			if ( IsDefined( self.perk_hud[ perk ] ) )
-			{
-				return;
-			}
+			return;
 		}
+	}
 #/
+	printConsole( "perk_hud_create() perk: " + perk );
+	shader = "";
+	if ( array_validate( level._custom_perks ) && isDefined( level._custom_perks[ perk ] ) && isDefined( level._custom_perks[ perk ].shader ) )
+	{
+		shader = level._custom_perks[ perk ].shader;
+		printConsole( "perk_hud_create() shader: " + shader );
+	}
+	hud = create_simple_hud( self );
+	hud.foreground = true; 
+	hud.sort = 1; 
+	hud.hidewheninmenu = false; 
+	hud.alignX = "left"; 
+	hud.alignY = "bottom";
+	hud.horzAlign = "left"; 
+	hud.vertAlign = "bottom";
+	hud.x = self.perk_hud.size * 30; 
+	hud.y = hud.y - 70; 
+	hud.alpha = 1;
+	hud SetShader( shader, 24, 24 );
 
-
-		shader = "";
-		if ( array_validate( level._custom_perks ) && isDefined( level._custom_perks[ perk ] ) && isDefined( level._custom_perks[ perk ].shader ) )
-		{
-			shader = level._custom_perks[ perk ].shader;
-		}
-		hud = create_simple_hud( self );
-		hud.foreground = true; 
-		hud.sort = 1; 
-		hud.hidewheninmenu = false; 
-		hud.alignX = "left"; 
-		hud.alignY = "bottom";
-		hud.horzAlign = "left"; 
-		hud.vertAlign = "bottom";
-		hud.x = self.perk_hud.size * 30; 
-		hud.y = hud.y - 70; 
-		hud.alpha = 1;
-		hud SetShader( shader, 24, 24 );
-
-		self.perk_hud[ perk ] = hud;
+	self.perk_hud[ perk ] = hud;
 }
 
 
@@ -838,6 +838,10 @@ spawn_and_link_perk_kvps()
 
 spawn_and_link_packapunch_kvps()
 {
+	if ( !isDefined( level._custom_packapunch ) )
+	{
+		return;
+	}
 	if ( is_true( level._custom_packapunch.dynamically_spawned ) )
 	{
 		assert( isDefined( level._custom_packapunch.origin ), "origin is required to dynamically spawn packapunch" );

@@ -15,7 +15,7 @@ player_in_zone( zone_name )
 	zone = level.zones[ zone_name ];
 
 	// Okay check to see if a player is in one of the zone volumes
-	players = get_players();
+	players = getPlayers();
 	{
 		for (i = 0; i < zone.volumes.size; i++)
 		{

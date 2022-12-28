@@ -1,10 +1,12 @@
+#include maps\_utility; 
+#include common_scripts\utility;
 #include maps\so\zm_common\_zm_utility;
 
 enable_full_ammo_powerup_for_level()
 {
 	maps\so\zm_common\_zm_powerups::register_powerup_basic_info( "full_ammo", "zombie_ammocan", &"ZOMBIE_POWERUP_MAX_AMMO", ::func_should_always_drop, false, false, false );
 	maps\so\zm_common\_zm_powerups::register_powerup_setup( "full_ammo", ::full_ammo_precache, ::full_ammo_setup );
-	maps\so\zm_common\_zm_powerups::register_powerup_grab_info( "full_ammo", grab_func, undefined, undefined )
+	maps\so\zm_common\_zm_powerups::register_powerup_grab_info( "full_ammo", ::full_ammo_grab, undefined, undefined );
 }
 
 func_should_always_drop()
@@ -30,7 +32,7 @@ full_ammo_grab( powerup, player )
 
 full_ammo_powerup( drop_item )
 {
-	players = get_players();
+	players = getPlayers();
 
 	for (i = 0; i < players.size; i++)
 	{
@@ -68,7 +70,7 @@ full_ammo_on_hud( drop_item )
 full_ammo_move_hud()
 {
 
-	players = get_players();
+	players = getPlayers();
 	if ( !is_true( level.use_legacy_powerup_system ) )
 	{
 		level thread maps\so\zm_common\_zm_powerups::play_devil_dialog("ma_vox");

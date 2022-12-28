@@ -61,7 +61,7 @@ zombie_spawn_dog_tracker()
 	while(1)
 	{
 		wait(.25);
-		players = get_players();
+		players = getPlayers();
 		for(i=0;i<players.size;i++)
 		{
 			if(isAlive(players[i]) && !isDefined(players[i].revivetrigger))
@@ -782,7 +782,7 @@ should_attack_player_thru_boards()
 	}
 	freq = getdvarint("zombie_reachin_freq");
 	
-	players = get_players();
+	players = getPlayers();
 	attack = false;
 	
 	for(i=0;i<players.size;i++)
@@ -1982,7 +1982,7 @@ find_flesh()
 //			self.ignore_player = self.favoriteenemy;
 //		}
 		
-		players = get_players();
+		players = getPlayers();
 				
 		// If playing single player, never ignore the player
 		if( players.size == 1 )
@@ -2065,7 +2065,7 @@ find_flesh_dog()
 //			self.ignore_player = self.favoriteenemy;
 //		}
 		
-		players = get_players();
+		players = getPlayers();
 				
 		// If playing single player, never ignore the player
 		if( players.size == 1 )

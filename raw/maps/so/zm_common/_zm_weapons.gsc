@@ -142,7 +142,7 @@ decide_hide_show_hint( endon_notify )
 
 	while( true )
 	{
-		players = get_players();
+		players = getPlayers();
 		for( i = 0; i < players.size; i++ )
 		{
 			if( players[i] can_buy_weapon() )
@@ -475,7 +475,7 @@ default_ray_gun_weighting_func()
 //	Slightly elevate the chance to get it until someone has it, then make it even
 default_cymbal_monkey_weighting_func()
 {
-	players = get_players();
+	players = getPlayers();
 	count = 0;
 	for( i = 0; i < players.size; i++ )
 	{

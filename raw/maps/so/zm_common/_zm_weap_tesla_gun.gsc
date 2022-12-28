@@ -238,13 +238,27 @@ tesla_do_damage( source_enemy, arc_num, player )
 
 	if ( !self enemy_is_dog() )
 	{
-		if( self.has_legs )
+		if ( !is_true( level.use_legacy_tesla_gun ) )
 		{
-			self.deathanim = random( level._zombie_tesla_death[self.animname] );
+			if( self.has_legs )
+			{
+				self.deathanim = random( level._zombie_tesla_death[self.animname] );
+			}
+			else
+			{
+				self.deathanim = random( level._zombie_tesla_crawl_death[self.animname] );
+			}
 		}
-		else
+		else 
 		{
-			self.deathanim = random( level._zombie_tesla_crawl_death[self.animname] );
+			if( self.has_legs )
+			{
+				self.deathanim = random( level._zombie_tesla_death );
+			}
+			else
+			{
+				self.deathanim = random( level._zombie_tesla_crawl_death );
+			}
 		}
 	}
 	else

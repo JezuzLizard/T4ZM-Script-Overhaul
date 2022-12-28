@@ -1,11 +1,14 @@
+#include maps\_utility; 
+#include common_scripts\utility;
 #include maps\so\zm_common\_zm_utility;
 
 enable_double_points_powerup_for_level()
 {
 	maps\so\zm_common\_zm_powerups::register_powerup_basic_info( "double_points", "zombie_x2_icon", &"ZOMBIE_POWERUP_DOUBLE_POINTS", ::func_should_always_drop, false, false, false );
 	maps\so\zm_common\_zm_powerups::register_powerup_setup( "double_points", ::double_points_precache, ::double_points_setup );
-	maps\so\zm_common\_zm_powerups::register_powerup_grab_info( "double_points", grab_func, undefined, undefined )
+	maps\so\zm_common\_zm_powerups::register_powerup_grab_info( "double_points", ::double_points_grab, undefined, undefined );
 	maps\so\zm_common\_zm_powerups::register_powerup_hud_info( "double_points", "specialty_doublepoints_zombies", "zombie_powerup_point_doubler_time", "zombie_powerup_point_doubler_on" );
+	maps\so\zm_common\_zm_powerups::register_powerup_player_setup( "double_points", ::double_points_player_setup );
 }
 
 func_should_always_drop()
@@ -27,6 +30,14 @@ double_points_setup()
 	set_zombie_var( "zombie_powerup_point_doubler_time", 30 );	// length of point doubler
 }
 
+double_points_player_setup()
+{
+	if ( !is_true( level.use_legacy_powerup_system ) )
+	{
+		self maps\so\zm_common\_zm_powerups::register_powerup_hud_player_info( "double_points" );
+	}
+}
+
 double_points_grab( powerup, player )
 {
 	level thread double_points_powerup( powerup );
@@ -39,7 +50,7 @@ double_points_powerup( drop_item )
 	level notify ("powerup points scaled");
 	level endon ("powerup points scaled");
 
-	//	players = get_players();	
+	//	players = getPlayers();	
 	//	array_thread(level,::point_doubler_on_hud, drop_item);
 	level thread point_doubler_on_hud( drop_item );
 
@@ -115,7 +126,7 @@ time_remaining_on_point_doubler_powerup()
 
 	// turn off the timer
 	level.zombie_vars["zombie_powerup_point_doubler_on"] = false;
-	players = get_players();
+	players = getPlayers();
 	for (i = 0; i < players.size; i++)
 	{
 		//players[i] stoploopsound("double_point_loop", 2);

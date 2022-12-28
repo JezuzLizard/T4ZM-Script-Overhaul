@@ -1,10 +1,12 @@
+#include maps\_utility; 
+#include common_scripts\utility;
 #include maps\so\zm_common\_zm_utility;
 
 enable_carpenter_powerup_for_level()
 {
 	maps\so\zm_common\_zm_powerups::register_powerup_basic_info( "carpenter", "zombie_carpenter", &"ZOMBIE_POWERUP_MAX_AMMO", ::func_should_drop_carpenter, false, false, false );
 	maps\so\zm_common\_zm_powerups::register_powerup_setup( "carpenter", ::carpenter_precache, ::carpenter_setup );
-	maps\so\zm_common\_zm_powerups::register_powerup_grab_info( "carpenter", ::carpenter_grab, undefined, undefined )
+	maps\so\zm_common\_zm_powerups::register_powerup_grab_info( "carpenter", ::carpenter_grab, undefined, undefined );
 }
 
 func_should_drop_carpenter()
@@ -79,7 +81,7 @@ start_carpenter( origin )
 	}
 
 
-	players = get_players();
+	players = getPlayers();
 	for(i = 0; i < players.size; i++)
 	{
 		players[i].score += 200;

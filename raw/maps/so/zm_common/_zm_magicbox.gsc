@@ -389,7 +389,7 @@ decide_hide_show_chest_hint( endon_notify )
 
 	while( true )
 	{
-		players = get_players();
+		players = getPlayers();
 		for( i = 0; i < players.size; i++ )
 		{
 			// chest_user defined if someone bought a weapon spin, false when chest closed
@@ -439,7 +439,7 @@ treasure_chest_move(lid)
 {
 	level waittill("weapon_fly_away_start");
 
-	players = get_players();
+	players = getPlayers();
 	
 	array_thread(players, ::play_crazi_sound);
 
@@ -511,7 +511,7 @@ treasure_chest_move(lid)
 	
 	//anchor thread rotateroll_box();
 	anchor waittill("movedone");
-	//players = get_players();
+	//players = getPlayers();
 	//array_thread(players, ::play_crazi_sound);
 	//wait(3.9);
 	
@@ -729,7 +729,7 @@ treasure_chest_ChooseRandomWeapon( player )
 	if( IsDefined( level.limited_weapons ) )
 	{
 		keys2 = GetArrayKeys( level.limited_weapons );
-		players = get_players();
+		players = getPlayers();
 		pap_triggers = GetEntArray("zombie_vending_upgrade", "targetname");
 		for( q = 0; q < keys2.size; q++ )
 		{
@@ -797,7 +797,7 @@ treasure_chest_ChooseWeightedRandomWeapon( player )
 	if( IsDefined( level.limited_weapons ) )
 	{
 		keys2 = GetArrayKeys( level.limited_weapons );
-		players = get_players();
+		players = getPlayers();
 		pap_triggers = GetEntArray("zombie_vending_upgrade", "targetname");
 		for( q = 0; q < keys2.size; q++ )
 		{

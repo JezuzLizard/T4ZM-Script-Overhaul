@@ -120,6 +120,10 @@ main()
 	maps\so\zm_common\_zm::init_zm();
 	maps\nazi_zombie_sumpf_blockers::init();
 	maps\so\zm_common\_zm_ai_dogs::init();
+	if ( !isDefined( level.use_legacy_tesla_gun ) )
+	{
+		level.use_legacy_tesla_gun = true;
+	}
 	maps\so\zm_common\_zm_weap_tesla_gun::init();
 
 	//init_sounds();
@@ -139,7 +143,7 @@ main()
 	
 //	level thread add_tesla_gun();
 	
-	players = get_players(); 
+	players = getPlayers(); 
 	
 	//initialize killstreak dialog	
 	for( i = 0; i < players.size; i++ )

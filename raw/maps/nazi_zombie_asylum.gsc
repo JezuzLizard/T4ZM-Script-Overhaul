@@ -196,7 +196,7 @@ player_zombie_awareness()
 
 //debug_health()
 //{
-//	players = get_players(); 
+//	players = getPlayers(); 
 //	hud = newHudElem();
 //	hud.foreground = true; 
 //	hud.sort = 1; 
@@ -542,7 +542,7 @@ manage_zone()
 	{
 		//test to see if any players are in the volume
 		zone_active = false;
-		players = get_players();
+		players = getPlayers();
 		
 		//check magic box volume
 		if(self.targetname == "south_upstairs_volume" && flag("magic_box_south"))
@@ -978,7 +978,7 @@ bouncing_betty_setup()
 betty_loadout()
 {
 	flag_wait("all_players_connected");
-	//players = get_players();
+	//players = getPlayers();
 	//array_thread(players,::bouncing_betty_setup);
 }
 
@@ -1041,7 +1041,7 @@ give_betties_after_rounds()
 	{
 		level waittill( "between_round_over" );
 		{
-			players = get_players();
+			players = getPlayers();
 			for(i=0;i<players.size;i++)
 			{
 				if(isDefined(players[i].has_betties))
@@ -1144,7 +1144,7 @@ electric_trap_dialog()
 	while(1)
 	{
 		wait(0.5);
-		players = get_players();
+		players = getPlayers();
 		for(i = 0; i < players.size; i++)
 		{		
 			dist = distancesquared(players[i].origin, self.origin );
@@ -1872,7 +1872,7 @@ play_door_dialog()
 	while(1)
 	{
 		wait(0.05);
-		players = get_players();
+		players = getPlayers();
 		for(i = 0; i < players.size; i++)
 		{		
 			dist = distancesquared(players[i].origin, self.origin );

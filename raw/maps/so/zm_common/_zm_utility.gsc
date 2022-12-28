@@ -686,7 +686,7 @@ get_closest_valid_player( origin, ignore_player )
 {
 	valid_player_found = false; 
 	
-	players = get_players();
+	players = getPlayers();
 
 	if( IsDefined( ignore_player ) )
 	{
@@ -760,7 +760,7 @@ is_player_valid( player )
 
 in_revive_trigger()
 {
-	players = get_players();
+	players = getPlayers();
 	for( i = 0; i < players.size; i++ )
 	{
 		if( !IsDefined( players[i] ) || !IsAlive( players[i] ) ) 
@@ -1277,7 +1277,10 @@ set_zombie_var( var, value, div, is_float )
 	{
 		value = value / div;
 	}
-
+	if ( !isDefined( level.zombie_vars ) )
+	{
+		level.zombie_vars = [];
+	}
 	level.zombie_vars[var] = value;
 }
 

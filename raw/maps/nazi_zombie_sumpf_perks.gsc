@@ -92,7 +92,7 @@ activate_vending_machine(machine, origin)
 
 play_vending_vo( machine, origin )
 {
-	players = get_players();		
+	players = getPlayers();		
 	players = get_array_of_closest( origin, players, undefined, undefined, 512 );
 	player = undefined;
 		

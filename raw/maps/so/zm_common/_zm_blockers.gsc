@@ -278,7 +278,7 @@ door_solid_thread()
 
 	while( 1 )
 	{
-		players = get_players(); 
+		players = getPlayers(); 
 		player_touching = false; 
 		for( i = 0; i < players.size; i++ )
 		{
@@ -310,7 +310,7 @@ door_solid_thread_anim( )
 
 	while( 1 )
 	{
-		players = get_players(); 
+		players = getPlayers(); 
 		player_touching = false; 
 		for( i = 0; i < players.size; i++ )
 		{

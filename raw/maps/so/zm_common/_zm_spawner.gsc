@@ -774,7 +774,7 @@ should_attack_player_thru_boards()
 	}
 	freq = getdvarint("zombie_reachin_freq");
 	
-	players = get_players();
+	players = getPlayers();
 	attack = false;
 	
 	for(i=0;i<players.size;i++)
@@ -2344,7 +2344,7 @@ find_flesh()
 
 		zombie_poi = self get_zombie_point_of_interest( self.origin );
 		
-		players = get_players();
+		players = getPlayers();
 		
 		//PI_CHANGE_BEGIN - 6/18/09 JV It was requested that we use the poi functionality to set the "wait" point while all players  
 		//are in the process of teleportation. It should not intefere with the monkey.  The way it should work is, if all players are in teleportation,

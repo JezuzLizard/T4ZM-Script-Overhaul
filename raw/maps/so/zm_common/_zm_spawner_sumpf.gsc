@@ -694,7 +694,7 @@ should_attack_player_thru_boards()
 	}
 	freq = getdvarint("zombie_reachin_freq");
 	
-	players = get_players();
+	players = getPlayers();
 	attack = false;
 	
 	for(i=0;i<players.size;i++)
@@ -2627,7 +2627,7 @@ find_flesh()
 //			self.ignore_player = self.favoriteenemy;
 //		}
 		
-		players = get_players();
+		players = getPlayers();
 				
 		// If playing single player, never ignore the player
 		if( players.size == 1 )

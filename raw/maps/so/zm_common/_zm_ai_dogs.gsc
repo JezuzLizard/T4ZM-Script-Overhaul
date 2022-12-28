@@ -133,7 +133,7 @@ dog_round_spawning()
 
 	level.dog_intermission = true;
 	level thread dog_round_aftermath();
-	players = get_players();
+	players = getPlayers();
 	array_thread( players, ::play_dog_round );	
 	wait(7);
 
@@ -178,7 +178,7 @@ dog_round_spawning()
 		}
 		
 		//update the player array.
-		players = get_players();
+		players = getPlayers();
 		favorite_enemy = get_favorite_enemy();
 
 		if ( IsDefined( level.dog_spawn_func ) )
@@ -251,7 +251,7 @@ waiting_for_next_dog_spawn( count, max )
 get_number_of_valid_players()
 {
 
-	players = get_players();
+	players = getPlayers();
 	num_player_valid = 0;
 	for( i = 0 ; i < players.size; i++ )
 	{
@@ -500,7 +500,7 @@ dog_round_tracker()
 
 			level.next_dog_round = level.round_number + randomintrange( 4, 6 );
 			/#
-				get_players()[0] iprintln( "Next dog round: " + level.next_dog_round );
+				getPlayers()[0] iprintln( "Next dog round: " + level.next_dog_round );
 			#/
 		}
 		else if ( flag( "dog_round" ) )
@@ -794,7 +794,7 @@ dog_behind_audio()
 	while(1)
 	{
 		wait(.25);
-		players = get_players();
+		players = getPlayers();
 		for(i=0;i<players.size;i++)
 		{
 			dogAngle = AngleClamp180( vectorToAngles( self.origin - players[i].origin )[1] - players[i].angles[1] );
@@ -874,7 +874,7 @@ special_dog_spawn( spawners, num_to_spawn )
 	while ( count < num_to_spawn )
 	{
 		//update the player array.
-		players = get_players();
+		players = getPlayers();
 		favorite_enemy = get_favorite_enemy();
 
 		if ( IsDefined( spawners ) )

@@ -60,15 +60,6 @@ on_player_connect_powerup_init()
 
 init_powerups()
 {
-	if( !IsDefined( level.zombie_powerup_array ) )
-	{
-		level.zombie_powerup_array = [];
-	}
-	if ( !IsDefined( level.zombie_special_drop_array ) )
-	{
-		level.zombie_special_drop_array = [];
-	}
-
 	// Random Drops
 	//	add_zombie_special_powerup( "monkey" );
 
@@ -161,24 +152,6 @@ powerup_hud_monitor()
 				{
 					player.powerup_hud = [];
 				}
-
-				if ( !isDefined( player.powerup_hud[ powerup_hud_field_keys[ powerup_hud_field_key_index ] ] ) )
-				{
-					hudelem = newClientHudelem( player );
-					hudelem.foreground = true; 
-					hudelem.sort = 2; 
-					hudelem.hidewheninmenu = false; 
-					hudelem.alignX = "center"; 
-					hudelem.alignY = "bottom";
-					hudelem.horzAlign = "center"; 
-					hudelem.vertAlign = "bottom";
-					hudelem.x = -32 + (powerup_hud_field_key_index * 15); 
-					hudelem.y = hudelem.y - 35; 
-					hudelem.alpha = 0.8;
-					hudelem.flashing = false;
-					hudelem setshader( powerup_hud_fields[ powerup_hud_field_keys[ powerup_hud_field_key_index ] ].shader, 32, 32);
-					player.powerup_hud[ powerup_hud_field_keys[ powerup_hud_field_key_index ] ] = hudelem;
-				}
 /#
 				if ( isdefined( player.pers["isBot"] ) && player.pers["isBot"] )
 					continue;
@@ -261,43 +234,41 @@ randomize_powerups()
 
 get_next_powerup()
 {
-	if( level.zombie_powerup_index >= level.zombie_powerup_array.size )
+	powerup = level.zombie_powerup_array[level.zombie_powerup_index];
+	level.zombie_powerup_index++;
+
+	if ( level.zombie_powerup_index >= level.zombie_powerup_array.size )
 	{
 		level.zombie_powerup_index = 0;
 		randomize_powerups();
 	}
 
-	powerup = level.zombie_powerup_array[level.zombie_powerup_index];
+	return powerup;
+}
 
-	/#
-		if( isdefined( level.zombie_devgui_power ) && level.zombie_devgui_power == 1 )
-			return powerup;
-
-	#/
-
-	//level.windows_destroyed = get_num_window_destroyed();
-
-	while( true )
-	{	
-		if ( ![[ level._custom_powerups[ powerup ].func_should_drop_with_regular_powerups ]]() )
+get_valid_powerup()
+{
+	powerup = get_next_powerup();
+	while ( true )
+	{
+		if ( ![[ level._custom_powerups[powerup].func_should_drop_with_regular_powerups ]]() )
 		{
 			powerup = get_next_powerup();
 			continue;
 		}
+
 		return powerup;
 	}
-
-	return powerup;
 }
 
 watch_for_drop()
 {
-	players = get_players();
+	players = getPlayers();
 	score_to_drop = ( players.size * level.zombie_vars["zombie_score_start"] ) + level.zombie_vars["zombie_powerup_drop_increment"];
 
 	while (1)
 	{
-		players = get_players();
+		players = getPlayers();
 
 		curr_total_score = 0;
 
@@ -461,7 +432,7 @@ special_powerup_drop(drop_point)
 //	Pick the next powerup in the list
 powerup_setup()
 {
-	powerup = get_next_powerup();
+	powerup = get_valid_powerup();
 
 	struct = level._custom_powerups[powerup];
 	self SetModel( struct.model_name );
@@ -494,7 +465,7 @@ special_drop_setup()
 	// Always give something at lower rounds or if a player is in last stand mode.
 	if ( level.round_number <= 10 || maps\_laststand::player_num_in_laststand() )
 	{
-		powerup = get_next_powerup();
+		powerup = get_valid_powerup();
 	}
 	// Gets harder now
 	else
@@ -538,7 +509,7 @@ special_drop_setup()
 		}
 		else
 		{
-			powerup = get_next_powerup();
+			powerup = get_valid_powerup();
 		}
 		break;
 
@@ -603,7 +574,7 @@ powerup_grab()
 	while (isdefined(self))
 	{
 		wait 0.1;
-		players = get_players();
+		players = getPlayers();
 
 		for (i = 0; i < players.size; i++)
 		{	
@@ -946,6 +917,29 @@ register_powerup_hud_info( powerup, shader, time, on )
 	level._custom_powerups[ powerup ].shader = shader;
 	level._custom_powerups[ powerup ].time_name = time;
 	level._custom_powerups[ powerup ].on_name = on;
+	if ( !isDefined( level.hud_powerups ) )
+	{
+		level.hud_powerups = [];
+	}
+	level.hud_powerups[ level.hud_powerups.size ] = powerup;
+}
+
+register_powerup_hud_player_info( powerup )
+{
+	hudelem = newClientHudelem( self );
+	hudelem.foreground = true; 
+	hudelem.sort = 2; 
+	hudelem.hidewheninmenu = false; 
+	hudelem.alignX = "center"; 
+	hudelem.alignY = "bottom";
+	hudelem.horzAlign = "center"; 
+	hudelem.vertAlign = "bottom";
+	hudelem.x = -32 + ( ( level.hud_powerups.size - 1 ) * 15); 
+	hudelem.y = hudelem.y - 35; 
+	hudelem.alpha = 0;
+	hudelem.flashing = false;
+	hudelem setshader( level._custom_powerups[ powerup ].shader, 32, 32);
+	self.powerup_hud[ powerup ] = hudelem;
 }
 
 register_powerup_grab_info( powerup, grab_func, pre_grab_check_func, grab_check_func )
@@ -970,9 +964,14 @@ register_powerup_player_setup( powerup, player_setup_func )
 
 _register_undefined_powerup( str_powerup )
 {
-	if ( !isdefined( level._custom_powerups ) )
+	if ( !isDefined( level._custom_powerups ) )
 		level._custom_powerups = [];
 
-	if ( !isdefined( level._custom_powerups[ str_powerup ] ) )
+	if( !IsDefined( level.zombie_powerup_array ) )
+		level.zombie_powerup_array = [];
+	if ( !IsDefined( level.zombie_special_drop_array ) )
+		level.zombie_special_drop_array = [];
+
+	if ( !isDefined( level._custom_powerups[ str_powerup ] ) )
 		level._custom_powerups[ str_powerup ] = spawnstruct();
 }

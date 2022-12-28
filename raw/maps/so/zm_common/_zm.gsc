@@ -227,8 +227,11 @@ init_levelvars()
 	level.zombie_total = 0;
 	level.no_laststandmissionfail = true;
 
-	level.zombie_vars = [];
-
+	if ( !isDefined( level.zombie_vars ) )
+	{
+		level.zombie_vars = [];
+	}
+	
 	// Default to not zombify the player till further support
 	set_zombie_var( "zombify_player", 					false );
 
@@ -553,7 +556,7 @@ player_damage_override( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, 
 		level waittill( "forever" );
 	}
 
-	players = get_players();
+	players = getPlayers();
 	count = 0;
 	for( i = 0; i < players.size; i++ )
 	{
@@ -634,7 +637,7 @@ coop_player_spawn_placement()
 
 	//chrisp - adding support for overriding the default spawning method
 
-	players = get_players(); 
+	players = getPlayers(); 
 
 	for( i = 0; i < players.size; i++ )
 	{
@@ -1059,7 +1062,7 @@ end_game()
 	wait( level.zombie_vars["zombie_intermission_time"] );
 
 	level notify( "stop_intermission" );
-	array_thread( get_players(), ::player_exit_level );
+	array_thread( getPlayers(), ::player_exit_level );
 
 	bbPrint( "zombie_epilogs: rounds %d", level.round_number );
 
@@ -1117,7 +1120,7 @@ nazizombies_upload_highscore()
 	if ( !isZombieLeaderboardAvailable( map_name, "waves" ) || !isZombieLeaderboardAvailable( map_name, "points" ) )
 		return;
 
-	players = get_players();		
+	players = getPlayers();		
 	for( i = 0; i < players.size; i++ )
 	{
 		pre_highest_wave = players[i] playerZombieStatGet( map_name, "highestwave" ); 
@@ -1205,7 +1208,7 @@ playerZombieStatSet( map, variable, value )
 
 nazizombies_set_new_zombie_stats()
 {
-	players = get_players();		
+	players = getPlayers();		
 	for( i = 0; i < players.size; i++ )
 	{
 		//grab stat and add final totals
@@ -1293,7 +1296,7 @@ intermission()
 	level.intermission = true;
 	level notify( "intermission" );
 
-	players = get_players();
+	players = getPlayers();
 	for( i = 0; i < players.size; i++ )
 	{
 		setclientsysstate( "levelNotify", "zi", players[i] ); // Tell clientscripts we're in zombie intermission
@@ -1308,7 +1311,7 @@ intermission()
 	wait( 0.25 );
 
 	// Delay the last stand monitor so we are 100% sure the zombie intermission ("zi") is set on the cients
-	players = get_players();
+	players = getPlayers();
 	for( i = 0; i < players.size; i++ )
 	{
 		setClientSysState( "lsm", "1", players[i] );
@@ -1361,7 +1364,7 @@ round_start()
 	level.round_number = 1; 
 	level.first_round = true;
 
-	players = get_players();
+	players = getPlayers();
 	for (i = 0; i < players.size; i++)
 	{
 		players[i] giveweapon( "stielhandgranate" );	
@@ -1450,7 +1453,7 @@ round_spawning()
 	count = 0; 
 
 	//CODER MOD: TOMMY K
-	players = get_players();
+	players = getPlayers();
 	for( i = 0; i < players.size; i++ )
 	{
 		players[i].zombification_time = 0;
@@ -1470,7 +1473,7 @@ round_spawning()
 		multiplier *= level.round_number * 0.15;
 	}
 
-	player_num = get_players().size;
+	player_num = getPlayers().size;
 
 	if( player_num == 1 )
 	{
@@ -1485,10 +1488,10 @@ round_spawning()
 	
 	if(level.round_number < 3 && level.script == "nazi_zombie_asylum")
 	{
-		if(get_players().size > 1)
+		if(getPlayers().size > 1)
 		{
 			
-			max = get_players().size * 3 + level.round_number;
+			max = getPlayers().size * 3 + level.round_number;
 
 		}
 		else
@@ -1753,7 +1756,7 @@ round_think()
 
 		maps\so\zm_common\_zm_powerups::powerup_round_start();
 
-		players = get_players();
+		players = getPlayers();
 		array_thread( players, maps\_zombiemode_blockers::rebuild_barrier_reward_reset );
 
 		level thread award_grenades_for_survivors();
@@ -1802,7 +1805,7 @@ play_door_dialog()
 	while(1)
 	{
 		wait(0.05);
-		players = get_players();
+		players = getPlayers();
 		for(i = 0; i < players.size; i++)
 		{		
 			dist = distancesquared(players[i].origin, self.origin );
@@ -1830,7 +1833,7 @@ play_door_dialog()
 
 wait_until_first_player()
 {
-	players = get_players();
+	players = getPlayers();
 	if( !IsDefined( players[0] ) )
 	{
 		level waittill( "first_player_ready" );
@@ -1981,7 +1984,7 @@ chalk_one_up()
 
 award_grenades_for_survivors()
 {
-	players = get_players();
+	players = getPlayers();
 
 	for (i = 0; i < players.size; i++)
 	{
@@ -2026,7 +2029,7 @@ spectators_respawn()
 
 	while( 1 )
 	{
-		players = get_players();
+		players = getPlayers();
 		for( i = 0; i < players.size; i++ )
 		{
 			if( players[i].sessionstate == "spectator" )
@@ -2085,7 +2088,7 @@ spectator_respawn()
 	if( IsSplitScreen() )
 	{
 		last_alive = undefined;
-		players = get_players();
+		players = getPlayers();
 
 		for( i = 0; i < players.size; i++ )
 		{
@@ -2121,7 +2124,7 @@ spectator_respawn()
 check_for_valid_spawn_near_team( revivee )
 {
 
-	players = get_players();
+	players = getPlayers();
 	spawn_points = getstructarray("player_respawn_point", "targetname");
 
 	if( spawn_points.size == 0 )
@@ -2164,7 +2167,7 @@ get_players_on_team(exclude)
 
 	teammates = [];
 
-	players = get_players();
+	players = getPlayers();
 	for(i=0;i<players.size;i++)
 	{		
 		//check to see if other players on your team are alive and not waiting to be revived
@@ -2259,12 +2262,12 @@ chalk_round_hint()
 players_playing()
 {
 	// initialize level.players_playing
-	players = get_players();
+	players = getPlayers();
 	level.players_playing = players.size;
 
 	wait( 20 );
 
-	players = get_players();
+	players = getPlayers();
 	level.players_playing = players.size;
 }
 
@@ -2432,7 +2435,7 @@ add_no_ammo_dialog( weap )
 
 get_safe_breadcrumb_pos( player )
 {
-	players = get_players();
+	players = getPlayers();
 	valid_players = [];
 
 	min_dist = 150 * 150;

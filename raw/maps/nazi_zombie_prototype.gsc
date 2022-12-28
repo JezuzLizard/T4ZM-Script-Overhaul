@@ -101,7 +101,7 @@ bad_area_fixes()
 // do point->distance checks and volume checks
 disable_stances_in_zones()
 { 	
-	players = get_players();
+	players = getPlayers();
 	
 	for (i = 0; i < players.size; i++)
 	{
@@ -470,7 +470,7 @@ above_couches_death()
 	{
 		wait 0.2;
 				
-		players = get_players();
+		players = getPlayers();
 		
 		for (i = 0; i < players.size; i++)
 		{
@@ -490,7 +490,7 @@ above_roof_death()
 	{
 		wait 0.2;
 		
-		players = get_players();
+		players = getPlayers();
 		
 		for (i = 0; i < players.size; i++)
 		{
@@ -510,7 +510,7 @@ below_ground_death()
 	{
 		wait 0.2;
 		
-		players = get_players();
+		players = getPlayers();
 		
 		for (i = 0; i < players.size; i++)
 		{

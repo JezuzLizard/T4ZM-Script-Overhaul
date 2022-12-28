@@ -1317,7 +1317,7 @@ find_flesh()
 	self.goalradius = 32;
 	while( 1 )
 	{
-		players = get_players();
+		players = getPlayers();
 		// If playing single player, never ignore the player
 		if( players.size == 1 )
 		{

@@ -98,7 +98,7 @@ Callback_SaveRestored()
 	println( "****Coop CodeCallback_SaveRestored****" ); 
 	#/
 	
-	players = get_players(); 
+	players = getPlayers(); 
 	level.debug_player = players[0]; 	
 	
 	num = 0; 
@@ -291,7 +291,7 @@ Player_BreadCrumb_Update()
 
 SetPlayerSpawnPos()
 {
-	players = get_players(); 
+	players = getPlayers(); 
 	player = players[0]; 
 
 	if( !isdefined( level._player_breadcrumbs ) )
@@ -387,7 +387,7 @@ Callback_PlayerConnect()
 	{
 		// CODER_MOD
 		// Danl( 08/03/07 ) Band aid to spawn clients at host position.
-		players = get_players(); 
+		players = getPlayers(); 
 		if( Isdefined( players ) &&( players.size != 0 ) )// || players[0] == self ) )
 		{
 			if( players[0] == self )
@@ -443,7 +443,7 @@ Callback_PlayerConnect()
 //	self.spectate_cam = spawn( "script_camera", ( 0, 0, 0 ) ); 
 //
 //	// pick a random player to spectate on
-//	players = get_players(); 
+//	players = getPlayers(); 
 //	if( players.size > 0 )
 //	{
 //		num = RandomInt( players.size ); 
@@ -616,13 +616,13 @@ Callback_PlayerKilled( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vD
 		self [[level.overridePlayerKilled]]();
 	}
 
-	if( get_players().size > 1 )
+	if( getPlayers().size > 1 )
 	{
 		// CODER_MOD 
 		// BNANDAKUMAR( 05/29/08 )
 		// We will display a Mission Failed text for all the players
 		// We will also display a message below if "You have died" or "Your teammate has died"
-		players = get_players(); 
+		players = getPlayers(); 
 		for( i = 0; i < players.size; i++ )
 		{
 			if( isDefined( players[i] ) )
@@ -729,7 +729,7 @@ spawnPlayer( spawnOnHost )
 	
 	if( isdefined( spawnOnHost ) )
 	{
-		self Spawn( get_players()[0].origin, get_players()[0].angles ); 
+		self Spawn( getPlayers()[0].origin, getPlayers()[0].angles ); 
 		self SetPlayerSpawnPos(); 
 	}
 	else
@@ -759,7 +759,7 @@ spawnPlayer( spawnOnHost )
 	// spawning of the player has finished propagating to remote clients.  This is not a good final solution.
 	// Ultimately, this whole chain of code shouldn't be triggered off until the server has determined that the clients
 	// have all received the map_restart message.
-	if( self != get_players()[0] )
+	if( self != getPlayers()[0] )
 	{
 		wait( 0.5 ); 
 	}
@@ -812,7 +812,7 @@ synchronize_players()
 
 	if ( level.onlineGame || level.systemLink ) 
 	{
-		players = get_players();
+		players = getPlayers();
 
 		for ( i = 0; i < players.size; i++ )
 		{
@@ -955,7 +955,7 @@ first_player_connect()
 	{
 		level notify( "connecting", self ); 
 
-		players = get_players(); 
+		players = getPlayers(); 
 		if( isdefined( players ) &&( players.size == 0 || players[0] == self ) )
 		{
 			level notify( "connecting_first_player", self ); 

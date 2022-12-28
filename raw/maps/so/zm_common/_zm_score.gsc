@@ -218,7 +218,7 @@ minus_to_player_score( cost )
 player_died_penalty()
 {
 	// Penalize all of the other players
-	players = get_players();
+	players = getPlayers();
 	for( i = 0; i < players.size; i++ )
 	{
 		if( players[i] != self && !players[i].is_zombie )
@@ -336,7 +336,7 @@ set_player_score_hud( init )
 //sort_score_board( init )
 //{
 //	// Figure out the order by score
-//	players = get_players(); 
+//	players = getPlayers(); 
 //	for( i = 0; i < players.size; i++ )
 //	{
 //		for( q = i; q < players.size; q++ )
@@ -430,7 +430,7 @@ score_highlight( score, value )
 	}
 	else
 	{
-		players = get_players();
+		players = getPlayers();
 		num = ( players.size - self GetEntityNumber() ) - 1;
 		y = ( num * -18 ) + score_y;
 	}

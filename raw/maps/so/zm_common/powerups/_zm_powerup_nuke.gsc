@@ -1,10 +1,12 @@
+#include maps\_utility; 
+#include common_scripts\utility;
 #include maps\so\zm_common\_zm_utility;
 
 enable_nuke_powerup_for_level()
 {
 	maps\so\zm_common\_zm_powerups::register_powerup_basic_info( "nuke", "zombie_bomb", &"ZOMBIE_POWERUP_NUKE", ::func_should_always_drop, false, false, false, "misc/fx_zombie_mini_nuke" );
 	maps\so\zm_common\_zm_powerups::register_powerup_setup( "nuke", ::nuke_precache, ::nuke_setup );
-	maps\so\zm_common\_zm_powerups::register_powerup_grab_info( "nuke", ::nuke_grab, undefined, undefined )
+	maps\so\zm_common\_zm_powerups::register_powerup_grab_info( "nuke", ::nuke_grab, undefined, undefined );
 }
 
 func_should_always_drop()
@@ -39,7 +41,7 @@ nuke_powerup( drop_item )
 	zombies = getaispeciesarray("axis");
 
 	PlayFx( drop_item.fx, drop_item.origin );
-	//	players = get_players();
+	//	players = getPlayers();
 	//	array_thread (players, ::nuke_flash);
 	level thread nuke_flash();
 
@@ -83,7 +85,7 @@ nuke_powerup( drop_item )
 		playsoundatposition( "nuked", zombies[i].origin );
 	}
 
-	players = get_players();
+	players = getPlayers();
 	for(i = 0; i < players.size; i++)
 	{
 		players[i].score += 400;
@@ -134,6 +136,6 @@ nuke_flash()
 devil_dialog_delay()
 {
 	wait(1.8);
-	level thread play_devil_dialog("nuke_vox");
+	level thread maps\so\zm_common\_zm_powerups::play_devil_dialog("nuke_vox");
 	
 }
