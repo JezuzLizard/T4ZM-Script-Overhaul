@@ -28,7 +28,14 @@ turn_revive_on()
 	level._custom_perks[ "specialty_quickrevive" ].powered_on = true;
 	for( i = 0; i < machine.size; i++ )
 	{
-		machine[i] setmodel("zombie_vending_revive_on");
+		if ( isDefined( level.custom_map_perk_models ) && isDefined( level.custom_map_perk_models[ "revive" ] ) )
+		{
+			machine[i] setmodel( level.custom_map_perk_models[ "revive" ] );
+		}
+		else 
+		{
+			machine[i] setmodel("zombie_vending_revive_on");
+		}
 		machine[i] playsound("perks_power_on");
 		machine[i] vibrate((0,-100,0), 0.3, 0.4, 3);
 		machine[i] thread maps\so\zm_common\_zm_perks::perk_fx( "revive_light" );

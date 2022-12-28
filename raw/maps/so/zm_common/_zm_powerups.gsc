@@ -4,12 +4,6 @@
 
 init()
 {
-	if ( !is_true( level.use_legacy_powerup_system ) )
-	{
-		PrecacheShader( "specialty_doublepoints_zombies" );
-		PrecacheShader( "specialty_instakill_zombies" );
-	}
-
 	PrecacheShader( "black" ); 
 
 	if ( isDefined( level._custom_powerups ) && level._custom_powerups.size > 0 )
@@ -21,15 +15,10 @@ init()
 		}
 	}
 	// powerup Vars
-	set_zombie_var( "zombie_insta_kill", 				0 );
 	set_zombie_var( "zombie_point_scalar", 				1 );
 	set_zombie_var( "zombie_drop_item", 				0 );
 	set_zombie_var( "zombie_timer_offset", 				350 );	// hud offsets
 	set_zombie_var( "zombie_timer_offset_interval", 	30 );
-	set_zombie_var( "zombie_powerup_insta_kill_on", 	false );
-	set_zombie_var( "zombie_powerup_point_doubler_on", 	false );
-	set_zombie_var( "zombie_powerup_point_doubler_time", 30 );	// length of point doubler
-	set_zombie_var( "zombie_powerup_insta_kill_time", 	30 );	// length of insta kill
 	set_zombie_var( "zombie_powerup_drop_increment", 	2000 );	// lower this to make drop happen more often
 	set_zombie_var( "zombie_powerup_drop_max_per_round", 4 );	// lower this to make drop happen more often
 
@@ -81,13 +70,6 @@ init_powerups()
 	}
 
 	// Random Drops
-	register_powerup_basic_info( "nuke", "zombie_bomb", &"ZOMBIE_POWERUP_NUKE", ::func_should_always_drop, false, false, false, "misc/fx_zombie_mini_nuke" );
-	register_powerup_basic_info( "insta_kill", "zombie_skull", &"ZOMBIE_POWERUP_INSTA_KILL", ::func_should_always_drop, false, false, false );
-	register_powerup_basic_info( "double_points", "zombie_x2_icon", &"ZOMBIE_POWERUP_DOUBLE_POINTS", ::func_should_always_drop, false, false, false );
-	register_powerup_basic_info( "full_ammo", "zombie_ammocan", &"ZOMBIE_POWERUP_MAX_AMMO", ::func_should_always_drop, false, false, false );
-	register_powerup_basic_info( "carpenter", "zombie_carpenter", &"ZOMBIE_POWERUP_MAX_AMMO", ::func_should_drop_carpenter, false, false, false );
-	register_powerup_hud_info( "insta_kill", "specialty_instakill_zombies", "zombie_powerup_insta_kill_time", "zombie_powerup_insta_kill_on" );
-	register_powerup_hud_info( "double_points", "specialty_doublepoints_zombies", "zombie_powerup_point_doubler_time", "zombie_powerup_point_doubler_on" );
 	//	add_zombie_special_powerup( "monkey" );
 
 	// additional special "drops"
@@ -103,11 +85,6 @@ init_powerups()
 	{
 		level thread powerup_hud_monitor();
 	}
-}  
-
-func_should_drop_carpenter()
-{
-	return get_num_window_destroyed() < 5;
 }
 
 func_should_always_drop()
@@ -311,38 +288,6 @@ get_next_powerup()
 	}
 
 	return powerup;
-}
-
-get_num_window_destroyed()
-{
-	num = 0;
-	for( i = 0; i < level.exterior_goals.size; i++ )
-	{
-		/*targets = getentarray(level.exterior_goals[i].target, "targetname");
-
-		barrier_chunks = []; 
-		for( j = 0; j < targets.size; j++ )
-		{
-			if( IsDefined( targets[j].script_noteworthy ) )
-			{
-				if( targets[j].script_noteworthy == "clip" )
-				{ 
-					continue; 
-				}
-			}
-
-			barrier_chunks[barrier_chunks.size] = targets[j];
-		}*/
-
-
-		if( all_chunks_destroyed( level.exterior_goals[i].barrier_chunks ) )
-		{
-			num += 1;
-		}
-
-	}
-
-	return num;
 }
 
 watch_for_drop()
@@ -700,44 +645,12 @@ powerup_grab()
 				}
 				else
 				{
-					switch (self.powerup_name)
+					if ( isDefined( level._custom_powerups ) && level._custom_powerups.size > 0 )
 					{
-					case "nuke":
-						level thread nuke_powerup( self );
-						
-						//chrisp - adding powerup VO sounds
-						players[i] thread powerup_vo("nuke");
-						zombies = getaiarray("axis");
-						players[i].zombie_nuked = get_array_of_closest( self.origin, zombies );
-						players[i] notify("nuke_triggered");
-						
-						break;
-					case "full_ammo":
-						level thread full_ammo_powerup( self );
-						players[i] thread powerup_vo("full_ammo");
-						break;
-					case "double_points":
-						level thread double_points_powerup( self );
-						players[i] thread powerup_vo("double_points");
-						break;
-					case "insta_kill":
-						level thread insta_kill_powerup( self );
-						players[i] thread powerup_vo("insta_kill");
-						break;
-					case "carpenter":
-						level thread start_carpenter( self.origin );
-						players[i] thread powerup_vo("carpenter");
-						break;
-
-					default:
-						if ( isDefined( level._custom_powerups ) && level._custom_powerups.size > 0 )
+						if ( isDefined( level._custom_powerups[ self.powerup_name ] ) && isDefined( level._custom_powerups[ self.powerup_name ].grab_func ) )
 						{
-							if ( isDefined( level._custom_powerups[ self.powerup_name ].grab_func ) )
-							{
-								level thread [[ level._custom_powerups[ self.powerup_name ].grab_func ]]( self, players[i] );
-							}
+							level thread [[ level._custom_powerups[ self.powerup_name ].grab_func ]]( self, players[i] );
 						}
-						break;
 					}
 				}
 
@@ -751,103 +664,6 @@ powerup_grab()
 			}
 		}
 	}	
-}
-
-start_carpenter( origin )
-{
-
-	level thread play_devil_dialog("carp_vox");
-	window_boards = getstructarray( "exterior_goal", "targetname" ); 
-	total = level.exterior_goals.size;
-	
-	//COLLIN
-	carp_ent = spawn("script_origin", (0,0,0));
-	carp_ent playloopsound( "carp_loop" );
-	
-	while(true)
-	{
-		windows = get_closest_window_repair(window_boards, origin);
-		if( !IsDefined( windows ) )
-		{
-			carp_ent stoploopsound( 1 );
-			carp_ent playsound( "carp_end", "sound_done" );
-			carp_ent waittill( "sound_done" );
-			break;
-		}
-		
-		else
-			window_boards = array_remove(window_boards, windows);
-
-
-		while(1)
-		{
-			if( all_chunks_intact( windows.barrier_chunks ) )
-			{
-				break;
-			}
-
-			chunk = get_random_destroyed_chunk( windows.barrier_chunks ); 
-
-			if( !IsDefined( chunk ) )
-				break;
-
-			windows thread maps\so\zm_common\_zm_blockers::replace_chunk( chunk, false, true );
-			windows.clip enable_trigger(); 
-			windows.clip DisconnectPaths();
-			wait_network_frame();
-			wait(0.05);
-		}
- 
-
-		wait_network_frame();
-		
-	}
-
-
-	players = get_players();
-	for(i = 0; i < players.size; i++)
-	{
-		players[i].score += 200;
-		players[i].score_total += 200;
-		players[i] maps\so\zm_common\_zm_score::set_player_score_hud(); 
-	}
-
-
-	carp_ent delete();
-
-
-}
-get_closest_window_repair( windows, origin )
-{
-	current_window = undefined;
-	shortest_distance = undefined;
-	for( i = 0; i < windows.size; i++ )
-	{
-		if( all_chunks_intact(windows[i].barrier_chunks ) )
-			continue;
-
-		if( !IsDefined( current_window ) )	
-		{
-			current_window = windows[i];
-			shortest_distance = DistanceSquared( current_window.origin, origin );
-			
-		}
-		else
-		{
-			if( DistanceSquared(windows[i].origin, origin) < shortest_distance )
-			{
-
-				current_window = windows[i];
-				shortest_distance =  DistanceSquared( windows[i].origin, origin );
-			}
-
-		}
-
-	}
-
-	return current_window;
-
-
 }
 
 powerup_vo(type)
@@ -1003,158 +819,6 @@ powerup_timeout()
 	self delete();
 }
 
-// kill them all!
-nuke_powerup( drop_item )
-{
-	zombies = getaispeciesarray("axis");
-
-	PlayFx( drop_item.fx, drop_item.origin );
-	//	players = get_players();
-	//	array_thread (players, ::nuke_flash);
-	level thread nuke_flash();
-
-	
-
-	zombies = get_array_of_closest( drop_item.origin, zombies );
-
-	for (i = 0; i < zombies.size; i++)
-	{
-		wait (randomfloatrange(0.1, 0.7));
-		if( !IsDefined( zombies[i] ) )
-		{
-			continue;
-		}
-		
-		if( zombies[i].animname == "boss_zombie" )
-		{
-			continue;
-		}
-
-		if( is_magic_bullet_shield_enabled( zombies[i] ) )
-		{
-			continue;
-		}
-
-		if( i < 5 && !( zombies[i] enemy_is_dog() ) )
-		{
-			zombies[i] thread animscripts\death::flame_death_fx();
-
-		}
-
-		if( !( zombies[i] enemy_is_dog() ) )
-		{
-			if ( isDefined( level._zm_spawner_funcs ) && isDefined( level._zm_spawner_funcs[ "zombie_head_gib" ] ) )
-			{
-				zombies[ i ] [[ level._zm_spawner_funcs[ "zombie_head_gib" ] ]]();
-			}
-		}
-
-		zombies[i] dodamage( zombies[i].health + 666, zombies[i].origin );
-		playsoundatposition( "nuked", zombies[i].origin );
-	}
-
-	players = get_players();
-	for(i = 0; i < players.size; i++)
-	{
-		players[i].score += 400;
-		players[i].score_total += 400;
-		players[i] maps\so\zm_common\_zm_score::set_player_score_hud(); 
-	}
-
-}
-
-nuke_flash()
-{
-	if ( !is_true( level.use_legacy_powerup_system ) )
-	{
-		players = getplayers();	
-		for(i=0; i<players.size; i ++)
-		{
-			players[i] play_sound_2d("nuke_flash");
-		}
-		level thread devil_dialog_delay();
-	}
-	else 
-	{
-		playsoundatposition("nuke_flash", (0,0,0));
-	}
-	fadetowhite = newhudelem();
-
-	fadetowhite.x = 0; 
-	fadetowhite.y = 0; 
-	fadetowhite.alpha = 0; 
-
-	fadetowhite.horzAlign = "fullscreen"; 
-	fadetowhite.vertAlign = "fullscreen"; 
-	fadetowhite.foreground = true; 
-	fadetowhite SetShader( "white", 640, 480 ); 
-
-	// Fade into white
-	fadetowhite FadeOverTime( 0.2 ); 
-	fadetowhite.alpha = 0.8; 
-
-	wait 0.5;
-	fadetowhite FadeOverTime( 1.0 ); 
-	fadetowhite.alpha = 0; 
-
-	wait 1.1;
-	fadetowhite destroy();
-}
-
-// double the points
-double_points_powerup( drop_item )
-{
-	level notify ("powerup points scaled");
-	level endon ("powerup points scaled");
-
-	//	players = get_players();	
-	//	array_thread(level,::point_doubler_on_hud, drop_item);
-	level thread point_doubler_on_hud( drop_item );
-
-	level.zombie_vars["zombie_point_scalar"] = 2;
-	wait 30;
-
-	level.zombie_vars["zombie_point_scalar"] = 1;
-}
-
-full_ammo_powerup( drop_item )
-{
-	players = get_players();
-
-	for (i = 0; i < players.size; i++)
-	{
-		primaryWeapons = players[i] GetWeaponsList(); 
-
-		for( x = 0; x < primaryWeapons.size; x++ )
-		{
-			players[i] GiveMaxAmmo( primaryWeapons[x] );
-		}
-	}
-	//	array_thread (players, ::full_ammo_on_hud, drop_item);
-	level thread full_ammo_on_hud( drop_item );
-}
-
-insta_kill_powerup( drop_item )
-{
-	level notify( "powerup instakill" );
-	level endon( "powerup instakill" );
-
-		
-	//	array_thread (players, ::insta_kill_on_hud, drop_item);
-	level thread insta_kill_on_hud( drop_item );
-
-	level.zombie_vars["zombie_insta_kill"] = 1;
-	wait( 30 );
-	level.zombie_vars["zombie_insta_kill"] = 0;
-	players = get_players();
-	for(i = 0; i < players.size; i++)
-	{
-		players[i] notify("insta_kill_over");
-
-	}
-
-}
-
 check_for_instakill( player )
 {
 	if( IsDefined( player ) && IsAlive( player ) && level.zombie_vars["zombie_insta_kill"])
@@ -1197,134 +861,6 @@ check_for_instakill( player )
 	}
 }
 
-insta_kill_on_hud( drop_item )
-{
-	self endon ("disconnect");
-
-	// check to see if this is on or not
-	if ( level.zombie_vars["zombie_powerup_insta_kill_on"] )
-	{
-		// reset the time and keep going
-		level.zombie_vars["zombie_powerup_insta_kill_time"] = 30;
-		return;
-	}
-
-	level.zombie_vars["zombie_powerup_insta_kill_on"] = true;
-
-	// set up the hudelem
-	if ( is_true( level.use_legacy_powerup_system ) )
-	{
-		hudelem = maps\_hud_util::createFontString( "objective", 2 );
-		hudelem maps\_hud_util::setPoint( "TOP", undefined, 0, level.zombie_vars["zombie_timer_offset"] + level.zombie_vars["zombie_timer_offset_interval"]);
-		hudelem.sort = 0.5;
-		hudelem.alpha = 0;
-		hudelem fadeovertime(0.5);
-		hudelem.alpha = 1;
-		hudelem.label = drop_item.hint;
-		hudelem thread time_remaning_on_insta_kill_powerup();
-	} 
-	else 
-	{
-		// set time remaining for insta kill
-		level thread time_remaning_on_insta_kill_powerup();	
-	}
-
-	// offset in case we get another powerup
-	//level.zombie_timer_offset -= level.zombie_timer_offset_interval;
-}
-
-time_remaning_on_insta_kill_powerup()
-{
-	if ( !is_true( level.use_legacy_powerup_system ) )
-	{
-		level thread play_devil_dialog("insta_vox");
-	}
-	else 
-	{
-		self setvalue( level.zombie_vars["zombie_powerup_insta_kill_time"] );
-	}
-	temp_enta = spawn("script_origin", (0,0,0));
-	temp_enta playloopsound("insta_kill_loop");	
-
-	/*
-	players = get_players();
-	for (i = 0; i < players.size; i++)
-	{
-	players[i] playloopsound ("insta_kill_loop");
-	}
-	*/
-
-
-	// time it down!
-	while ( level.zombie_vars["zombie_powerup_insta_kill_time"] >= 0)
-	{
-		wait 0.1;
-		level.zombie_vars["zombie_powerup_insta_kill_time"] = level.zombie_vars["zombie_powerup_insta_kill_time"] - 0.1;
-		if ( is_true( level.use_legacy_powerup_system ) )
-		{
-			self setvalue( level.zombie_vars["zombie_powerup_insta_kill_time"] );	
-		}
-	}
-
-	players = get_players();
-	for (i = 0; i < players.size; i++)
-	{
-		//players[i] stoploopsound (2);
-
-		players[i] playsound("insta_kill");
-
-	}
-
-	temp_enta stoploopsound(2);
-	// turn off the timer
-	level.zombie_vars["zombie_powerup_insta_kill_on"] = false;
-
-	// remove the offset to make room for new powerups, reset timer for next time
-	level.zombie_vars["zombie_powerup_insta_kill_time"] = 30;
-	//level.zombie_timer_offset += level.zombie_timer_offset_interval;
-	if ( is_true( level.use_legacy_powerup_system ) )
-	{
-		self destroy();
-	}
-	temp_enta delete();
-}
-
-point_doubler_on_hud( drop_item )
-{
-	self endon ("disconnect");
-
-	// check to see if this is on or not
-	if ( level.zombie_vars["zombie_powerup_point_doubler_on"] )
-	{
-		// reset the time and keep going
-		level.zombie_vars["zombie_powerup_point_doubler_time"] = 30;
-		return;
-	}
-
-	level.zombie_vars["zombie_powerup_point_doubler_on"] = true;
-	//level.powerup_hud_array[0] = true;
-	// set up the hudelem
-	if ( is_true( level.use_legacy_powerup_system ) )
-	{
-		hudelem = maps\_hud_util::createFontString( "objective", 2 );
-		hudelem maps\_hud_util::setPoint( "TOP", undefined, 0, level.zombie_vars["zombie_timer_offset"] );
-		hudelem.sort = 0.5;
-		hudelem.alpha = 0;
-		hudelem fadeovertime( 0.5 );
-		hudelem.alpha = 1;
-		hudelem.label = drop_item.hint;
-		hudelem thread time_remaining_on_point_doubler_powerup();
-	}
-	else 
-	{
-		// set time remaining for point doubler
-		level thread time_remaining_on_point_doubler_powerup();	
-	}
-	
-
-	// offset in case we get another powerup
-	//level.zombie_timer_offset -= level.zombie_timer_offset_interval;
-}
 play_devil_dialog(sound_to_play)
 {
 	if(!IsDefined(level.devil_is_speaking))
@@ -1339,104 +875,6 @@ play_devil_dialog(sound_to_play)
 		level.devil_is_speaking =0;
 	}
 	
-}
-time_remaining_on_point_doubler_powerup()
-{
-	if ( !is_true( level.use_legacy_powerup_system ) )
-	{
-		level thread play_devil_dialog("dp_vox");
-	}
-	else 
-	{
-		self setvalue( level.zombie_vars["zombie_powerup_point_doubler_time"] );
-	}
-	temp_ent = spawn("script_origin", (0,0,0));
-	temp_ent playloopsound ("double_point_loop");
-	
-	
-	
-	
-	// time it down!
-	while ( level.zombie_vars["zombie_powerup_point_doubler_time"] >= 0)
-	{
-		wait 0.1;
-		level.zombie_vars["zombie_powerup_point_doubler_time"] = level.zombie_vars["zombie_powerup_point_doubler_time"] - 0.1;
-		if ( is_true( level.use_legacy_powerup_system ) )
-		{
-			self setvalue( level.zombie_vars["zombie_powerup_point_doubler_time"] );	
-		}
-	}
-
-	// turn off the timer
-	level.zombie_vars["zombie_powerup_point_doubler_on"] = false;
-	players = get_players();
-	for (i = 0; i < players.size; i++)
-	{
-		//players[i] stoploopsound("double_point_loop", 2);
-		players[i] playsound("points_loop_off");
-	}
-	temp_ent stoploopsound(2);
-
-
-	// remove the offset to make room for new powerups, reset timer for next time
-	level.zombie_vars["zombie_powerup_point_doubler_time"] = 30;
-	//level.zombie_timer_offset += level.zombie_timer_offset_interval;
-	if ( is_true( level.use_legacy_powerup_system ) )
-	{
-		self destroy();
-	}
-	temp_ent delete();
-}
-devil_dialog_delay()
-{
-	wait(1.8);
-	level thread play_devil_dialog("nuke_vox");
-	
-}
-full_ammo_on_hud( drop_item )
-{
-	self endon ("disconnect");
-
-	// set up the hudelem
-	hudelem = maps\_hud_util::createFontString( "objective", 2 );
-	hudelem maps\_hud_util::setPoint( "TOP", undefined, 0, level.zombie_vars["zombie_timer_offset"] - (level.zombie_vars["zombie_timer_offset_interval"] * 2));
-	hudelem.sort = 0.5;
-	hudelem.alpha = 0;
-	hudelem fadeovertime(0.5);
-	hudelem.alpha = 1;
-	hudelem.label = drop_item.hint;
-
-	// set time remaining for insta kill
-	hudelem thread full_ammo_move_hud();		
-
-	// offset in case we get another powerup
-	//level.zombie_timer_offset -= level.zombie_timer_offset_interval;
-}
-
-full_ammo_move_hud()
-{
-
-	players = get_players();
-	if ( !is_true( level.use_legacy_powerup_system ) )
-	{
-		level thread play_devil_dialog("ma_vox");
-	}
-	for (i = 0; i < players.size; i++)
-	{
-		players[i] playsound ("full_ammo");
-	}
-
-	wait 0.5;
-	move_fade_time = 1.5;
-
-	self FadeOverTime( move_fade_time ); 
-	self MoveOverTime( move_fade_time );
-	self.y = 270;
-	self.alpha = 0;
-
-	wait move_fade_time;
-
-	self destroy();
 }
 
 //

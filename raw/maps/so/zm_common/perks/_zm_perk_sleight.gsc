@@ -28,7 +28,14 @@ turn_sleight_on()
 	level._custom_perks[ "specialty_fastreload" ].powered_on = true;
 	for( i = 0; i < machine.size; i++ )
 	{
-		machine[i] setmodel("zombie_vending_sleight_on");
+		if ( isDefined( level.custom_map_perk_models ) && isDefined( level.custom_map_perk_models[ "sleight" ] ) )
+		{
+			machine[i] setmodel( level.custom_map_perk_models[ "sleight" ] );
+		}
+		else 
+		{
+			machine[i] setmodel("zombie_vending_sleight_on");
+		}
 		machine[i] vibrate((0,-100,0), 0.3, 0.4, 3);
 		machine[i] playsound("perks_power_on");
 		machine[i] thread maps\so\zm_common\_zm_perks::perk_fx( "sleight_light" );

@@ -539,7 +539,10 @@ perks_a_cola_jingle()
 {	
 	flag_wait( "power_on" );
 	packapunch = getEnt( "specialty_weapupgrade", "script_noteworthy" );
-	packapunch thread play_random_broken_sounds();
+	if ( isDefined( packapunch ) )
+	{
+		packapunch thread play_random_broken_sounds();
+	}
 	perk_keys = getArrayKeys( level._custom_perks );
 	for ( i = 0; i < perk_keys.size; i++ )
 	{

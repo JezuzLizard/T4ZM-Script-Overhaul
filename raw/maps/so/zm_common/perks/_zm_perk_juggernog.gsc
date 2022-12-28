@@ -30,7 +30,14 @@ turn_jugger_on()
 	level._custom_perks[ "specialty_armorvest" ].powered_on = true;
 	for( i = 0; i < machine.size; i++ )
 	{
-		machine[i] setmodel("zombie_vending_jugg_on");
+		if ( isDefined( level.custom_map_perk_models ) && isDefined( level.custom_map_perk_models[ "juggernog" ] ) )
+		{
+			machine[i] setmodel( level.custom_map_perk_models[ "juggernog" ] );
+		}
+		else 
+		{
+			machine[i] setmodel("zombie_vending_jugg_on");
+		}
 		machine[i] vibrate((0,-100,0), 0.3, 0.4, 3);
 		machine[i] playsound("perks_power_on");
 		machine[i] thread maps\so\zm_common\_zm_perks::perk_fx( "jugger_light" );

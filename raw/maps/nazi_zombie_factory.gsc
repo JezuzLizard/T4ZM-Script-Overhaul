@@ -105,6 +105,11 @@ main()
 	{
 		level [[ level.zm_custom_map_perk_machines_func ]]();
 	}
+	maps\so\zm_common\powerups\_zm_powerup_double_points::enable_double_points_powerup_for_level();
+	maps\so\zm_common\powerups\_zm_powerup_full_ammo::enable_full_ammo_powerup_for_level();
+	maps\so\zm_common\powerups\_zm_powerup_insta_kill::enable_insta_kill_powerup_for_level();
+	maps\so\zm_common\powerups\_zm_powerup_nuke::enable_nuke_powerup_for_level();
+	maps\so\zm_common\powerups\_zm_powerup_carpenter::enable_carpenter_powerup_for_level();
 	maps\so\zm_common\_zm_spawner::init();
 	maps\so\zm_common\_zm::init_zm();
 	maps\so\zm_common\_zm_ai_dogs::init();

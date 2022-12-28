@@ -27,7 +27,15 @@ turn_doubletap_on()
 	level._custom_perks[ "specialty_rof" ].powered_on = true;
 	for( i = 0; i < machine.size; i++ )
 	{
-		machine[i] setmodel("zombie_vending_doubletap_on");
+		if ( isDefined( level.custom_map_perk_models ) && isDefined( level.custom_map_perk_models[ "doubletap" ] ) )
+		{
+			machine[i] setmodel( level.custom_map_perk_models[ "doubletap" ] );
+		}
+		else 
+		{
+			machine[i] setmodel("zombie_vending_doubletap_on");
+		}
+		
 		machine[i] vibrate((0,-100,0), 0.3, 0.4, 3);
 		machine[i] playsound("perks_power_on");
 		machine[i] thread maps\so\zm_common\_zm_perks::perk_fx( "doubletap_light" );

@@ -1202,7 +1202,7 @@ zombie_damage( mod, hit_location, hit_origin, player )
 		}
 	}
 	
-	self thread maps\_zombiemode_powerups::check_for_instakill( player );
+	self thread maps\so\zm_common\_zm_powerups::check_for_instakill( player );
 }
 
 zombie_damage_ads( mod, hit_location, hit_origin, player )
@@ -1224,7 +1224,7 @@ zombie_damage_ads( mod, hit_location, hit_origin, player )
 		player maps\_zombiemode_score::player_add_points( "damage_ads", mod, hit_location );
 	}
 
-	self thread maps\_zombiemode_powerups::check_for_instakill( player );
+	self thread maps\so\zm_common\_zm_powerups::check_for_instakill( player );
 }
 
 zombie_give_flame_damage_points()
