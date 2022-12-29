@@ -344,7 +344,8 @@ include_weapons()
 	maps\so\zm_common\_zm_weapons::add_limited_weapon( "zombie_gewehr43", 0 );
 	maps\so\zm_common\_zm_weapons::add_limited_weapon( "zombie_m1garand", 0 );
 	
-	
+	register_tactical_grenade_for_level( "molotov" );
+	level.zombie_tactical_grenade_player_init = undefined;
 }
 
 include_powerups()

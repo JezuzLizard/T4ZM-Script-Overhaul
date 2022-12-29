@@ -730,6 +730,10 @@ include_weapons()
 	//maps\so\zm_common\_zm_weapons::add_limited_weapon( "zombie_type99_rifle", 0 );
 	maps\so\zm_common\_zm_weapons::add_limited_weapon( "zombie_gewehr43", 0 );
 	maps\so\zm_common\_zm_weapons::add_limited_weapon( "zombie_m1garand", 0 );
+
+	register_tactical_grenade_for_level( "molotov" );
+	register_tactical_grenade_for_level( "cymbal_monkey_zm" );
+	level.zombie_tactical_grenade_player_init = undefined;
 }
 
 

@@ -5,15 +5,18 @@
 
 init()
 {
-	level._zm_cymbal_monkey_funcs = [];
-	level._zm_cymbal_monkey_funcs[ "player_give_cymbal_monkey" ] = ::player_give_cymbal_monkey;
+	level thread on_player_connect();
 	level._effect["monkey_glow"] 	= loadfx( "maps/zombie/fx_zombie_monkey_light" );
 }
 
-player_give_cymbal_monkey()
+on_player_connect()
 {
-	self giveweapon( "zombie_cymbal_monkey" );
-	self thread player_handle_cymbal_monkey();
+	level endon( "end_game" );
+	while ( true )
+	{
+		level waittill( "connected", player );
+		player thread player_handle_cymbal_monkey();
+	}
 }
 
 #using_animtree( "zombie_cymbal_monkey" );
@@ -44,7 +47,7 @@ player_handle_cymbal_monkey()
 	
 	while( true )
 	{
-		grenade = get_thrown_monkey();
+		grenade = self get_thrown_monkey();
 		if( IsDefined( grenade ) )
 		{
 			if( self maps\_laststand::player_is_in_laststand() )

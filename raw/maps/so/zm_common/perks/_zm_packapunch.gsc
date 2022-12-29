@@ -233,7 +233,6 @@ do_knuckle_crack()
 	self waittill_any( "fake_death", "death", "player_downed", "weapon_change_complete" );
 	
 	self upgrade_knuckle_crack_end( gun );
-	self.is_drinking = undefined;
 }
 
 upgrade_knuckle_crack_begin()

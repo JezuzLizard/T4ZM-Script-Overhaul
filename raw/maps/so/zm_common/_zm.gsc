@@ -790,7 +790,7 @@ onPlayerSpawned()
 	{
 		self waittill( "spawned_player" ); 
 
-		
+		self init_player_tactical_grenade();
 
 		self SetClientDvars( "cg_thirdPerson", "0", 
 							"cg_thirdPersonAngle", "0" );
@@ -967,11 +967,6 @@ init_dvars()
 	if( GetDvar( "zombie_cheat" ) == "" )
 	{
 		SetDvar( "zombie_cheat", "0" );
-	}
-	
-	if(getdvar("magic_chest_movable") == "")
-	{
-		SetDvar( "magic_chest_movable", "1" );
 	}
 
 	if(getdvar("magic_box_explore_only") == "")
@@ -1430,6 +1425,8 @@ round_spawning()
 	level endon( "kill_round" );
 #/
 
+	level endon( "end_of_round" );
+
 	if( level.intermission )
 	{
 		return;
@@ -1448,8 +1445,9 @@ round_spawning()
 	}
 #/
 
-	ai_calculate_health(); 
-
+	ai_calculate_health( level.round_number ); 
+	set_zombie_spawn_rate_for_round( level.round_number );
+	set_zombie_move_speed_for_round( level.round_number );
 	count = 0; 
 
 	//CODER MOD: TOMMY K
@@ -1484,24 +1482,7 @@ round_spawning()
 		max += int( ( ( player_num - 1 ) * level.zombie_vars["zombie_ai_per_player"] ) * multiplier ); 
 	}
 
-
-	
-	if(level.round_number < 3 && level.script == "nazi_zombie_asylum")
-	{
-		if(getPlayers().size > 1)
-		{
-			
-			max = getPlayers().size * 3 + level.round_number;
-
-		}
-		else
-		{
-
-			max = 6;	
-
-		}
-	}
-	else if ( level.first_round )
+	if ( level.first_round )
 	{
 		max = int( max * 0.2 );	
 	}
@@ -1517,8 +1498,7 @@ round_spawning()
 	{
 		max = int( max * 0.8 );
 	}
-
-
+	
 	level.zombie_total = max;
 	mixed_spawns = 0;	// Number of mixed spawns this round.  Currently means number of dogs in a mixed round
 
@@ -1527,9 +1507,15 @@ round_spawning()
 	old_spawn = undefined;
 
 	flag_set( "begin_spawning" );
-
-	while( count < max )
+	level thread speed_up_last_zombie();
+	while( true )
 	{
+		while( get_enemy_count() >= level.zombie_ai_limit || level.zombie_total <= 0 )
+		{
+			wait( 0.05 );
+		}
+
+		flag_wait( "spawn_zombies" );
 
 		spawn_point = level.enemy_spawns[RandomInt( level.enemy_spawns.size )]; 
 
@@ -1544,10 +1530,6 @@ round_spawning()
 		old_spawn = spawn_point;
 
 	//	iPrintLn(spawn_point.targetname + " " + level.zombie_vars["zombie_spawn_delay"]);
-		while( get_enemy_count() > 31 )
-		{
-			wait( 0.05 );
-		}
 
 		// MM Mix in dog spawns...
 		if ( isDefined( level._custom_func_table ) && isDefined( level._custom_func_table[ "special_dog_spawn" ] ) && IsDefined( level.mixed_rounds_enabled ) && level.mixed_rounds_enabled == 1 )
@@ -1611,46 +1593,80 @@ round_spawning()
 		{
 			level.zombie_total--;
 			ai thread round_spawn_failsafe();
-			count++; 
 		}
 		wait( level.zombie_vars["zombie_spawn_delay"] ); 
 		wait_network_frame();
 	}
+	flag_clear( "begin_spawning" );
+}
 
+speed_up_last_zombie()
+{
+	level endon( "end_of_round" );
+
+	level notify( "speed_up_last_zombie" );
+	level endon( "speed_up_last_zombie" );
+	
 	if( level.round_number > 3 )
 	{
 		zombies = getaiarray( "axis" );
-		while( zombies.size > 0 )
+		while( true )
 		{
-			if( zombies.size == 1 && zombies[0].has_legs == true )
+			if ( level.zombie_total <= 0 && zombies.size == 1 && zombies[0].has_legs )
 			{
 				var = randomintrange(1, 4);
 				zombies[0] set_run_anim( "sprint" + var );                       
 				zombies[0].run_combatanim = level.scr_anim[zombies[0].animname]["sprint" + var];
+				break;
 			}
 			wait(0.5);
 			zombies = getaiarray("axis");
 		}
-
-	}
-
-	flag_clear( "begin_spawning" );
+	}	
 }
 
-ai_calculate_health()
+ai_calculate_health( round_number )
 {
-	// After round 10, get exponentially harder
-	if( level.round_number >= 10 )
-	{
-		level.zombie_health += Int( level.zombie_health * level.zombie_vars["zombie_health_increase_percent"] ); 
-		return;
-	}
+	level.zombie_health = level.zombie_vars["zombie_health_start"];
 
-	if( level.round_number > 1 )
+	for ( i = 2; i <= round_number; i++ )
 	{
-		level.zombie_health = Int( level.zombie_health + level.zombie_vars["zombie_health_increase"] ); 
+		if ( i >= 10 )
+		{
+			level.zombie_health += int( level.zombie_health * level.zombie_vars["zombie_health_increase_multiplier"] );
+		}
+		else
+			level.zombie_health = int( level.zombie_health + level.zombie_vars["zombie_health_increase"] );
 	}
+}
 
+set_zombie_spawn_rate_for_round( round_number )
+{
+	if ( !isDefined( level.starting_zombie_spawn_delay ) )
+	{
+		level.starting_zombie_spawn_delay = level.zombie_vars[ "zombie_spawn_delay" ];
+	}
+	timer = level.starting_zombie_spawn_delay;
+	for ( i = 1; i <= round_number; i++ )
+	{
+		if ( timer > 0.08 )
+		{
+			timer = timer * 0.95;
+			continue;
+		}
+
+		if ( timer < 0.08 )
+		{
+			timer = 0.08;
+			break;
+		}
+	}
+	level.zombie_vars[ "zombie_spawn_delay" ] = timer;
+}
+
+set_zombie_move_speed_for_round( round_number )
+{
+	level.zombie_move_speed = round_number * 8;
 }
 
 round_spawn_failsafe()
@@ -1702,6 +1718,7 @@ round_spawn_failsafe()
 
 round_wait()
 {
+	level notify( "start_of_round" );
 /#
 	if (GetDVarInt("zombie_rise_test"))
 	{
@@ -1733,6 +1750,7 @@ round_wait()
 			wait( 0.5 );
 		}
 	}
+	level notify( "end_of_round" );
 }
 
 round_think()

@@ -1166,7 +1166,7 @@ zombie_damage( mod, hit_location, hit_origin, player )
 	{
 		return; 
 	}
-
+	player.use_weapon_type = mod;
 	if( self zombie_flame_damage( mod, player ) )
 	{
 		if( self zombie_give_flame_damage_points() )
@@ -1211,7 +1211,7 @@ zombie_damage_ads( mod, hit_location, hit_origin, player )
 	{
 		return; 
 	}
-
+	player.use_weapon_type = mod;
 	if( self zombie_flame_damage( mod, player ) )
 	{
 		if( self zombie_give_flame_damage_points() )

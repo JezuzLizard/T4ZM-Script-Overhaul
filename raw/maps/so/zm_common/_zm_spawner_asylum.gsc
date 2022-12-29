@@ -1752,8 +1752,8 @@ damage_on_fire( player )
 
 zombie_damage( mod, hit_location, hit_origin, player, is_dog )
 {
-	
 	//ChrisP - 12/8 - no points for killing gassed zombies!
+	player.use_weapon_type = mod;
 	if(isDefined(self.marked_for_death))
 	{
 		return;
@@ -1808,7 +1808,7 @@ zombie_damage_ads( mod, hit_location, hit_origin, player )
 	{
 		return; 
 	}
-
+	player.use_weapon_type = mod;
 	if( self zombie_flame_damage( mod, player ) )
 	{
 		if( self zombie_give_flame_damage_points() )

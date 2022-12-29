@@ -1973,3 +1973,51 @@ clear_is_drinking()
 	self enableoffhandweapons();
 	self enableweaponcycling();
 }
+
+register_tactical_grenade_for_level( weaponname )
+{
+	if ( is_tactical_grenade( weaponname ) )
+		return;
+
+	if ( !isdefined( level.zombie_tactical_grenade_list ) )
+		level.zombie_tactical_grenade_list = [];
+
+	level.zombie_tactical_grenade_list[weaponname] = weaponname;
+}
+
+is_tactical_grenade( weaponname )
+{
+	if ( !isdefined( weaponname ) || !isdefined( level.zombie_tactical_grenade_list ) )
+		return false;
+
+	return isdefined( level.zombie_tactical_grenade_list[weaponname] );
+}
+
+is_player_tactical_grenade( weaponname )
+{
+	if ( !isdefined( weaponname ) || !isdefined( self.current_tactical_grenade ) )
+		return false;
+
+	return self.current_tactical_grenade == weaponname;
+}
+
+get_player_tactical_grenade()
+{
+	tactical = "";
+
+	if ( isdefined( self.current_tactical_grenade ) )
+		tactical = self.current_tactical_grenade;
+
+	return tactical;
+}
+
+set_player_tactical_grenade( weaponname )
+{
+	self notify( "new_tactical_grenade", weaponname );
+	self.current_tactical_grenade = weaponname;
+}
+
+init_player_tactical_grenade()
+{
+	self set_player_tactical_grenade( level.zombie_tactical_grenade_player_init );
+}

@@ -6,7 +6,10 @@
 
 main()
 {	
-	setDvar( "magic_chest_movable", "0" );
+	if ( !isDefined( level.magic_box_can_move ) )
+	{
+		level.magic_box_can_move = false;
+	}
 	maps\_destructible_opel_blitz::init();
 	level.startInvulnerableTime = GetDvarInt( "player_deathInvulnerableTime" );
 
@@ -353,6 +356,9 @@ include_weapons()
 
 	// Special
 	include_weapon( "ray_gun" );
+
+	register_tactical_grenade_for_level( "molotov" );
+	level.zombie_tactical_grenade_player_init = undefined;
 }
 
 prototype_add_weapons()

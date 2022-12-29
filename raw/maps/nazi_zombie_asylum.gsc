@@ -850,7 +850,9 @@ include_weapons()
 	
 	//bouncing betties
 	include_weapon("mine_bouncing_betty", false);
-	
+
+	register_tactical_grenade_for_level( "molotov" );
+	level.zombie_tactical_grenade_player_init = undefined;
 }
 
 include_powerups()

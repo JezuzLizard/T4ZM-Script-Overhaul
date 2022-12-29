@@ -319,13 +319,13 @@ perk_think( perk )
 		}
 #/
 
-		self waittill_any( "fake_death", "death", "player_downed" );
+	self waittill_any( "fake_death", "death", "player_downed" );
 
-		if ( array_validate( level._custom_perks ) && isdefined( level._custom_perks[perk] ) && isdefined( level._custom_perks[perk].player_thread_take ) )
-			self thread [[ level._custom_perks[perk].player_thread_take ]]();
-		self UnsetPerk( perk );
-		self perk_hud_destroy( perk );
-		//self iprintln( "Perk Lost: " + perk );
+	if ( array_validate( level._custom_perks ) && isdefined( level._custom_perks[perk] ) && isdefined( level._custom_perks[perk].player_thread_take ) )
+		self thread [[ level._custom_perks[perk].player_thread_take ]]();
+	self UnsetPerk( perk );
+	self perk_hud_destroy( perk );
+	//self iprintln( "Perk Lost: " + perk );
 }
 
 

@@ -170,11 +170,16 @@ weapon_cabinet_think()
 
 	self.has_been_used_once = false; 
 
-	self decide_hide_show_hint();
+	self thread decide_hide_show_hint();
 
 	while( 1 )
 	{
 		self waittill( "trigger", player );
+		if( !is_player_valid( player ) )
+		{
+			player thread ignore_triggers( 0.5 );
+			continue;
+		}
 
 		if( !player can_buy_weapon() )
 		{
@@ -196,12 +201,6 @@ weapon_cabinet_think()
 		}
 
 		ammo_cost = get_ammo_cost( self.zombie_weapon_upgrade );
-
-		if( !is_player_valid( player ) )
-		{
-			player thread ignore_triggers( 0.5 );
-			continue;
-		}
 
 		if( self.has_been_used_once )
 		{
@@ -503,7 +502,7 @@ default_cymbal_monkey_weighting_func()
 
 can_buy_weapon()
 {
-	if( isDefined( self.is_drinking ) && self.is_drinking )
+	if( isDefined( self.is_drinking ) && self.is_drinking > 0 )
 	{
 		return false;
 	}
@@ -699,6 +698,13 @@ weapon_give( weapon, is_upgrade )
 	primaryWeapons = self GetWeaponsListPrimaries(); 
 	current_weapon = undefined; 
 
+	if( self HasWeapon( weapon_string ) )
+	{
+		self GiveMaxAmmo( weapon_string );
+		self SwitchToWeapon( weapon_string );
+		return;
+	}
+	
 	//if is not an upgraded perk purchase
 	if( !IsDefined( is_upgrade ) )
 	{
@@ -725,42 +731,32 @@ weapon_give( weapon, is_upgrade )
 		{
 			if( !( weapon == "fraggrenade" || weapon == "stielhandgranate" || weapon == "molotov" || weapon == "zombie_cymbal_monkey" ) )
 			{
+				if( isDefined(level.script) && (level.script == "nazi_zombie_sumpf" || level.script == "nazi_zombie_factory") )
+				{
+					if( current_weapon == "tesla_gun" )
+					{
+						level.player_drops_tesla_gun = true;
+					}
+				}
 				self TakeWeapon( current_weapon ); 
 			}
 		} 
 	}
-
-	if( weapon == "zombie_cymbal_monkey" )
+	if ( is_tactical_grenade( weapon ) )
 	{
-		// PI_CHANGE_BEGIN
-		// JMA 051409 sanity check to see if we have the weapon before we remove it	
-		has_weapon = self HasWeapon( "molotov" );
-		if( isDefined(has_weapon) && has_weapon )
+		old_tactical = self get_player_tactical_grenade();
+
+		if ( isdefined( old_tactical ) && old_tactical != "" )
 		{
-			self TakeWeapon( "molotov" );
+			self takeweapon( old_tactical );
 		}
 
-		if( isDefined(level.zombie_weapons) && isDefined(level.zombie_weapons["molotov_zombie"]) )
-		{		
-			has_weapon = self HasWeapon( "molotov_zombie" );
-			if( isDefined(has_weapon) && has_weapon )
-			{
-				self TakeWeapon( "molotov_zombie" );
-			}
-		}
-		// PI_CHANGE_END
-		if ( isDefined( level._zm_cymbal_monkey_funcs ) && isDefined( level._zm_cymbal_monkey_funcs[ "player_give_cymbal_monkey" ] ) )
-		{
-			self [[ level._zm_cymbal_monkey_funcs[ "player_give_cymbal_monkey" ] ]]();
-		}
+		self set_player_tactical_grenade( weapon );
+		self giveWeapon( weapon, 0 );
+		self play_sound_on_ent( "purchase" );
 		play_weapon_vo( weapon );
 		return;
 	}
-	if( (weapon == "molotov" || weapon == "molotov_zombie") )
-	{
-			self TakeWeapon( "zombie_cymbal_monkey" );
-	}
-
 	self play_sound_on_ent( "purchase" );
 	self GiveWeapon( weapon, 0 ); 
 	self GiveMaxAmmo( weapon ); 
@@ -768,6 +764,35 @@ weapon_give( weapon, is_upgrade )
 	 
 	play_weapon_vo(weapon);
 }
+
+
+	if( IsDefined( primaryWeapons ) && !isDefined( current_weapon ) )
+	{
+		for( i = 0; i < primaryWeapons.size; i++ )
+		{
+			if( primaryWeapons[i] == "zombie_colt" )
+			{
+				continue; 
+			}
+
+			if( weapon_string != "fraggrenade" && weapon_string != "stielhandgranate" && weapon_string != "molotov" && weapon_string != "zombie_cymbal_monkey" )
+			{
+				// PI_CHANGE_BEGIN
+				// JMA - player dropped the tesla gun
+				if( isDefined(level.script) && (level.script == "nazi_zombie_sumpf" || level.script == "nazi_zombie_factory") )
+				{
+					if( primaryWeapons[i] == "tesla_gun" )
+					{
+						level.player_drops_tesla_gun = true;
+					}
+				}
+				// PI_CHANGE_END
+			
+				self TakeWeapon( primaryWeapons[i] ); 
+			}
+		}
+	}
+
 play_weapon_vo(weapon)
 {
 	index = get_player_index(self);

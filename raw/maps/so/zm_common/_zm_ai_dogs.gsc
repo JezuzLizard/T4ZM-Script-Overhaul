@@ -708,7 +708,7 @@ dog_death()
 {
 	self waittill( "death" );
 
-	if( get_enemy_count() == 0 && level.zombie_total == 0 )
+	if( get_enemy_count() <= 0 && level.zombie_total <= 0 )
 	{
 
 		level.last_dog_origin = self.origin;

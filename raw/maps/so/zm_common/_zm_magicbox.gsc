@@ -5,6 +5,10 @@
 
 init_zm_magicbox()
 {
+	if ( !isDefined( level.magic_box_can_move ) )
+	{
+		level.magic_box_can_move = true;
+	}
 	treasure_chest_init();
 	level.box_moved = false;
 }
@@ -320,7 +324,7 @@ treasure_chest_think()
 					bbPrint( "zombie_uses: playername %s playerscore %d round %d cost %d name %s x %f y %f z %f type magic_accept",
 						user.playername, user.score, level.round_number, cost, weapon_spawn_org.weapon_string, self.origin );
 					self notify( "user_grabbed_weapon" );
-					user thread treasure_chest_give_weapon( weapon_spawn_org.weapon_string );
+					user thread maps\so\zm_common\_zm_weapons::weapon_give( weapon_spawn_org.weapon_string );
 					break; 
 				}
 				else if( grabber == level )
@@ -572,7 +576,7 @@ treasure_chest_move(lid)
 	//also make sure box doesn't respawn in old location.
 	//PI WJB: removed check on "magic_box_explore_only" dvar because it is only ever used here and when it is set in _zombiemode.gsc line 446
 	// where it is declared and set to 0, causing this while loop to never happen because the check was to see if it was equal to 1
-	if( getdvar("magic_chest_movable") == "1" )
+	if( is_true( level.magic_box_can_move ) )
 	{
 		level.chest_index++;
 
@@ -903,7 +907,7 @@ treasure_chest_weapon_spawn( chest, player )
 	}
 
 	//increase the chance of joker appearing from 0-100 based on amount of the time chest has been opened.
-	if ( getdvar("magic_chest_movable") == "1" && !is_true( chest._box_opened_by_fire_sale ) && !is_true( level.zombie_vars["zombie_powerup_fire_sale_on"] ) )
+	if ( is_true( level.magic_box_can_move ) && !is_true( chest._box_opened_by_fire_sale ) && !is_true( level.zombie_vars["zombie_powerup_fire_sale_on"] ) )
 	{
 
 		if(level.chest_accessed < level.chest_min_move_usage)
@@ -1064,124 +1068,4 @@ treasure_chest_glowfx()
 	self waittill_any( "weapon_grabbed", "box_moving" ); 
 
 	fxobj delete(); 
-}
-
-// self is the player string comes from the randomization function
-treasure_chest_give_weapon( weapon_string )
-{
-	primaryWeapons = self GetWeaponsListPrimaries(); 
-	current_weapon = undefined; 
-
-	if( self HasWeapon( weapon_string ) )
-	{
-		self GiveMaxAmmo( weapon_string );
-		self SwitchToWeapon( weapon_string );
-		return;
-	}
-
-	// This should never be true for the first time.
-	if( primaryWeapons.size >= 2 ) // he has two weapons
-	{
-		current_weapon = self getCurrentWeapon(); // get hiss current weapon
-
-		if ( current_weapon == "mine_bouncing_betty" )
-		{
-			current_weapon = undefined;
-		}
-
-		if( isdefined( current_weapon ) )
-		{
-			if( !( weapon_string == "fraggrenade" || weapon_string == "stielhandgranate" || weapon_string == "molotov" || weapon_string == "zombie_cymbal_monkey" ) )
-			{
-				// PI_CHANGE_BEGIN
-				// JMA - player dropped the tesla gun
-				if( isDefined(level.script) && (level.script == "nazi_zombie_sumpf" || level.script == "nazi_zombie_factory") )
-				{
-					if( current_weapon == "tesla_gun" )
-					{
-						level.player_drops_tesla_gun = true;
-					}
-				}
-				// PI_CHANGE_END
-				
-				self TakeWeapon( current_weapon ); 
-		} 
-	} 
-	} 
-
-	if( IsDefined( primaryWeapons ) && !isDefined( current_weapon ) )
-	{
-		for( i = 0; i < primaryWeapons.size; i++ )
-		{
-			if( primaryWeapons[i] == "zombie_colt" )
-			{
-				continue; 
-			}
-
-			if( weapon_string != "fraggrenade" && weapon_string != "stielhandgranate" && weapon_string != "molotov" && weapon_string != "zombie_cymbal_monkey" )
-			{
-				// PI_CHANGE_BEGIN
-				// JMA - player dropped the tesla gun
-				if( isDefined(level.script) && (level.script == "nazi_zombie_sumpf" || level.script == "nazi_zombie_factory") )
-				{
-					if( primaryWeapons[i] == "tesla_gun" )
-					{
-						level.player_drops_tesla_gun = true;
-					}
-				}
-				// PI_CHANGE_END
-			
-				self TakeWeapon( primaryWeapons[i] ); 
-			}
-		}
-	}
-
-	self play_sound_on_ent( "purchase" ); 
-
-	if( weapon_string == "molotov" || weapon_string == "molotov_zombie" )
-	{
-		// PI_CHANGE_BEGIN
-		// JMA 051409 sanity check to see if we have the weapon before we remove it
-		has_weapon = self HasWeapon( "zombie_cymbal_monkey" );
-		if( isDefined(has_weapon) && has_weapon )
-		{
-			self TakeWeapon( "zombie_cymbal_monkey" );
-		}
-		// PI_CHANGE_END
-	}
-	if( weapon_string == "zombie_cymbal_monkey" )
-	{
-		// PI_CHANGE_BEGIN
-		// JMA 051409 sanity check to see if we have the weapon before we remove it	
-		has_weapon = self HasWeapon( "molotov" );
-		if( isDefined(has_weapon) && has_weapon )
-		{
-			self TakeWeapon( "molotov" );
-		}
-
-		if( isDefined(level.zombie_weapons) && isDefined(level.zombie_weapons["molotov_zombie"]) )
-		{
-			has_weapon = self HasWeapon( "molotov_zombie" );
-			if( isDefined(has_weapon) && has_weapon )
-			{
-				self TakeWeapon( "molotov_zombie" );
-			}
-		}
-		// PI_CHANGE_END
-		
-		if ( isDefined( level._zm_cymbal_monkey_funcs ) && isDefined( level._zm_cymbal_monkey_funcs[ "player_give_cymbal_monkey" ] ) )
-		{
-			self [[ level._zm_cymbal_monkey_funcs[ "player_give_cymbal_monkey" ] ]]();
-		}
-		play_weapon_vo(weapon_string);
-		return;
-	}
-
-	self GiveWeapon( weapon_string, 0 );
-	self GiveMaxAmmo( weapon_string );
-	self SwitchToWeapon( weapon_string );
-
-	play_weapon_vo(weapon_string);
-
-	// self playsound (level.zombie_weapons[weapon_string].sound); 
 }

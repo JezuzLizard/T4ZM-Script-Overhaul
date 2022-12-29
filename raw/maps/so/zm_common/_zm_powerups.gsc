@@ -934,7 +934,7 @@ register_powerup_hud_player_info( powerup )
 	hudelem.alignY = "bottom";
 	hudelem.horzAlign = "center"; 
 	hudelem.vertAlign = "bottom";
-	hudelem.x = -32 + ( ( level.hud_powerups.size - 1 ) * 15); 
+	hudelem.x = -32 + ( level.hud_powerups.size * 15); 
 	hudelem.y = hudelem.y - 35; 
 	hudelem.alpha = 0;
 	hudelem.flashing = false;
