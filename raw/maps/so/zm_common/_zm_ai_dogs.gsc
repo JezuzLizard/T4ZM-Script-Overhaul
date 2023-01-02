@@ -107,6 +107,8 @@ dog_spawner_init()
 dog_round_spawning()
 {
 	level endon( "intermission" );
+
+	level endon( "end_of_round" );
 	
 	level.dog_targets = getplayers();
 	for( i = 0 ; i < level.dog_targets.size; i++ )
@@ -137,8 +139,6 @@ dog_round_spawning()
 	array_thread( players, ::play_dog_round );	
 	wait(7);
 
-
-
 	if( level.dog_round_count < 3 )
 	{
 		max = players.size * 6;
@@ -147,10 +147,6 @@ dog_round_spawning()
 	{
 		max = players.size * 8;
 	}
-	
-
-
-
 /#
 	if( GetDVar( "force_dogs" ) != "" )
 	{
@@ -161,14 +157,12 @@ dog_round_spawning()
 	level.zombie_total = max;
 	dog_health_increase();
 
-
-
-	count = 0; 
-	while( count < max )
+	while( true )
 	{
-
-	/*	iPrintLnBold(count + "-" + max);*/
-	
+		while( get_enemy_count() >= level.zombie_ai_limit || level.zombie_total <= 0 )
+		{
+			wait( 0.05 );
+		}
 		num_player_valid = get_number_of_valid_players();
 	
 		while( get_enemy_count() >= num_player_valid * 2 )
@@ -191,7 +185,6 @@ dog_round_spawning()
 				ai.favoriteenemy = favorite_enemy;
 				spawn_loc thread dog_spawn_fx( ai, spawn_loc );
 				level.zombie_total--;
-				count++;
 			}
 		}
 		else
@@ -205,21 +198,13 @@ dog_round_spawning()
 				ai.favoriteenemy = favorite_enemy;
 				spawn_point thread dog_spawn_fx( ai );
 				level.zombie_total--;
-				count++;
 
 			}
 		}
-
-		
 		waiting_for_next_dog_spawn( count, max );
 	}
-
-
-
-
-	
-
 }
+
 waiting_for_next_dog_spawn( count, max )
 {
 	default_wait = 1.5;
@@ -290,7 +275,6 @@ dog_round_aftermath()
 		level thread maps\so\zm_common\_zm_powerups::powerup_drop( power_up_origin );
 
 	}
-	
 	wait(2);
 	clientnotify( "dog_stop" );
 	wait(6);
@@ -306,6 +290,7 @@ dog_round_aftermath()
 //	In Factory, there's a single spawner and the struct is passed in as the second argument.
 dog_spawn_fx( ai, ent )
 {
+	ai endon( "death" );
 	if ( !IsDefined(ent) )
 	{
 		ent = GetStruct( self.target, "targetname" );
@@ -886,7 +871,6 @@ special_dog_spawn( spawners, num_to_spawn )
 			{
 				ai.favoriteenemy = favorite_enemy;
 				spawn_point thread dog_spawn_fx( ai );
-				//					level.zombie_total--;
 				count++;
 				flag_set( "dog_clips" );
 			}
@@ -902,7 +886,6 @@ special_dog_spawn( spawners, num_to_spawn )
 				{
 					ai.favoriteenemy = favorite_enemy;
 					spawn_loc thread dog_spawn_fx( ai, spawn_loc );
-//					level.zombie_total--;
 					count++;
 					flag_set( "dog_clips" );
 				}
@@ -917,7 +900,6 @@ special_dog_spawn( spawners, num_to_spawn )
 				{
 					ai.favoriteenemy = favorite_enemy;
 					spawn_point thread dog_spawn_fx( ai );
-//					level.zombie_total--;
 					count++;
 					flag_set( "dog_clips" );
 				}

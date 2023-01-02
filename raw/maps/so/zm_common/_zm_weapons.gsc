@@ -698,13 +698,13 @@ weapon_give( weapon, is_upgrade )
 	primaryWeapons = self GetWeaponsListPrimaries(); 
 	current_weapon = undefined; 
 
-	if( self HasWeapon( weapon_string ) )
+	if( self HasWeapon( weapon ) )
 	{
-		self GiveMaxAmmo( weapon_string );
-		self SwitchToWeapon( weapon_string );
+		self GiveMaxAmmo( weapon );
+		self SwitchToWeapon( weapon );
 		return;
 	}
-	
+
 	//if is not an upgraded perk purchase
 	if( !IsDefined( is_upgrade ) )
 	{
@@ -742,6 +742,10 @@ weapon_give( weapon, is_upgrade )
 			}
 		} 
 	}
+	if ( is_wonder_weapon( weapon ) )
+	{
+		self [[ level.on_wonder_weapon_obtained ]]( weapon );
+	}
 	if ( is_tactical_grenade( weapon ) )
 	{
 		old_tactical = self get_player_tactical_grenade();
@@ -764,34 +768,6 @@ weapon_give( weapon, is_upgrade )
 	 
 	play_weapon_vo(weapon);
 }
-
-
-	if( IsDefined( primaryWeapons ) && !isDefined( current_weapon ) )
-	{
-		for( i = 0; i < primaryWeapons.size; i++ )
-		{
-			if( primaryWeapons[i] == "zombie_colt" )
-			{
-				continue; 
-			}
-
-			if( weapon_string != "fraggrenade" && weapon_string != "stielhandgranate" && weapon_string != "molotov" && weapon_string != "zombie_cymbal_monkey" )
-			{
-				// PI_CHANGE_BEGIN
-				// JMA - player dropped the tesla gun
-				if( isDefined(level.script) && (level.script == "nazi_zombie_sumpf" || level.script == "nazi_zombie_factory") )
-				{
-					if( primaryWeapons[i] == "tesla_gun" )
-					{
-						level.player_drops_tesla_gun = true;
-					}
-				}
-				// PI_CHANGE_END
-			
-				self TakeWeapon( primaryWeapons[i] ); 
-			}
-		}
-	}
 
 play_weapon_vo(weapon)
 {

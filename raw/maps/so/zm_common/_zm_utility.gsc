@@ -1903,11 +1903,6 @@ include_weapon( weapon_name, in_box, weighting_func )
 	maps\so\zm_common\_zm_weapons::include_zombie_weapon( weapon_name, in_box, weighting_func );
 }
 
-include_powerup( powerup_name )
-{
-	maps\so\zm_common\_zm_powerups::include_zombie_powerup( powerup_name );
-}
-
 include_achievement( achievement, var1, var2, var3, var4 )
 {
 	//maps\_zombiemode_achievement::init( achievement, var1, var2, var3, var4 );
@@ -1972,6 +1967,25 @@ clear_is_drinking()
 	self.is_drinking = 0;
 	self enableoffhandweapons();
 	self enableweaponcycling();
+}
+
+register_wonder_weapon_for_level( weaponname )
+{
+	if ( is_wonder_weapon( weaponname ) )
+		return;
+
+	if ( !isdefined( level.zombie_wonder_weapon_list ) )
+		level.zombie_wonder_weapon_list = [];
+
+	level.zombie_wonder_weapon_list[weaponname] = weaponname;
+}
+
+is_wonder_weapon( weaponname )
+{
+	if ( !isdefined( weaponname ) || !isdefined( level.zombie_wonder_weapon_list ) )
+		return false;
+
+	return isdefined( level.zombie_wonder_weapon_list[weaponname] );
 }
 
 register_tactical_grenade_for_level( weaponname )

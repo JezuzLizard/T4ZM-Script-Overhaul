@@ -253,7 +253,8 @@ init_levelvars()
 
 	// AI 
 	set_zombie_var( "zombie_health_increase", 			100 );
-	set_zombie_var( "zombie_health_increase_percent", 	10, 	100 );
+	//set_zombie_var( "zombie_health_increase_percent", 	10, 	100 );
+	set_zombie_var( "zombie_health_increase_multiplier", 0.1, undefined, true );
 	set_zombie_var( "zombie_health_start", 				150 );
 	set_zombie_var( "zombie_max_ai", 					24 );
 	set_zombie_var( "zombie_ai_per_player", 			6 );
@@ -1448,7 +1449,6 @@ round_spawning()
 	ai_calculate_health( level.round_number ); 
 	set_zombie_spawn_rate_for_round( level.round_number );
 	set_zombie_move_speed_for_round( level.round_number );
-	count = 0; 
 
 	//CODER MOD: TOMMY K
 	players = getPlayers();
@@ -1636,7 +1636,9 @@ ai_calculate_health( round_number )
 			level.zombie_health += int( level.zombie_health * level.zombie_vars["zombie_health_increase_multiplier"] );
 		}
 		else
+		{
 			level.zombie_health = int( level.zombie_health + level.zombie_vars["zombie_health_increase"] );
+		}
 	}
 }
 
@@ -1666,7 +1668,14 @@ set_zombie_spawn_rate_for_round( round_number )
 
 set_zombie_move_speed_for_round( round_number )
 {
-	level.zombie_move_speed = round_number * 8;
+	if ( round_number == 1 )
+	{
+		level.zombie_move_speed = 1;
+	}
+	else 
+	{
+		level.zombie_move_speed = ( round_number - 1 ) * 8;
+	}
 }
 
 round_spawn_failsafe()
@@ -1795,18 +1804,6 @@ round_think()
 		wait( level.zombie_vars["zombie_between_round_time"] ); 
 
 		// here's the difficulty increase over time area
-			timer = level.zombie_vars["zombie_spawn_delay"];
-
-		if( timer < 0.08 )
-		{
-			timer = 0.08; 
-		}	
-
-		level.zombie_vars["zombie_spawn_delay"] = timer * 0.95;
-
-		// Increase the zombie move speed
-		level.zombie_move_speed = level.round_number * 8;
-
 		level.round_number++;
 
 		level notify( "between_round_over" );

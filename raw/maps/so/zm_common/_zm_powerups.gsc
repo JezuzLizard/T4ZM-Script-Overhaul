@@ -147,11 +147,6 @@ powerup_hud_monitor()
 			for ( powerup_hud_field_key_index = 0; powerup_hud_field_key_index < powerup_hud_field_keys.size; powerup_hud_field_key_index++ )
 			{
 				player = players[playerindex];
-
-				if ( !isDefined( player.powerup_hud ) )
-				{
-					player.powerup_hud = [];
-				}
 /#
 				if ( isdefined( player.pers["isBot"] ) && player.pers["isBot"] )
 					continue;
@@ -249,11 +244,18 @@ get_next_powerup()
 get_valid_powerup()
 {
 	powerup = get_next_powerup();
+	i = 0;
 	while ( true )
 	{
 		if ( ![[ level._custom_powerups[powerup].func_should_drop_with_regular_powerups ]]() )
 		{
 			powerup = get_next_powerup();
+			i++;
+			if ( i == 50 )
+			{
+				assertmsg( "No powerup was able to be selected by get_valid_powerup() in 100 attempts" );
+				return powerup;
+			}
 			continue;
 		}
 
@@ -283,7 +285,6 @@ watch_for_drop()
 			score_to_drop = curr_total_score + level.zombie_vars["zombie_powerup_drop_increment"];
 			level.zombie_vars["zombie_drop_item"] = 1;
 		}
-
 		wait( 0.5 );
 	}
 }
@@ -292,16 +293,6 @@ watch_for_drop()
 add_zombie_special_drop( powerup_name )
 {
 	level.zombie_special_drop_array[ level.zombie_special_drop_array.size ] = powerup_name;
-}
-
-include_zombie_powerup( powerup_name )
-{
-	if( !IsDefined( level.zombie_include_powerups ) )
-	{
-		level.zombie_include_powerups = [];
-	}
-
-	level.zombie_include_powerups[powerup_name] = true;
 }
 
 powerup_round_start()
@@ -319,7 +310,7 @@ powerup_drop(drop_point)
 		return;
 	}
 	
-	if( !isDefined(level.zombie_include_powerups) || level.zombie_include_powerups.size == 0 )
+	if( !isDefined(level._custom_powerups) || level._custom_powerups.size == 0 )
 	{
 		return;
 	}
@@ -398,7 +389,7 @@ special_powerup_drop(drop_point)
 // 		return;
 // 	}
 
-	if( !isDefined(level.zombie_include_powerups) || level.zombie_include_powerups.size == 0 )
+	if( !isDefined(level._custom_powerups) || level._custom_powerups.size == 0 )
 	{
 		return;
 	}
@@ -917,15 +908,14 @@ register_powerup_hud_info( powerup, shader, time, on )
 	level._custom_powerups[ powerup ].shader = shader;
 	level._custom_powerups[ powerup ].time_name = time;
 	level._custom_powerups[ powerup ].on_name = on;
-	if ( !isDefined( level.hud_powerups ) )
-	{
-		level.hud_powerups = [];
-	}
-	level.hud_powerups[ level.hud_powerups.size ] = powerup;
 }
 
 register_powerup_hud_player_info( powerup )
 {
+	if ( !isDefined( self.powerup_hud ) )
+	{
+		self.powerup_hud = [];
+	}
 	hudelem = newClientHudelem( self );
 	hudelem.foreground = true; 
 	hudelem.sort = 2; 
@@ -934,7 +924,7 @@ register_powerup_hud_player_info( powerup )
 	hudelem.alignY = "bottom";
 	hudelem.horzAlign = "center"; 
 	hudelem.vertAlign = "bottom";
-	hudelem.x = -32 + ( level.hud_powerups.size * 15); 
+	hudelem.x = -32 + ( self.powerup_hud.size * 38); 
 	hudelem.y = hudelem.y - 35; 
 	hudelem.alpha = 0;
 	hudelem.flashing = false;

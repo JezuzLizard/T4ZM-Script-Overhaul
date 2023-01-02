@@ -11,7 +11,7 @@ enable_carpenter_powerup_for_level()
 
 func_should_drop_carpenter()
 {
-	return get_num_window_destroyed() < 5;
+	return get_num_window_destroyed() > 5;
 }
 
 carpenter_precache()

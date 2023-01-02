@@ -72,14 +72,6 @@ main()
 	{
 		include_weapons();
 	}
-	if ( isDefined( level.zm_custom_map_include_powerups ) )
-	{
-		level [[ level.zm_custom_map_include_powerups ]]();
-	}
-	else 
-	{
-		include_powerups();
-	}
 	if ( !isDefined( level.zm_custom_map_fx_init ) )
 	{
 		level.zm_custom_map_fx_init = ::init_fx;
@@ -346,14 +338,8 @@ include_weapons()
 	
 	register_tactical_grenade_for_level( "molotov" );
 	level.zombie_tactical_grenade_player_init = undefined;
-}
-
-include_powerups()
-{
-	include_powerup( "nuke" );
-	include_powerup( "insta_kill" );
-	include_powerup( "double_points" );
-	include_powerup( "full_ammo" );
+	register_wonder_weapon_for_level( "tesla_gun" );
+	register_wonder_weapon_for_level( "ray_gun" );
 }
 	
 spawn_initial_outside_zombies( name )

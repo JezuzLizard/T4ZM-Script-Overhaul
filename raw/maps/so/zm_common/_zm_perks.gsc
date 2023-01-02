@@ -510,7 +510,7 @@ play_vendor_stings(sound)
 		{
 			level._custom_packapunch.jingle_active = true;
 //			iprintlnbold("stinger packapunch:" + level.packa_jingle);
-			temp_org_pack_s = spawn("script_origin", level._custom_packapunch.origin);		
+			temp_org_pack_s = spawn("script_origin", self.origin);		
 			temp_org_pack_s playsound (sound, "sound_done");
 			temp_org_pack_s waittill("sound_done");
 			level._custom_packapunch.jingle_active = false;

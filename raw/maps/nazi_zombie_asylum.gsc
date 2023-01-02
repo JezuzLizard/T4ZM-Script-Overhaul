@@ -49,14 +49,6 @@ main()
 	{
 		include_weapons();
 	}
-	if ( isDefined( level.zm_custom_map_include_powerups ) )
-	{
-		level [[ level.zm_custom_map_include_powerups ]]();
-	}
-	else 
-	{
-		include_powerups();
-	}
 	maps\nazi_zombie_asylum_fx::main();	
 	
 	if(getdvar("light_mode") != "")
@@ -853,14 +845,7 @@ include_weapons()
 
 	register_tactical_grenade_for_level( "molotov" );
 	level.zombie_tactical_grenade_player_init = undefined;
-}
-
-include_powerups()
-{
-	include_powerup( "nuke" );
-	include_powerup( "insta_kill" );
-	include_powerup( "double_points" );
-	include_powerup( "full_ammo" );
+	register_wonder_weapon_for_level( "ray_gun" );	
 }
 
 /*------------------------------------

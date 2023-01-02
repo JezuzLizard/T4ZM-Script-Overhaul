@@ -70,14 +70,6 @@ main()
 	{
 		include_weapons();
 	}
-	if ( isDefined( level.zm_custom_map_include_powerups ) )
-	{
-		level [[ level.zm_custom_map_include_powerups ]]();
-	}
-	else 
-	{
-		include_powerups();
-	}
 	level.use_zombie_heroes = true;
 	if ( !isDefined( level.zm_custom_map_fx_init ) )
 	{
@@ -732,8 +724,13 @@ include_weapons()
 	maps\so\zm_common\_zm_weapons::add_limited_weapon( "zombie_m1garand", 0 );
 
 	register_tactical_grenade_for_level( "molotov" );
-	register_tactical_grenade_for_level( "cymbal_monkey_zm" );
+	register_tactical_grenade_for_level( "zombie_cymbal_monkey" );
 	level.zombie_tactical_grenade_player_init = undefined;
+	register_wonder_weapon_for_level( "zombie_cymbal_monkey" );
+	register_wonder_weapon_for_level( "tesla_gun" );
+	register_wonder_weapon_for_level( "tesla_gun_upgraded" );
+	register_wonder_weapon_for_level( "ray_gun" );
+	register_wonder_weapon_for_level( "ray_gun_upgraded" );
 }
 
 
@@ -794,38 +791,6 @@ factory_cymbal_monkey_weighting_func()
 		}
 	}
 }
-
-
-include_powerups()
-{
-	include_powerup( "nuke" );
-	include_powerup( "insta_kill" );
-	include_powerup( "double_points" );
-	include_powerup( "full_ammo" );
-	include_powerup( "carpenter" );
-}
-
-
-
-//turn on all of the perk machines
-activate_vending_machines()
-{
-	//activate perks-a-cola
-	//level notify( "master_switch_activated" );
-	
-	//level notify( "specialty_armorvest_power_on" );
-	//level notify( "specialty_rof_power_on" );
-	//level notify( "specialty_quickrevive_power_on" );
-	//level notify( "specialty_fastreload_power_on" );
-	
-	//clientnotify("revive_on");
-	//clientnotify("middle_door_open");
-	//clientnotify("fast_reload_on");
-	//clientnotify("doubletap_on");
-	//clientnotify("jugger_on");	
-
-}
-
 
 #using_animtree( "generic_human" ); 
 force_zombie_crawler()

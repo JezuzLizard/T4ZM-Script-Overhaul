@@ -715,6 +715,11 @@ treasure_chest_ChooseRandomWeapon( player )
 			continue;
 		}
 
+		if ( isDefined( level.magicbox_can_receive_weapon ) && !player [[ level.magicbox_can_receive_weapon ]]( keys[i] ) )
+		{
+			continue;
+		}
+
 		if( !get_is_in_box( keys[i] ) )
 		{
 			continue;
@@ -778,6 +783,11 @@ treasure_chest_ChooseWeightedRandomWeapon( player )
 			continue;
 		}
 
+		if ( isDefined( level.magicbox_can_receive_weapon ) && !player [[ level.magicbox_can_receive_weapon ]]( keys[i] ) )
+		{
+			continue;
+		}
+
 		if( !get_is_in_box( keys[i] ) )
 		{
 			continue;
@@ -828,7 +838,18 @@ treasure_chest_ChooseWeightedRandomWeapon( player )
 			}
 		}
 	}
-	
+	/#
+	if ( getDvar( "scr_force_mysterybox_weapon" ) != "" )
+	{
+		forced_weapon = getDvar( "scr_force_mysterybox_weapon" );
+		setDvar( "scr_force_mysterybox_weapon", "" );
+		return forced_weapon;
+	}
+	#/
+	if ( isDefined( level.magicbox_force_weapon_func ) )
+	{
+		return player [[ level.magicbox_force_weapon_func ]]( filtered );
+	}
 	return filtered[RandomInt( filtered.size )];
 }
 

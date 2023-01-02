@@ -21,14 +21,6 @@ main()
 	{
 		include_weapons();
 	}
-	if ( isDefined( level.zm_custom_map_include_powerups ) )
-	{
-		level [[ level.zm_custom_map_include_powerups ]]();
-	}
-	else 
-	{
-		include_powerups();
-	}
 	
 	if( !isdefined( level.startInvulnerableTime ) )
 		level.startInvulnerableTime = GetDvarInt( "player_deathInvulnerableTime" );
@@ -359,6 +351,7 @@ include_weapons()
 
 	register_tactical_grenade_for_level( "molotov" );
 	level.zombie_tactical_grenade_player_init = undefined;
+	register_wonder_weapon_for_level( "ray_gun" );
 }
 
 prototype_add_weapons()
@@ -458,14 +451,6 @@ prototype_add_weapons()
 
 	// ONLY 1 OF THE BELOW SHOULD BE ALLOWED
 	maps\so\zm_common\_zm_weapons::add_limited_weapon( "m2_flamethrower_zombie", 1 );
-}
-
-include_powerups()
-{
-	include_powerup( "nuke" );
-	include_powerup( "insta_kill" );
-	include_powerup( "double_points" );
-	include_powerup( "full_ammo" );
 }
 
 above_couches_death()
