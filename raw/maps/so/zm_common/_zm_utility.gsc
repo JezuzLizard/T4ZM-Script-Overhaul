@@ -1252,24 +1252,55 @@ string_to_float( string )
 
 set_zombie_var( var, value, div, is_float )
 {
-	// First look it up in the table
-	table = "mp/zombiemode.csv";
-	table_value = TableLookUp( table, 0, var, 1 );
+	if ( !isDefined( level.zombie_vars ) )
+	{
+		level.zombie_vars = [];
+	}
 
 	if ( !IsDefined( is_float ) )
 	{
 		is_float = false;
 	}
 
-	if( IsDefined( table_value ) && table_value != "" )
+	zombie_var_mode = getDvar( "so_zombie_var_mode" );
+	if ( zombie_var_mode != "" )
 	{
-		if( is_float )
+		zombie_var_mode = getDvarInt( "so_zombie_var_mode" );
+	}
+	else 
+	{
+		zombie_var_mode = 0;
+	}
+
+	if( zombie_var_mode == 0 )
+	{
+		table = "mp/zombiemode.csv";
+		table_value = TableLookUp( table, 0, var, 1 );
+		if ( IsDefined( table_value ) && table_value != "" )
 		{
-			value = string_to_float( table_value );
+			if( is_float )
+			{
+				value = string_to_float( table_value );
+			}
+			else
+			{
+				value = int( table_value );
+			}
 		}
-		else
+	}
+	else if ( zombie_var_mode == 1 )
+	{
+		value = getDvar( "so_zombie_var_" + var );
+		if ( value != "" )
 		{
-			value = int( table_value );
+			if ( is_float )
+			{
+				value = getDvarFloat( "so_zombie_var_" + var );
+			}
+			else 
+			{
+				value = getDvarInt( "so_zombie_var_" + var );
+			}
 		}
 	}
 
@@ -1277,11 +1308,57 @@ set_zombie_var( var, value, div, is_float )
 	{
 		value = value / div;
 	}
-	if ( !isDefined( level.zombie_vars ) )
-	{
-		level.zombie_vars = [];
-	}
 	level.zombie_vars[var] = value;
+}
+
+get_zombie_var( var, is_float )
+{
+	zombie_var_mode = getDvar( "so_zombie_var_mode" );
+	if ( zombie_var_mode != "" )
+	{
+		zombie_var_mode = getDvarInt( "so_zombie_var_mode" );
+	}
+	else 
+	{
+		zombie_var_mode = 0;
+	}
+
+	if( zombie_var_mode == 0 )
+	{
+		table = "mp/zombiemode.csv";
+		table_value = TableLookUp( table, 0, var, 1 );
+		if ( IsDefined( table_value ) && table_value != "" )
+		{
+			if( is_float )
+			{
+				value = string_to_float( table_value );
+			}
+			else
+			{
+				value = int( table_value );
+			}
+			return value;
+		}
+	}
+	else if ( zombie_var_mode == 1 )
+	{
+		value = getDvar( "so_zombie_var_" + var );
+		if ( value != "" )
+		{
+			if ( is_float )
+			{
+				value = getDvarFloat( "so_zombie_var_" + var );
+			}
+			else 
+			{
+				value = getDvarInt( "so_zombie_var_" + var );
+			}
+			return value;
+		}
+	}
+	assert( isDefined( level.zombie_vars ), "Tried to get zombie var before calling set_zombie_var()" );
+	assert( isDefined( level.zombie_vars[ var ] ), "Tried to get zombie var on initialized value" );
+	return level.zombie_vars[ var ];
 }
 
 //
