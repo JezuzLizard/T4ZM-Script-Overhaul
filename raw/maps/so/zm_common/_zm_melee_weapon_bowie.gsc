@@ -97,12 +97,12 @@ bowie_think()
 				bbPrint( "zombie_uses: playername %s playerscore %d round %d cost %d name %s x %f y %f z %f type weapon",
 						player.playername, player.score, level.round_number, cost, "bowie_knife", self.origin );
 
-				player give_bowie(); 
+				player thread give_bowie(); 
 			}
 			else
 			{
 				play_sound_on_ent( "no_purchase" );
-				player thread maps\so\zm_common\_zm_blockers::play_no_money_purchase_dialog();
+				player thread maps\so\zm_common\_zm_audio::play_no_money_purchase_dialog();
 			}
 		}
 	}
