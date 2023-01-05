@@ -2,8 +2,7 @@
 
 enable_juggernog_perk_for_level()
 {
-	set_zombie_var( "zombie_perk_cost",					2000 );
-	set_zombie_var( "zombie_perk_juggernaut_health",	160 );
+	set_zombie_var( "zombie_perk_juggernaut_health",	250 );
 	if ( isDefined( level.custom_map_perk_vox ) && isDefined( level.custom_map_perk_vox[ "juggernog" ] ) )
 	{
 		vox = level.custom_map_perk_vox[ "juggernog" ];
@@ -68,6 +67,7 @@ give_jugg()
 	self.maxhealth = level.zombie_vars["zombie_perk_juggernaut_health"];
 	self.health = level.zombie_vars["zombie_perk_juggernaut_health"];
 	//player.health = 160;
+	self iPrintLn( "New health: " + self.health );
 }
 
 take_jugg()

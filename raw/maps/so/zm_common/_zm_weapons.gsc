@@ -742,7 +742,7 @@ weapon_give( weapon, is_upgrade )
 			}
 		} 
 	}
-	if ( is_wonder_weapon( weapon ) )
+	if ( is_wonder_weapon( weapon ) && isDefined( level.on_wonder_weapon_obtained ) )
 	{
 		self [[ level.on_wonder_weapon_obtained ]]( weapon );
 	}

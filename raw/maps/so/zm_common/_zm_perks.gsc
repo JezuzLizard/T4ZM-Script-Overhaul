@@ -4,6 +4,8 @@
 
 init()
 {
+	set_zombie_var( "zombie_perk_cost",					2000 );
+
 	spawn_and_link_perk_kvps();
 
 	vending_triggers = GetEntArray( "zombie_vending", "targetname" );

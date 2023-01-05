@@ -201,7 +201,7 @@ dog_round_spawning()
 
 			}
 		}
-		waiting_for_next_dog_spawn( count, max );
+		waiting_for_next_dog_spawn( level.zombie_total, max );
 	}
 }
 

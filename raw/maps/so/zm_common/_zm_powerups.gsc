@@ -276,6 +276,10 @@ watch_for_drop()
 
 		for (i = 0; i < players.size; i++)
 		{
+			if ( !isDefined( players[ i ].score_total ) )
+			{
+				continue;
+			}
 			curr_total_score += players[i].score_total;
 		}
 
