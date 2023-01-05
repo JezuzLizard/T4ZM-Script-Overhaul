@@ -227,6 +227,8 @@ init_levelvars()
 	level.zombie_total = 0;
 	level.no_laststandmissionfail = true;
 
+	level.endGame = ::endGameNotify;
+
 	if ( !isDefined( level.zombie_vars ) )
 	{
 		level.zombie_vars = [];
@@ -2483,4 +2485,9 @@ get_safe_breadcrumb_pos( player )
 	}
 
 	return undefined;
+}
+
+endGameNotify()
+{
+	level notify( "end_game" );
 }

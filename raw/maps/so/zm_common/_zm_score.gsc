@@ -416,7 +416,7 @@ create_highlight_hud( x, y, value )
 // Handles the creation/movement/deletion of the moving hud elems
 score_highlight( score, value )
 {
-	self endon( "disconnect" ); 
+	//self endon( "disconnect" ); 
 
 	// Location from hud.menu
 	score_x = -103;
