@@ -70,9 +70,13 @@ init()
 	
 	level thread [[level.dog_round_track_override]]();
 
-	if ( !isDefined( level.ai_dogs_special_dog_spawn_func ) )
+	if ( !isDefined( level._zm_ai_dogs_funcs ) )
 	{
-		level.ai_dogs_special_dog_spawn_func = ::special_dog_spawn;
+		level._zm_ai_dogs_funcs = [];
+	}
+	if ( !isDefined( level._zm_ai_dogs_funcs[ "special_dog_spawn" ] ) )
+	{
+		level._zm_ai_dogs_funcs[ "special_dog_spawn" ] = ::special_dog_spawn;
 	}
 }
 

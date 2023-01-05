@@ -1534,7 +1534,7 @@ round_spawning()
 	//	iPrintLn(spawn_point.targetname + " " + level.zombie_vars["zombie_spawn_delay"]);
 
 		// MM Mix in dog spawns...
-		if ( isDefined( level._custom_func_table ) && isDefined( level._custom_func_table[ "special_dog_spawn" ] ) && IsDefined( level.mixed_rounds_enabled ) && level.mixed_rounds_enabled == 1 )
+		if ( isDefined( level._zm_ai_dogs_funcs ) && isDefined( level._zm_ai_dogs_funcs[ "special_dog_spawn" ] ) && IsDefined( level.mixed_rounds_enabled ) && level.mixed_rounds_enabled )
 		{
 			spawn_dog = false;
 			if ( level.round_number > 30 )
@@ -1580,7 +1580,7 @@ round_spawning()
 								!level.zones[ akeys[k] ].is_occupied &&
 								level.zones[ akeys[k] ].dog_locations.size > 0 )
 							{
-								level [[ level._custom_func_table[ "special_dog_spawn" ] ]]( undefined, 1 );
+								level [[ level._zm_ai_dogs_funcs[ "special_dog_spawn" ] ]]( undefined, 1 );
 								level.zombie_total--;
 								wait_network_frame();
 							}

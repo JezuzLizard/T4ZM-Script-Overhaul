@@ -368,10 +368,10 @@ player_teleporting( index )
 	}
 
 	// Special for teleporting too much.  The Dogs attack!
-	if ( time_since_last_teleport < 60000 && level.active_links == 3 && level.round_number > 20 )
+	if ( time_since_last_teleport < 60000 && level.active_links == 3 && level.round_number > 20 && isDefined( level._zm_ai_dogs_funcs ) && isDefined( level._zm_ai_dogs_funcs[ "special_dog_spawn" ] ) )
 	{
 		dog_spawners = GetEntArray( "special_dog_spawner", "targetname" );
-		maps\so\zm_common\_zm_ai_dogs::special_dog_spawn( undefined, 4 );
+		level [[ level._zm_ai_dogs_funcs[ "special_dog_spawn" ] ]]( undefined, 4 );
 		//iprintlnbold( "Samantha Sez: No Powerup For You!" );
 		thread play_sound_2d( "sam_nospawn" );
 	}
