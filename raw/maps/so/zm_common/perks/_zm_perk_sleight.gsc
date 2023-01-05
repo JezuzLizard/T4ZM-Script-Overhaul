@@ -2,9 +2,9 @@
 
 enable_sleight_perk_for_level()
 {
-	if ( isDefined( level.custom_map_perk_vox ) && isDefined( level.custom_map_perk_vox[ "sleight" ] ) )
+	if ( isDefined( level.zm_custom_map_perk_vox ) && isDefined( level.zm_custom_map_perk_vox[ "sleight" ] ) )
 	{
-		vox = level.custom_map_perk_vox[ "sleight" ];
+		vox = level.zm_custom_map_perk_vox[ "sleight" ];
 	}
 	else 
 	{
@@ -28,9 +28,9 @@ turn_sleight_on()
 	level._custom_perks[ "specialty_fastreload" ].powered_on = true;
 	for( i = 0; i < machine.size; i++ )
 	{
-		if ( isDefined( level.custom_map_perk_models ) && isDefined( level.custom_map_perk_models[ "sleight" ] ) )
+		if ( isDefined( level.zm_custom_map_perk_models ) && isDefined( level.zm_custom_map_perk_models[ "sleight" ] ) )
 		{
-			machine[i] setmodel( level.custom_map_perk_models[ "sleight" ] );
+			machine[i] setmodel( level.zm_custom_map_perk_models[ "sleight" ] );
 		}
 		else 
 		{
@@ -48,9 +48,9 @@ sleight_precache()
 {
 	PrecacheItem( "zombie_perk_bottle_sleight" );
 	PrecacheShader( "specialty_fastreload_zombies" );
-	if ( isDefined( level.custom_map_perk_models ) && isDefined( level.custom_map_perk_models[ "sleight" ] ) )
+	if ( isDefined( level.zm_custom_map_perk_models ) && isDefined( level.zm_custom_map_perk_models[ "sleight" ] ) )
 	{
-		PrecacheModel( level.custom_map_perk_models[ "sleight" ] );
+		PrecacheModel( level.zm_custom_map_perk_models[ "sleight" ] );
 	}
 	else 
 	{

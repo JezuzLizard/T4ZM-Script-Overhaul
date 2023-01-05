@@ -3,9 +3,9 @@
 enable_juggernog_perk_for_level()
 {
 	set_zombie_var( "zombie_perk_juggernaut_health",	250 );
-	if ( isDefined( level.custom_map_perk_vox ) && isDefined( level.custom_map_perk_vox[ "juggernog" ] ) )
+	if ( isDefined( level.zm_custom_map_perk_vox ) && isDefined( level.zm_custom_map_perk_vox[ "juggernog" ] ) )
 	{
-		vox = level.custom_map_perk_vox[ "juggernog" ];
+		vox = level.zm_custom_map_perk_vox[ "juggernog" ];
 	}
 	else 
 	{
@@ -29,9 +29,9 @@ turn_jugger_on()
 	level._custom_perks[ "specialty_armorvest" ].powered_on = true;
 	for( i = 0; i < machine.size; i++ )
 	{
-		if ( isDefined( level.custom_map_perk_models ) && isDefined( level.custom_map_perk_models[ "juggernog" ] ) )
+		if ( isDefined( level.zm_custom_map_perk_models ) && isDefined( level.zm_custom_map_perk_models[ "juggernog" ] ) )
 		{
-			machine[i] setmodel( level.custom_map_perk_models[ "juggernog" ] );
+			machine[i] setmodel( level.zm_custom_map_perk_models[ "juggernog" ] );
 		}
 		else 
 		{
@@ -50,9 +50,9 @@ juggernog_precache()
 {
 	PrecacheItem( "zombie_perk_bottle_jugg" );
 	PrecacheShader( "specialty_juggernaut_zombies" );
-	if ( isDefined( level.custom_map_perk_models ) && isDefined( level.custom_map_perk_models[ "juggernog" ] ) )
+	if ( isDefined( level.zm_custom_map_perk_models ) && isDefined( level.zm_custom_map_perk_models[ "juggernog" ] ) )
 	{
-		PrecacheModel( level.custom_map_perk_models[ "juggernog" ] );
+		PrecacheModel( level.zm_custom_map_perk_models[ "juggernog" ] );
 	}
 	else 
 	{
@@ -66,8 +66,6 @@ give_jugg()
 {
 	self.maxhealth = level.zombie_vars["zombie_perk_juggernaut_health"];
 	self.health = level.zombie_vars["zombie_perk_juggernaut_health"];
-	//player.health = 160;
-	self iPrintLn( "New health: " + self.health );
 }
 
 take_jugg()

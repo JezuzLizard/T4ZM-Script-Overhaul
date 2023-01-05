@@ -2,9 +2,9 @@
 
 enable_doubletap_perk_for_level()
 {
-	if ( isDefined( level.custom_map_perk_vox ) && isDefined( level.custom_map_perk_vox[ "doubletap" ] ) )
+	if ( isDefined( level.zm_custom_map_perk_vox ) && isDefined( level.zm_custom_map_perk_vox[ "doubletap" ] ) )
 	{
-		vox = level.custom_map_perk_vox[ "doubletap" ];
+		vox = level.zm_custom_map_perk_vox[ "doubletap" ];
 	}
 	else 
 	{
@@ -27,9 +27,9 @@ turn_doubletap_on()
 	level._custom_perks[ "specialty_rof" ].powered_on = true;
 	for( i = 0; i < machine.size; i++ )
 	{
-		if ( isDefined( level.custom_map_perk_models ) && isDefined( level.custom_map_perk_models[ "doubletap" ] ) )
+		if ( isDefined( level.zm_custom_map_perk_models ) && isDefined( level.zm_custom_map_perk_models[ "doubletap" ] ) )
 		{
-			machine[i] setmodel( level.custom_map_perk_models[ "doubletap" ] );
+			machine[i] setmodel( level.zm_custom_map_perk_models[ "doubletap" ] );
 		}
 		else 
 		{
@@ -47,9 +47,9 @@ doubletap_precache()
 {
 	PrecacheItem( "zombie_perk_bottle_doubletap" );
 	PrecacheShader( "specialty_doubletap_zombies" );
-	if ( isDefined( level.custom_map_perk_models ) && isDefined( level.custom_map_perk_models[ "doubletap" ] ) )
+	if ( isDefined( level.zm_custom_map_perk_models ) && isDefined( level.zm_custom_map_perk_models[ "doubletap" ] ) )
 	{
-		PrecacheModel( level.custom_map_perk_models[ "doubletap" ] );
+		PrecacheModel( level.zm_custom_map_perk_models[ "doubletap" ] );
 	}
 	else 
 	{

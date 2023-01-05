@@ -88,14 +88,14 @@ main()
 	{
 		level.zm_custom_map_weapon_add_func = ::sumpf_add_weapons;
 	}
-	if ( !isDefined( level.custom_map_perk_models ) )
+	if ( !isDefined( level.zm_custom_map_perk_models ) )
 	{
-		level.custom_map_perk_models = [];
+		level.zm_custom_map_perk_models = [];
 	}
-	level.custom_map_perk_models[ "juggernog" ] = "zombie_vending_jugg_on_price";
-	level.custom_map_perk_models[ "revive" ] = "zombie_vending_revive_on_price";
-	level.custom_map_perk_models[ "doubletap" ] = "zombie_vending_doubletap_price";
-	level.custom_map_perk_models[ "sleight" ] = "zombie_vending_sleight_on_price";
+	level.zm_custom_map_perk_models[ "juggernog" ] = "zombie_vending_jugg_on_price";
+	level.zm_custom_map_perk_models[ "revive" ] = "zombie_vending_revive_on_price";
+	level.zm_custom_map_perk_models[ "doubletap" ] = "zombie_vending_doubletap_price";
+	level.zm_custom_map_perk_models[ "sleight" ] = "zombie_vending_sleight_on_price";
 	maps\so\zm_common\perks\_zm_perk_doubletap::enable_doubletap_perk_for_level();
 	maps\so\zm_common\perks\_zm_perk_juggernog::enable_juggernog_perk_for_level();
 	maps\so\zm_common\perks\_zm_perk_revive::enable_revive_perk_for_level();

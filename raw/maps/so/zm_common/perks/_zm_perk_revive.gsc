@@ -2,9 +2,9 @@
 
 enable_revive_perk_for_level()
 {
-	if ( isDefined( level.custom_map_perk_vox ) && isDefined( level.custom_map_perk_vox[ "revive" ] ) )
+	if ( isDefined( level.zm_custom_map_perk_vox ) && isDefined( level.zm_custom_map_perk_vox[ "revive" ] ) )
 	{
-		vox = level.custom_map_perk_vox[ "revive" ];
+		vox = level.zm_custom_map_perk_vox[ "revive" ];
 	}
 	else 
 	{
@@ -28,9 +28,9 @@ turn_revive_on()
 	level._custom_perks[ "specialty_quickrevive" ].powered_on = true;
 	for( i = 0; i < machine.size; i++ )
 	{
-		if ( isDefined( level.custom_map_perk_models ) && isDefined( level.custom_map_perk_models[ "revive" ] ) )
+		if ( isDefined( level.zm_custom_map_perk_models ) && isDefined( level.zm_custom_map_perk_models[ "revive" ] ) )
 		{
-			machine[i] setmodel( level.custom_map_perk_models[ "revive" ] );
+			machine[i] setmodel( level.zm_custom_map_perk_models[ "revive" ] );
 		}
 		else 
 		{
@@ -48,9 +48,9 @@ revive_precache()
 {
 	PrecacheItem( "zombie_perk_bottle_revive" );
 	PrecacheShader( "specialty_quickrevive_zombies" );
-	if ( isDefined( level.custom_map_perk_models ) && isDefined( level.custom_map_perk_models[ "revive" ] ) )
+	if ( isDefined( level.zm_custom_map_perk_models ) && isDefined( level.zm_custom_map_perk_models[ "revive" ] ) )
 	{
-		PrecacheModel( level.custom_map_perk_models[ "revive" ] );
+		PrecacheModel( level.zm_custom_map_perk_models[ "revive" ] );
 	}
 	else 
 	{
