@@ -133,6 +133,7 @@ unhide_magic_box( index )
 	{
 		println( "^3Warning: No rubble found for magic box" );
 	}
+	level.chests[index].hidden = false;
 }
 
 set_treasure_chest_cost( cost )
@@ -148,7 +149,16 @@ hide_chest()
 	{
 		pieces[i] disable_trigger();
 		pieces[i] hide();
-	}	
+	}
+	self.hidden = true;
+}
+
+get_box_piece()
+{
+	lid = GetEnt(self.target, "targetname");
+	org = GetEnt(lid.target, "targetname");
+	box = GetEnt(org.target, "targetname");
+	return box;
 }
 
 get_chest_pieces()
@@ -212,6 +222,111 @@ show_magic_box()
 	pieces[0] playsound( "couch_slam" );
 }
 
+hide_magic_box()
+{
+	lid = getent( self.target, "targetname" );
+	lid thread treasure_chest_lid_close(false);
+	self setvisibletoall();
+
+	fake_pieces = [];
+	pieces = self get_chest_pieces();
+
+	for(i=0;i<pieces.size;i++)
+	{
+		if(pieces[i].classname == "script_model")
+		{
+			fake_pieces[fake_pieces.size] = spawn("script_model",pieces[i].origin);
+			fake_pieces[fake_pieces.size - 1].angles = pieces[i].angles;
+			fake_pieces[fake_pieces.size - 1] setmodel(pieces[i].model);
+			pieces[i] disable_trigger();
+			pieces[i] hide();
+		}
+		else
+		{
+			pieces[i] disable_trigger();
+			pieces[i] hide();
+		}
+	}
+
+	anchor = spawn("script_origin",fake_pieces[0].origin);
+	soundpoint = spawn("script_origin", anchor.origin);
+	playfx( level._effect["poltergeist"],anchor.origin);
+
+	anchor playsound("box_move");
+	for(i=0;i<fake_pieces.size;i++)
+	{
+		fake_pieces[i] linkto(anchor);
+	}
+
+	playsoundatposition ("whoosh", soundpoint.origin );
+	playsoundatposition ("ann_vox_magicbox", soundpoint.origin );
+
+
+	anchor moveto(anchor.origin + (0,0,50),5);
+	//anchor rotateyaw(360 * 10,5,5);
+	if(level.chests[level.chest_index].script_noteworthy == "magic_box_south" || level.chests[level.chest_index].script_noteworthy == "magic_box_bathroom" || level.chests[level.chest_index].script_noteworthy == "magic_box_hallway")
+	{
+		anchor Vibrate( (50, 0, 0), 10, 0.5, 5 );
+	}
+	else if(level.script != "nazi_zombie_sumpf")
+	{
+		anchor Vibrate( (0, 50, 0), 10, 0.5, 5 );
+	}
+	else
+	{
+		//Get the normal of the box using the positional data of the box and lid
+		direction = pieces[3].origin - pieces[1].origin;
+		direction = (direction[1], direction[0], 0);
+		
+		if(direction[1] < 0 || (direction[0] > 0 && direction[1] > 0))
+		{
+				direction = (direction[0], direction[1] * -1, 0);
+		}
+		else if(direction[0] < 0)
+		{
+				direction = (direction[0] * -1, direction[1], 0);
+		}
+		anchor Vibrate( direction, 10, 0.5, 5);
+	}
+	
+	//anchor thread rotateroll_box();
+	anchor waittill("movedone");
+	//players = getPlayers();
+	//array_thread(players, ::play_crazi_sound);
+	//wait(3.9);
+	
+	playfx(level._effect["poltergeist"], anchor.origin);
+	
+	//TUEY - Play the 'disappear' sound
+	playsoundatposition ("box_poof", soundpoint.origin);
+	for(i=0;i<fake_pieces.size;i++)
+	{
+		fake_pieces[i] delete();
+	}
+
+
+	//gzheng-Show the rubble
+	//PI CHANGE - allow for more than one object of rubble per box
+	rubble = getentarray(self.script_noteworthy + "_rubble", "script_noteworthy");
+	
+	if ( IsDefined( rubble ) )
+	{
+		for (i = 0; i < rubble.size; i++)
+		{
+			rubble[i] show();
+		}
+	}
+	else
+	{
+		println( "^3Warning: No rubble found for magic box" );
+	}
+
+	wait(0.1);
+	anchor delete();
+	soundpoint delete();
+	self.hidden = true;
+}
+
 treasure_chest_think()
 {	
 	cost = 950;
@@ -231,15 +346,29 @@ treasure_chest_think()
 
 	// waittill someuses uses this
 	user = undefined;
+	old_cost = self.zombie_cost;
 	while( 1 )
 	{
-		self waittill( "trigger", user ); 
+		self waittill( "trigger", user );
+		if ( self.zombie_cost != old_cost )
+		{
+			old_cost = self.zombie_cost;
+			cost = self.zombie_cost;
+			if ( cost == 10 )
+			{
+				self sethintstring( "Press & Hold &&1 To Buy Mystery Box [Cost: 10]" );
+			}
+			else 
+			{
+				self set_hint_string( self, "default_treasure_chest_" + cost );
+			}
+		}
 		if( user in_revive_trigger() )
 		{
 			wait( 0.1 );
 			continue;
 		}
-		if ( isDefineD( user.is_drinking ) && user.is_drinking > 0 )
+		if ( isDefined( user.is_drinking ) && user.is_drinking > 0 )
 		{
 			wait 0.1;
 			continue;
@@ -448,105 +577,7 @@ treasure_chest_move(lid)
 
 	level waittill("weapon_fly_away_end");
 
-	lid thread treasure_chest_lid_close(false);
-	self setvisibletoall();
-
-	fake_pieces = [];
-	pieces = self get_chest_pieces();
-
-	for(i=0;i<pieces.size;i++)
-	{
-		if(pieces[i].classname == "script_model")
-		{
-			fake_pieces[fake_pieces.size] = spawn("script_model",pieces[i].origin);
-			fake_pieces[fake_pieces.size - 1].angles = pieces[i].angles;
-			fake_pieces[fake_pieces.size - 1] setmodel(pieces[i].model);
-			pieces[i] disable_trigger();
-			pieces[i] hide();
-		}
-		else
-		{
-			pieces[i] disable_trigger();
-			pieces[i] hide();
-		}
-	}
-
-	anchor = spawn("script_origin",fake_pieces[0].origin);
-	soundpoint = spawn("script_origin", anchor.origin);
-	playfx( level._effect["poltergeist"],anchor.origin);
-
-	anchor playsound("box_move");
-	for(i=0;i<fake_pieces.size;i++)
-	{
-		fake_pieces[i] linkto(anchor);
-	}
-
-	playsoundatposition ("whoosh", soundpoint.origin );
-	playsoundatposition ("ann_vox_magicbox", soundpoint.origin );
-
-
-	anchor moveto(anchor.origin + (0,0,50),5);
-	//anchor rotateyaw(360 * 10,5,5);
-	if(level.chests[level.chest_index].script_noteworthy == "magic_box_south" || level.chests[level.chest_index].script_noteworthy == "magic_box_bathroom" || level.chests[level.chest_index].script_noteworthy == "magic_box_hallway")
-	{
-		anchor Vibrate( (50, 0, 0), 10, 0.5, 5 );
-	}
-	else if(level.script != "nazi_zombie_sumpf")
-	{
-		anchor Vibrate( (0, 50, 0), 10, 0.5, 5 );
-	}
-	else
-	{
-		//Get the normal of the box using the positional data of the box and lid
-		direction = pieces[3].origin - pieces[1].origin;
-		direction = (direction[1], direction[0], 0);
-		
-		if(direction[1] < 0 || (direction[0] > 0 && direction[1] > 0))
-		{
-				direction = (direction[0], direction[1] * -1, 0);
-		}
-		else if(direction[0] < 0)
-		{
-				direction = (direction[0] * -1, direction[1], 0);
-		}
-		anchor Vibrate( direction, 10, 0.5, 5);
-	}
-	
-	//anchor thread rotateroll_box();
-	anchor waittill("movedone");
-	//players = getPlayers();
-	//array_thread(players, ::play_crazi_sound);
-	//wait(3.9);
-	
-	playfx(level._effect["poltergeist"], anchor.origin);
-	
-	//TUEY - Play the 'disappear' sound
-	playsoundatposition ("box_poof", soundpoint.origin);
-	for(i=0;i<fake_pieces.size;i++)
-	{
-		fake_pieces[i] delete();
-	}
-
-
-	//gzheng-Show the rubble
-	//PI CHANGE - allow for more than one object of rubble per box
-	rubble = getentarray(self.script_noteworthy + "_rubble", "script_noteworthy");
-	
-	if ( IsDefined( rubble ) )
-	{
-		for (i = 0; i < rubble.size; i++)
-		{
-			rubble[i] show();
-		}
-	}
-	else
-	{
-		println( "^3Warning: No rubble found for magic box" );
-	}
-
-	wait(0.1);
-	anchor delete();
-	soundpoint delete();
+	self hide_magic_box();
 
 	old_chest_index = level.chest_index;
 
@@ -1089,4 +1120,9 @@ treasure_chest_glowfx()
 	self waittill_any( "weapon_grabbed", "box_moving" ); 
 
 	fxobj delete(); 
+}
+
+get_active_magicbox()
+{
+	return level.chests[ level.chest_index ];
 }

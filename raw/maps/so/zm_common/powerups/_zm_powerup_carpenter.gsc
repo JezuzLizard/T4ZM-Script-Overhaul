@@ -11,7 +11,7 @@ enable_carpenter_powerup_for_level()
 
 func_should_drop_carpenter()
 {
-	return get_num_window_destroyed() > 5;
+	return get_num_window_destroyed() > level.carpenter_windows_destroyed_requirement;
 }
 
 carpenter_precache()
@@ -21,7 +21,8 @@ carpenter_precache()
 
 carpenter_setup()
 {
-
+	level.carpenter_windows_destroyed_requirement = 5;
+	level.carpenter_points_awarded = 200;
 }
 
 carpenter_grab( powerup, player )
@@ -84,8 +85,8 @@ start_carpenter( origin )
 	players = getPlayers();
 	for(i = 0; i < players.size; i++)
 	{
-		players[i].score += 200;
-		players[i].score_total += 200;
+		players[i].score += level.carpenter_points_awarded;
+		players[i].score_total += level.carpenter_points_awarded;
 		players[i] maps\so\zm_common\_zm_score::set_player_score_hud(); 
 	}
 

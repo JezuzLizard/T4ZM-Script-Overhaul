@@ -34,7 +34,10 @@ main()
 	{
 		level.dogs_enabled = true;
 	}
-
+	if ( !isDefined( level.use_legacy_dogs ) )
+	{
+		level.use_legacy_dogs = true;
+	}
 	// enable for zombie risers within active player zones
 	level.zombie_rise_spawners = [];
 	
@@ -117,6 +120,11 @@ main()
 		level.use_legacy_tesla_gun = true;
 	}
 	maps\so\zm_common\_zm_weap_tesla_gun::init();
+
+	if ( !isDefined( level.default_visionset ) )
+	{
+		level.default_visionset = "zombie_sumpf";
+	}
 
 	//init_sounds();
 	init_zombie_sumpf();

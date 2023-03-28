@@ -1313,6 +1313,10 @@ set_zombie_var( var, value, div, is_float )
 
 get_zombie_var( var, is_float )
 {
+	if ( !isDefined( is_float ) )
+	{
+		is_float = false;
+	}
 	zombie_var_mode = getDvar( "so_zombie_var_mode" );
 	if ( zombie_var_mode != "" )
 	{
@@ -2111,4 +2115,63 @@ set_player_tactical_grenade( weaponname )
 init_player_tactical_grenade()
 {
 	self set_player_tactical_grenade( level.zombie_tactical_grenade_player_init );
+}
+
+register_actor_killed_callback( name, callback, priority )
+{
+	if ( !isDefined( priority ) )
+	{
+		priority = 0;
+	}
+
+	if ( !isDefined( level.actor_killed_callbacks ) )
+	{
+		level.actor_killed_callbacks = [];
+	}
+
+	level.actor_killed_callbacks[ name ] = callback;
+	level.actor_killed_callbacks_priorities[ name ] = priority;
+}
+
+register_actor_damage_modifier( name, callback, priority )
+{
+	if ( !isDefined( priority ) )
+	{
+		priority = 0;
+	}
+	if ( !isDefined( level.actor_damage_modifiers ) )
+	{
+		level.actor_damage_modifiers = [];
+	}
+	level.actor_damage_modifiers[ name ] = callback;
+	level.actor_damage_modifiers_priorities[ name ] = priority;
+}
+
+register_actor_on_damage_callback( name, callback )
+{
+	if ( !isDefined( priority ) )
+	{
+		priority = 0;
+	}
+
+	if ( !isDefined( level.actor_on_damage_callbacks ) )
+	{
+		level.actor_on_damage_callbacks = [];
+	}
+	level.actor_on_damage_callbacks[ name ] = callback;
+}
+
+register_player_damage_modifiers( name, callback, priority )
+{
+	if ( !isDefined( priority ) )
+	{
+		priority = 0;
+	}
+
+	if ( !isDefined( level.player_damage_modifiers ) )
+	{
+		level.player_damage_modifiers = [];
+	}
+	level.player_damage_modifiers[ name ] = callback;
+	level.player_damage_modifiers_priorities[ name ] = priority;
 }

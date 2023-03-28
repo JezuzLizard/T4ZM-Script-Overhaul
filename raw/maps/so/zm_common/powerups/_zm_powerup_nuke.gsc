@@ -21,7 +21,7 @@ nuke_precache()
 
 nuke_setup()
 {
-
+	level.nuke_points_awarded = 400;
 }
 
 nuke_grab( powerup, player )
@@ -88,8 +88,8 @@ nuke_powerup( drop_item )
 	players = getPlayers();
 	for(i = 0; i < players.size; i++)
 	{
-		players[i].score += 400;
-		players[i].score_total += 400;
+		players[i].score += level.nuke_points_awarded;
+		players[i].score_total += level.nuke_points_awarded;
 		players[i] maps\so\zm_common\_zm_score::set_player_score_hud(); 
 	}
 

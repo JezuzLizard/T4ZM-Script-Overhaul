@@ -325,6 +325,18 @@ dog_spawn_fx( ai, ent )
 	ai zombie_setup_attack_properties_dog();
 	ai stop_magic_bullet_shield();
 
+	if ( is_true( level.use_legacy_dogs ) )
+	{
+		// start glowing eyes
+		assert( IsDefined( ai.fx_dog_eye ) );
+		PlayFxOnTag( level._effect["dog_eye_glow"], ai.fx_dog_eye, "tag_origin" );
+
+		// start trail
+		assert( IsDefined( ai.fx_dog_trail ) );
+		PlayFxOnTag( ai.fx_dog_trail_type, ai.fx_dog_trail, "tag_origin" );
+		ai playloopsound( ai.fx_dog_trail_sound );
+	}
+
 	wait( 0.1 ); // dog should come out running after this wait
 	ai show();
 }
@@ -634,8 +646,11 @@ dog_init()
 
 	self.maxhealth = int( level.dog_health * health_multiplier );
 	self.health = int( level.dog_health * health_multiplier );
-	self thread dog_run_think();
-	self thread dog_stalk_audio();
+	if ( !is_true( level.use_legacy_dogs ) )
+	{
+		self thread dog_run_think();
+		self thread dog_stalk_audio();
+	}
 
 	self thread maps\so\zm_common\_zm::round_spawn_failsafe();
 	self hide();
@@ -806,6 +821,10 @@ dog_clip_monitor()
 {
 	clips_on = false;
 	level.dog_clips = GetEntArray( "dog_clips", "targetname" );
+	if ( level.dog_clips.size <= 0 )
+	{
+		return;
+	}
 	while (1)
 	{
 		for ( i=0; i<level.dog_clips.size; i++ )

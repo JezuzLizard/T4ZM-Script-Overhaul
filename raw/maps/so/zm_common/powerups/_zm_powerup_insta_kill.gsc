@@ -26,9 +26,10 @@ insta_kill_precache()
 
 insta_kill_setup()
 {
+	level.insta_kill_duration = 30;
 	set_zombie_var( "zombie_insta_kill", 				0 );
 	set_zombie_var( "zombie_powerup_insta_kill_on", 	false );
-	set_zombie_var( "zombie_powerup_insta_kill_time", 	30 );	// length of insta kill
+	set_zombie_var( "zombie_powerup_insta_kill_time", 	level.insta_kill_duration );	// length of insta kill
 }
 
 insta_kill_player_setup()
@@ -55,7 +56,7 @@ insta_kill_powerup( drop_item )
 	level thread insta_kill_on_hud( drop_item );
 
 	level.zombie_vars["zombie_insta_kill"] = 1;
-	wait( 30 );
+	wait( level.insta_kill_duration );
 	level.zombie_vars["zombie_insta_kill"] = 0;
 	players = getPlayers();
 	for(i = 0; i < players.size; i++)
@@ -74,7 +75,7 @@ insta_kill_on_hud( drop_item )
 	if ( level.zombie_vars["zombie_powerup_insta_kill_on"] )
 	{
 		// reset the time and keep going
-		level.zombie_vars["zombie_powerup_insta_kill_time"] = 30;
+		level.zombie_vars["zombie_powerup_insta_kill_time"] = level.insta_kill_duration;
 		return;
 	}
 
@@ -154,7 +155,7 @@ time_remaning_on_insta_kill_powerup()
 	level.zombie_vars["zombie_powerup_insta_kill_on"] = false;
 
 	// remove the offset to make room for new powerups, reset timer for next time
-	level.zombie_vars["zombie_powerup_insta_kill_time"] = 30;
+	level.zombie_vars["zombie_powerup_insta_kill_time"] = level.insta_kill_duration;
 	//level.zombie_timer_offset += level.zombie_timer_offset_interval;
 	if ( is_true( level.use_legacy_powerup_system ) )
 	{

@@ -136,6 +136,10 @@ main()
 	level thread chair_useage();
 	level thread magic_box_light();
 	
+	if ( !isDefined( level.default_visionset ) )
+	{
+		level.default_visionset = "zombie_asylum";
+	}
 	
 	// If you want to modify/add to the weapons table, please copy over the so\zm_common\_zm_weapons init_weapons() and paste it here.
 	// I recommend putting it in it's own function...

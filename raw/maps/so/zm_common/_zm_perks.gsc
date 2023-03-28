@@ -169,6 +169,12 @@ vending_trigger_think()
 			continue;
 		}
 
+		if ( self.classname == "trigger_radius" && !player useButtonPressed() )
+		{
+			wait 0.05;
+			continue;
+		}
+
 		if ( player HasPerk( perk ) )
 		{
 			cheat = false;

@@ -253,7 +253,7 @@ get_valid_powerup()
 			i++;
 			if ( i == 50 )
 			{
-				assertmsg( "No powerup was able to be selected by get_valid_powerup() in 100 attempts" );
+				assertmsg( "No powerup was able to be selected by get_valid_powerup() in 50 attempts" );
 				return powerup;
 			}
 			continue;
@@ -369,6 +369,7 @@ powerup_drop(drop_point)
 
 	level.zombie_vars["zombie_drop_item"] = 0;
 
+	level notify( "powerup_dropped", powerup );
 
 	//powerup = powerup_setup(); 
 
@@ -425,10 +426,17 @@ special_powerup_drop(drop_point)
 
 //
 //	Pick the next powerup in the list
-powerup_setup()
-{
-	powerup = get_valid_powerup();
-
+powerup_setup( powerup_override )
+{	
+	if ( isDefined( powerup_override ) )
+	{
+		powerup = powerup_override;
+	}
+	else 
+	{
+		powerup = get_valid_powerup();
+	}
+	
 	struct = level._custom_powerups[powerup];
 	self SetModel( struct.model_name );
 
@@ -449,7 +457,6 @@ powerup_setup()
 	
 	self PlayLoopSound("spawn_powerup_loop");
 }
-
 
 //
 //	Get the special teleporter drop
@@ -539,25 +546,12 @@ special_drop_setup()
 
 //		wait( 0.5 );
 
-		struct = level._custom_powerups[powerup];
-		self SetModel( struct.model_name );
-
-		//TUEY Spawn Powerup
-		playsoundatposition("spawn_powerup", self.origin);
-
-		self.powerup_name 	= struct.powerup_name;
-		self.hint 			= struct.hint;
-
-		if( IsDefined( struct.fx ) )
-		{
-			self.fx = struct.fx;
-		}
-
-		self PlayLoopSound("spawn_powerup_loop");
+		self powerup_setup( powerup );
 
 		self thread powerup_timeout();
 		self thread powerup_wobble();
 		self thread powerup_grab();
+		level notify( "powerup_dropped", self );
 	}
 }
 
@@ -621,12 +615,22 @@ powerup_grab()
 				}
 
 				wait( 0.1 );
+				
+				self notify ("powerup_grabbed", players[i]);
+
+				level notify( "powerup_grabbed", players[i], self );
+
+				if ( isDefined( players[ i ].on_powerup_grab_func ) )
+				{
+					players[ i ] [[ players[ i ].on_powerup_grab_func ]]( self );
+				}
 
 				playsoundatposition("powerup_grabbed", self.origin);
 				self stoploopsound();
 
-				self delete();
-				self notify ("powerup_grabbed");
+				wait 0.05;
+
+				self powerup_free();
 			}
 		}
 	}	
@@ -781,7 +785,14 @@ powerup_timeout()
 		}
 	}
 
-	self notify ("powerup_timedout");
+	self notify( "powerup_timedout" );
+	level notify( "powerup_timedout", self );
+	self powerup_free();
+}
+
+powerup_free()
+{
+	level notify( "powerup_freed", self );
 	self delete();
 }
 

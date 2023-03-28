@@ -129,6 +129,9 @@ door_think()
 	// maybe just destroy the door, could be two players from opposite sides..
 	// breaking into chunks seems best.
 	// or I cuold just give it no collision
+
+	who = undefined;
+
 	while( 1 )
 	{
 		if(isDefined(self.script_noteworthy) && self.script_noteworthy == "electric_door")
@@ -261,6 +264,16 @@ door_think()
 		for( i = 0; i < all_trigs.size; i++ )
 		{
 			all_trigs[i] trigger_off(); 
+		}
+		if ( isDefined( who ) )
+		{
+			self notify( "door_opened", who );
+			level notify( "door_opened", self, who );
+		}
+		else 
+		{
+			self notify( "door_opened" );
+			level notify( "door_opened", self );
 		}
 		break;
 	}
@@ -476,7 +489,8 @@ debris_think()
 	
 					clip Delete();
 				}
-				
+				self notify( "debtis_opened", who );
+				level notify( "debris_opened", self, who );
 				break; 								
 			}
 			else

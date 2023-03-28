@@ -26,8 +26,9 @@ double_points_precache()
 
 double_points_setup()
 {
+	level.double_points_duration = 30;
 	set_zombie_var( "zombie_powerup_point_doubler_on", 	false );
-	set_zombie_var( "zombie_powerup_point_doubler_time", 30 );	// length of point doubler
+	set_zombie_var( "zombie_powerup_point_doubler_time", level.double_points_duration );	// length of point doubler
 }
 
 double_points_player_setup()
@@ -55,7 +56,7 @@ double_points_powerup( drop_item )
 	level thread point_doubler_on_hud( drop_item );
 
 	level.zombie_vars["zombie_point_scalar"] = 2;
-	wait 30;
+	wait level.double_points_duration;
 
 	level.zombie_vars["zombie_point_scalar"] = 1;
 }
@@ -68,7 +69,7 @@ point_doubler_on_hud( drop_item )
 	if ( level.zombie_vars["zombie_powerup_point_doubler_on"] )
 	{
 		// reset the time and keep going
-		level.zombie_vars["zombie_powerup_point_doubler_time"] = 30;
+		level.zombie_vars["zombie_powerup_point_doubler_time"] = level.double_points_duration;
 		return;
 	}
 
@@ -142,7 +143,7 @@ time_remaining_on_point_doubler_powerup()
 
 
 	// remove the offset to make room for new powerups, reset timer for next time
-	level.zombie_vars["zombie_powerup_point_doubler_time"] = 30;
+	level.zombie_vars["zombie_powerup_point_doubler_time"] = level.double_points_duration;
 	//level.zombie_timer_offset += level.zombie_timer_offset_interval;
 	if ( is_true( level.use_legacy_powerup_system ) )
 	{

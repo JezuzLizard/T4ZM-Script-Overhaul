@@ -21,7 +21,7 @@ full_ammo_precache()
 
 full_ammo_setup()
 {
-
+	level.max_ammo_refill_clips = false;
 }
 
 full_ammo_grab( powerup, player )
@@ -41,6 +41,10 @@ full_ammo_powerup( drop_item )
 		for( x = 0; x < primaryWeapons.size; x++ )
 		{
 			players[i] GiveMaxAmmo( primaryWeapons[x] );
+			if ( level.max_ammo_refill_clips )
+			{
+				players[ i ] setWeaponAmmoClip( primaryWeapons[ x ], weaponClipSize( primaryWeapons[ x ] ) );
+			}
 		}
 	}
 	//	array_thread (players, ::full_ammo_on_hud, drop_item);

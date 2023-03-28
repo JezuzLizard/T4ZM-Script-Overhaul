@@ -114,6 +114,11 @@ main()
 	maps\_zombiemode_auto_turret::init();
 	init_sounds();
 	init_achievement();
+
+	if ( !isDefined( level.default_visionset ) )
+	{
+		level.default_visionset = "zombie_factory";
+	}
 	//ESM - activate the initial exterior goals
 	//level.exterior_goals = getstructarray("exterior_goal","targetname");		
 	

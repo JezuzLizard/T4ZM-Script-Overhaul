@@ -84,6 +84,10 @@ main()
 		thread above_roof_death();
 		thread below_ground_death();
 	}
+	if ( !isDefined( level.default_visionset ) )
+	{
+		level.default_visionset = "zombie";
+	}
 }
 
 
