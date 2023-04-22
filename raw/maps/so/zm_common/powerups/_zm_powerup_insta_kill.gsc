@@ -69,8 +69,6 @@ insta_kill_powerup( drop_item )
 
 insta_kill_on_hud( drop_item )
 {
-	self endon ("disconnect");
-
 	// check to see if this is on or not
 	if ( level.zombie_vars["zombie_powerup_insta_kill_on"] )
 	{
@@ -113,7 +111,7 @@ time_remaning_on_insta_kill_powerup()
 	{
 		self setvalue( level.zombie_vars["zombie_powerup_insta_kill_time"] );
 	}
-	temp_enta = spawn("script_origin", (0,0,0));
+	temp_enta = spawn_temp_entity_delete_after_notify( "script_origin", (0, 0, 0), undefined, "time_remaning_on_insta_kill_powerup", "time_remaning_on_insta_kill_powerup_delete" );
 	temp_enta playloopsound("insta_kill_loop");	
 
 	/*

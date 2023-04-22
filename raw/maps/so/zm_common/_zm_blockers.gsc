@@ -866,7 +866,7 @@ remove_chunk( chunk, node, destroy_immediately )
 //		force = AnglesToForward( angles + ( -60, 0, 0 ) ) * ( 200 + RandomInt( 100 ) ); 
 //		chunk PhysicsLaunch( chunk.origin, force );
 	
-		ent = Spawn( "script_origin", chunk.origin ); 
+		ent = spawn_temp_entity_delete_after_notify( "script_origin", chunk.origin, undefined, "remove_chunk", "chunk_physics_delete" );
 		ent.angles = node.angles +( 0, 180, 0 );
 		dist = 100 + RandomInt( 100 );
 		dest = ent.origin + ( AnglesToForward( ent.angles ) * dist );
@@ -902,7 +902,8 @@ remove_chunk( chunk, node, destroy_immediately )
 		chunk Hide();
 	
 		wait( 1 );
-		ent Delete(); 
+		//ent Delete(); 
+		ent delete();
 	}
 
 	//if (isdefined( destroy_immediately ) && destroy_immediately)

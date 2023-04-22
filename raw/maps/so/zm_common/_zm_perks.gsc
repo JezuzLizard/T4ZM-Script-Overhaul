@@ -10,38 +10,36 @@ init()
 
 	vending_triggers = GetEntArray( "zombie_vending", "targetname" );
 	
-	if ( vending_triggers.size < 1 )
+	if ( vending_triggers.size > 0 )
 	{
-		return;
-	}
-
-	if ( array_validate( level._custom_perks ) )
-	{
-		a_keys = getarraykeys( level._custom_perks );
-
-		for ( i = 0; i < a_keys.size; i++ )
+		if ( array_validate( level._custom_perks ) )
 		{
-			if ( isdefined( level._custom_perks[a_keys[i]].precache_func ) )
-				level [[ level._custom_perks[a_keys[i]].precache_func ]]();
+			a_keys = getarraykeys( level._custom_perks );
+
+			for ( i = 0; i < a_keys.size; i++ )
+			{
+				if ( isdefined( level._custom_perks[a_keys[i]].precache_func ) )
+					level [[ level._custom_perks[a_keys[i]].precache_func ]]();
+			}
 		}
-	}
 
-	// this map uses atleast 1 perk machine
-	array_thread( vending_triggers, ::vending_trigger_think );
-	array_thread( vending_triggers, ::electric_perks_dialog);
+		// this map uses atleast 1 perk machine
+		array_thread( vending_triggers, ::vending_trigger_think );
+		array_thread( vending_triggers, ::electric_perks_dialog);
 
-	if ( array_validate( level._custom_perks ) )
-	{
-		a_keys = getarraykeys( level._custom_perks );
-
-		for ( i = 0; i < a_keys.size; i++ )
+		if ( array_validate( level._custom_perks ) )
 		{
-			if ( isdefined( level._custom_perks[a_keys[i]].perk_machine_thread ) )
-				level thread [[ level._custom_perks[a_keys[i]].perk_machine_thread ]]();
-		}
-	}	
-		
-	level thread machine_watcher();
+			a_keys = getarraykeys( level._custom_perks );
+
+			for ( i = 0; i < a_keys.size; i++ )
+			{
+				if ( isdefined( level._custom_perks[a_keys[i]].perk_machine_thread ) )
+					level thread [[ level._custom_perks[a_keys[i]].perk_machine_thread ]]();
+			}
+		}	
+			
+		level thread machine_watcher();
+	}
 
 	spawn_and_link_packapunch_kvps();
 
@@ -518,7 +516,7 @@ play_vendor_stings(sound)
 		{
 			level._custom_packapunch.jingle_active = true;
 //			iprintlnbold("stinger packapunch:" + level.packa_jingle);
-			temp_org_pack_s = spawn("script_origin", self.origin);		
+			temp_org_pack_s = spawn_temp_entity_delete_after_notify( "script_origin", self.origin, undefined, "packapunch_vendor_sting", "packapunch_vendor_sting_delete" );	
 			temp_org_pack_s playsound (sound, "sound_done");
 			temp_org_pack_s waittill("sound_done");
 			level._custom_packapunch.jingle_active = false;
@@ -530,7 +528,7 @@ play_vendor_stings(sound)
 			if ( sound == level._custom_perks[ self.script_noteworthy ].stinger && !level._custom_perks[ self.script_noteworthy ].jingle_active )
 			{
 				level._custom_perks[ self.script_noteworthy ].jingle_active = true;
-				temp_sound = spawn("script_origin", self.origin);
+				temp_sound = spawn_temp_entity_delete_after_notify( "script_origin", self.origin, undefined, "perk_vendor_sting", "perk_vendor_sting_delete" );
 				temp_sound playsound (sound, "sound_done");
 				temp_sound waittill("sound_done");
 				level._custom_perks[ self.script_noteworthy ].jingle_active = false;
@@ -576,7 +574,7 @@ perks_a_cola_jingle()
 		{
 			packapunch = getEnt( "specialty_weapupgrade", "script_noteworthy" );
 			level._custom_packapunch.jingle_active = true;
-			temp_org_packa = spawn( "script_origin", packapunch.origin );
+			temp_org_packa = spawn_temp_entity_delete_after_notify( "script_origin", packapunch.origin, undefined, "packapunch_vendor_jingle", "packapunch_vendor_jingle_delete" );
 			temp_org_packa playsound( level._custom_packapunch.jingle, "sound_done" );
 			temp_org_packa waittill( "sound_done" );
 			level._custom_packapunch.jingle_active = false;
@@ -587,7 +585,7 @@ perks_a_cola_jingle()
 		{
 			perk = getEnt( random_perk_keys[ 0 ], "script_noteworthy" );
 			level._custom_perks[ perk.script_noteworthy ].jingle_active = true;
-			temp_sound = spawn( "script_origin", perk.origin );
+			temp_sound = spawn_temp_entity_delete_after_notify( "script_origin", perk.origin, undefined, "perk_vendor_jingle", "perk_vendor_jingle_delete" );
 			temp_sound playsound( level._custom_perks[ perk.script_noteworthy ].jingle, "sound_done" );
 			temp_sound waittill( "sound_done" );
 			level._custom_perks[ perk.script_noteworthy ].jingle_active = false;

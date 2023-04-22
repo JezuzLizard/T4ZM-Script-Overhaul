@@ -107,6 +107,19 @@ init_zm()
 	}
 
 	level thread on_all_players_ready();
+
+	script_spawned_temp_entities_session = getDvar( "scr_spawned_temp_entities_tracking_session" );
+
+	if ( script_spawned_temp_entities_session == "" )
+	{
+		setDvar( "scr_spawned_temp_entities_tracking_session", 0 );
+	}
+	else
+	{
+		setDvar( "scr_spawned_temp_entities_tracking_session", int( script_spawned_temp_entities_session ) + 1 );
+	}
+
+	level thread maps\so\zm_common\_zm_utility::dump_script_spawned_temp_entities();
 }
 
 on_all_players_ready()
@@ -417,7 +430,7 @@ player_intermission()
 			{
 				if( !IsDefined( org ) )
 				{
-					org = Spawn( "script_origin", self.origin + ( 0, 0, -60 ) );
+					org = spawn_temp_entity_delete_after_notify( "script_origin", self.origin + ( 0, 0, -60 ), undefined, "player_intermission", "player_intermission_delete" );
 				}
 
 				self LinkTo( org, "", ( 0, 0, -60 ), ( 0, 0, 0 ) );

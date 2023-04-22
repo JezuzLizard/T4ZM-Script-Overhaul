@@ -2729,7 +2729,7 @@ do_zombie_rise()
 
 	//self.zombie_rise_version = 1; // TESTING: override version
 
-	self.anchor = spawn("script_origin", self.origin);
+	self.anchor = spawn_temp_entity_delete_after_time( "script_origin", self.origin, undefined, "do_zombie_rise_anchor", 30 );
 	self.anchor.angles = self.angles;
 	self linkto(self.anchor);
 

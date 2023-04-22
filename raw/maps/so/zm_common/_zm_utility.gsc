@@ -141,8 +141,7 @@ check_point_in_active_zone( origin )
 		return true;
 	}
 	
-	scr_org = spawn( "script_origin", origin+(0, 0, 40) );
-	
+	scr_org = spawn_temp_entity_delete_after_time( "script_origin", origin+(0, 0, 40), undefined, "check_point_in_active_zone", 10 );
 	one_valid_zone = false;
 	for( i = 0; i < player_zones.size; i++ )
 	{
@@ -155,6 +154,8 @@ check_point_in_active_zone( origin )
 			}
 		}
 	}
+
+	scr_org delete();
 	
 	return one_valid_zone;
 }
@@ -1801,7 +1802,7 @@ enemy_is_dog()
 
 really_play_2D_sound(sound)
 {
-	temp_ent = spawn("script_origin", (0,0,0));
+	temp_ent = spawn_temp_entity_delete_after_notify( "script_origin", (0, 0, 0), undefined, "really_play_2D_sound", "really_play_2D_sound_delete" );
 	temp_ent playsound (sound, sound + "wait");
 	temp_ent waittill (sound + "wait");
 	wait(0.05);
@@ -1993,6 +1994,154 @@ achievement_notify( notify_name )
 	self notify( notify_name );
 }
 
+spawn_temp_entity_wrapper( entity_type, origin, spawnflags, script_name )
+{
+	check = entity_type == "script_model" || entity_type == "script_origin";
+
+	assert( !check, "Only entities of type script_model and script_origin are supported for this function" );
+
+	if ( !check )
+	{
+		return undefined;
+	}
+
+	if ( !isDefined( level.script_spawned_entities_id_num ) )
+	{
+		level.script_spawned_entities_ids = [];
+	}
+
+	if ( !isDefined( level.script_spawned_entities_ids[ script_name ] ) )
+	{
+		level.script_spawned_entities_ids[ script_name ] = 0;
+	}
+
+	if ( isDefined( spawnflags ) )
+	{
+		new_ent = spawn( entity_type, origin, spawnflags );
+	}
+	else 
+	{
+		new_ent = spawn( entity_type, origin );
+	}
+
+	new_ent.script_name = script_name + "_" + level.script_spawned_entities_ids[ script_name ];
+
+	level.script_spawned_entities_ids[ script_name ]++;
+
+	return new_ent;
+}
+
+spawn_temp_entity_delete_after_time( entity_type, origin, spawnflags, script_name, time )
+{
+	new_ent = spawn_temp_entity_wrapper( entity_type, origin, spawnflags, script_name );
+
+	if ( !isDefined( new_ent ) )
+	{
+		return undefined;
+	}
+
+	new_ent thread temp_entity_delete_after_time_thread( time );
+
+	return new_ent;
+}
+
+temp_entity_delete_after_time_thread( time )
+{
+	self endon( "death" );
+	for ( ; time > 0; time-- )
+	{
+		wait 1;	
+	}
+	self delete();
+}
+
+spawn_temp_entity_delete_after_notify( entity_type, origin, spawnflags, script_name, notify_name, owner )
+{
+	new_ent = spawn_temp_entity_wrapper( entity_type, origin, spawnflags, script_name );
+
+	if ( !isDefined( new_ent ) )
+	{
+		return undefined;
+	}
+
+	new_ent thread temp_entity_delete_after_notify_thread( notify_name, owner );
+
+	return new_ent;
+}
+
+temp_entity_delete_after_notify_thread( notify_name, owner )
+{
+	self endon( "death" );
+
+	if ( isDefined( owner ) )
+	{
+		owner waittill( notify_name );
+	}
+	else 
+	{
+		self waittill( notify_name );
+	}
+	
+	self delete();
+}
+
+dump_script_spawned_temp_entities()
+{
+	while ( true )
+	{
+		while ( getDvar( "scr_track_script_spawned_temp_entities" ) == "" || getDvarInt( "scr_track_script_spawned_temp_entities" ) == 0 )
+		{
+			wait 1;
+		}
+
+		entities = getEntArray();
+
+		buffer = "";
+		temp_entity_count = 0;
+		throttle_count = 0;
+		for ( i = 0; i < entities.size; i++ )
+		{
+			if ( isDefined( entities[ i ].script_name ) )
+			{
+				buffer = buffer + i + ": Script Name: " + entities[ i ].script_name + " Classname: " + entities[ i ].classname + "\n";
+				temp_entity_count++;
+			}
+			if ( throttle_count > 5 )
+			{
+				throttle_count = 0;
+				wait 0.05;
+			}
+			throttle_count++;
+		}
+
+		if ( buffer != "" )
+		{
+			folder_name = "";
+			if ( temp_entity_count <= 100 )
+			{
+				folder_name = "0-100";
+			}
+			else if ( temp_entity_count >= 101 && temp_entity_count <= 200 ) 
+			{
+				folder_name = "101-200";
+			}
+			else if ( temp_entity_count >= 201 )
+			{
+				folder_name = "201-max";
+			}
+
+			session = getDvarInt( "scr_spawned_temp_entities_tracking_session" );
+
+			path = "scriptdata/script_spawned_temp_entity_tracker/" + getDvar( "mapname" ) + "/" + folder_name + "/" + session + ".txt";	
+
+			buffer = buffer + "Total script spawned temp entities: " + temp_entity_count + "\n";
+			fileWrite( path, buffer, "write" );
+		}
+
+		wait 10;
+	}
+}
+
 is_true( value )
 {
 	return isDefined( value ) && value;
@@ -2174,4 +2323,14 @@ register_player_damage_modifiers( name, callback, priority )
 	}
 	level.player_damage_modifiers[ name ] = callback;
 	level.player_damage_modifiers_priorities[ name ] = priority;
+}
+
+register_on_player_disconnect_callback( func )
+{
+	if ( !isDefined( level.on_player_disconnect_callbacks ) )
+	{
+		level.on_player_disconnect_callbacks = [];
+	}
+
+	level.on_player_disconnect_callbacks[ level.on_player_disconnect_callbacks.size ] = func;
 }

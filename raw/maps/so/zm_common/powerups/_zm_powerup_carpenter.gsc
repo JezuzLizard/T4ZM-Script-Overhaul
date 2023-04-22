@@ -39,7 +39,7 @@ start_carpenter( origin )
 	total = level.exterior_goals.size;
 	
 	//COLLIN
-	carp_ent = spawn("script_origin", (0,0,0));
+	carp_ent = spawn_temp_entity_delete_after_notify( "script_origin", (0, 0, 0), undefined, "start_carpenter", "start_carpenter_delete" );
 	carp_ent playloopsound( "carp_loop" );
 	
 	while(true)

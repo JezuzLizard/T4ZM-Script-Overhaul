@@ -248,8 +248,8 @@ hide_magic_box()
 		}
 	}
 
-	anchor = spawn("script_origin",fake_pieces[0].origin);
-	soundpoint = spawn("script_origin", anchor.origin);
+	anchor = spawn_temp_entity_delete_after_notify( "script_origin", fake_pieces[ 0 ].origin, undefined, "magicbox_fake_piece", "magicbox_fake_piece_delete" );
+	soundpoint = spawn_temp_entity_delete_after_notify( "script_origin", anchor.origin, undefined, "magicbox_soundpoint", "magicbox_soundpoint_delete" );
 	playfx( level._effect["poltergeist"],anchor.origin);
 
 	anchor playsound("box_move");

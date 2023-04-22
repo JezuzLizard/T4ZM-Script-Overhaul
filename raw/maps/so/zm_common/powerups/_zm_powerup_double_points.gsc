@@ -63,8 +63,6 @@ double_points_powerup( drop_item )
 
 point_doubler_on_hud( drop_item )
 {
-	self endon ("disconnect");
-
 	// check to see if this is on or not
 	if ( level.zombie_vars["zombie_powerup_point_doubler_on"] )
 	{
@@ -108,7 +106,7 @@ time_remaining_on_point_doubler_powerup()
 	{
 		self setvalue( level.zombie_vars["zombie_powerup_point_doubler_time"] );
 	}
-	temp_ent = spawn("script_origin", (0,0,0));
+	temp_ent = spawn_temp_entity_delete_after_notify( "script_origin", (0, 0, 0), undefined, "time_remaining_on_point_doubler_powerup", "time_remaining_on_point_doubler_powerup_delete" );
 	temp_ent playloopsound ("double_point_loop");
 	
 	

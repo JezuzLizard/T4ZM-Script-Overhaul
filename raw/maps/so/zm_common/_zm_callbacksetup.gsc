@@ -515,6 +515,13 @@ reset_clientdvars()
 
 Callback_PlayerDisconnect()
 {
+	if ( isDefined( level.on_player_disconnect_callbacks ) && level.on_player_disconnect_callbacks.size > 0 )
+	{
+		for ( i = 0; i < level.on_player_disconnect_callbacks.size; i++ )
+		{
+			self [[ level.on_player_disconnect_callbacks[ i ] ]]();
+		}
+	}
 }
 
 Callback_PlayerDamage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, modelIndex, psOffsetTime )

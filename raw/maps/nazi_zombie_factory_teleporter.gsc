@@ -62,6 +62,8 @@ teleporter_init()
 	level.teleport_ae_funcs[level.teleport_ae_funcs.size] = maps\nazi_zombie_factory_teleporter::teleport_aftereffect_red_vision;
 	level.teleport_ae_funcs[level.teleport_ae_funcs.size] = maps\nazi_zombie_factory_teleporter::teleport_aftereffect_flashy_vision;
 	level.teleport_ae_funcs[level.teleport_ae_funcs.size] = maps\nazi_zombie_factory_teleporter::teleport_aftereffect_flare_vision;
+
+	//maps\so\zm_common\_zm_utility::register_on_player_disconnect_callback( ::teleporter_cleanup_on_disconnect );
 }
 
 //-------------------------------------------------------------------------------
@@ -536,8 +538,7 @@ teleport_players()
 					{
 						desired_origin = image_room[i].origin + stand_offset;
 					}
-					
-					players[i].teleport_origin = spawn( "script_origin", players[i].origin );
+					players[i].teleport_origin = spawn_temp_entity_delete_after_notify( "script_origin", players[ i ].origin, undefined, "teleport_origin", "disconnect", players[ i ] );
 					players[i].teleport_origin.angles = players[i].angles;
 					players[i] linkto( players[i].teleport_origin );
 					players[i].teleport_origin.origin = desired_origin;
@@ -611,9 +612,11 @@ teleport_players()
 
 		player unlink();
 
-		assert( IsDefined( player.teleport_origin ) );
-		player.teleport_origin delete();
-		player.teleport_origin = undefined;
+		if ( isDefined( player.teleport_origin ) )
+		{
+			player.teleport_origin delete();
+			player.teleport_origin = undefined;
+		}
 
 		player enableweapons();
 		player enableoffhandweapons();
@@ -1007,5 +1010,13 @@ packa_door_reminder()
 		rand = randomintrange(4,16);
 		self playsound( "packa_door_hitch" );
 		wait(rand);
+	}
+}
+
+teleporter_cleanup_on_disconnect()
+{
+	if ( isDefined( self.teleport_origin ) )
+	{
+		self.teleport_origin delete();
 	}
 }

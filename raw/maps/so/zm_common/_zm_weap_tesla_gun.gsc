@@ -567,7 +567,7 @@ play_tesla_sound(emotion)
 	{
 		level.var_counter ++;
 		level.one_emo_at_a_time = 1;
-		org = spawn("script_origin", self.origin);
+		org = spawn_temp_entity_delete_after_notify( "script_origin", self.origin, undefined, "play_tesla_sound", "play_tesla_sound_delete" );
 		org LinkTo(self);
 		org playsound (emotion, "sound_complete"+ "_"+level.var_counter);
 		org waittill("sound_complete"+ "_"+level.var_counter);
