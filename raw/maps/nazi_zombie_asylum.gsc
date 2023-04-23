@@ -931,6 +931,7 @@ set_betty_visible()
 
 bouncing_betty_watch()
 {
+	self endon( "disconnect" );
 
 	while(1)
 	{

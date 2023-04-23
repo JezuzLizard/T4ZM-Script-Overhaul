@@ -278,13 +278,16 @@ laststand_giveback_player_weapons()
 
 laststand_clean_up_on_disconnect( playerBeingRevived, reviverGun )
 {
-	reviveTrigger = playerBeingRevived.revivetrigger;
+	playerBeingRevived notify( "laststand_clean_up_on_disconnect_stop" );
+	playerBeingRevived endon( "laststand_clean_up_on_disconnect_stop" );
+	playerBeingRevived endon( "zombified" );
+	self endon( "do_revive_ended_normally" );
 
 	playerBeingRevived waittill("disconnect");	
 	
-	if( isdefined( reviveTrigger ) )
+	if( isdefined( playerBeingRevived.revivetrigger ) )
 	{
-		reviveTrigger delete();
+		playerBeingRevived.revivetrigger delete();
 	}
 	
 	if( isdefined( self.reviveProgressBar ) )
@@ -709,6 +712,7 @@ revive_do_revive( playerBeingRevived, reviverGun )
 	//CODER_MOD: TOMMYK 07/13/2008
 	playerBeingRevived.revivetrigger setHintString( &"GAME_BUTTON_TO_REVIVE_PLAYER" );
 	playerBeingRevived.revivetrigger.beingRevived = 0;
+	self notify( "do_revive_ended_normally" );
 	
 	return revived;
 }
