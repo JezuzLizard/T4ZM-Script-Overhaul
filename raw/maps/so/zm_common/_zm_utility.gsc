@@ -2266,7 +2266,7 @@ init_player_tactical_grenade()
 	self set_player_tactical_grenade( level.zombie_tactical_grenade_player_init );
 }
 
-register_actor_killed_callback( name, callback, priority )
+register_on_actor_killed_callback( name, callback, priority )
 {
 	if ( !isDefined( priority ) )
 	{
@@ -2282,47 +2282,13 @@ register_actor_killed_callback( name, callback, priority )
 	level.actor_killed_callbacks_priorities[ name ] = priority;
 }
 
-register_actor_damage_modifier( name, callback, priority )
+register_on_actor_damage_callback( name, callback )
 {
-	if ( !isDefined( priority ) )
-	{
-		priority = 0;
-	}
-	if ( !isDefined( level.actor_damage_modifiers ) )
-	{
-		level.actor_damage_modifiers = [];
-	}
-	level.actor_damage_modifiers[ name ] = callback;
-	level.actor_damage_modifiers_priorities[ name ] = priority;
-}
-
-register_actor_on_damage_callback( name, callback )
-{
-	if ( !isDefined( priority ) )
-	{
-		priority = 0;
-	}
-
 	if ( !isDefined( level.actor_on_damage_callbacks ) )
 	{
 		level.actor_on_damage_callbacks = [];
 	}
 	level.actor_on_damage_callbacks[ name ] = callback;
-}
-
-register_player_damage_modifiers( name, callback, priority )
-{
-	if ( !isDefined( priority ) )
-	{
-		priority = 0;
-	}
-
-	if ( !isDefined( level.player_damage_modifiers ) )
-	{
-		level.player_damage_modifiers = [];
-	}
-	level.player_damage_modifiers[ name ] = callback;
-	level.player_damage_modifiers_priorities[ name ] = priority;
 }
 
 register_on_player_disconnect_callback( func )
@@ -2333,4 +2299,22 @@ register_on_player_disconnect_callback( func )
 	}
 
 	level.on_player_disconnect_callbacks[ level.on_player_disconnect_callbacks.size ] = func;
+}
+
+register_on_actor_spawned_callback( func )
+{
+	if ( !isDefined( level.on_actor_spawned_callbacks ) )
+	{
+		level.on_actor_spawned_callbacks = [];
+	}
+
+	level.on_actor_spawned_callbacks[ level.on_actor_spawned_callbacks.size ] = func;
+}
+
+run_actor_spawned_callbacks()
+{
+	for ( i = 0; i < level.on_actor_spawned_callbacks.size; i++ )
+	{
+		self thread [[ level.on_actor_spawned_callbacks[ i ] ]]();
+	}
 }

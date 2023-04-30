@@ -558,7 +558,6 @@ special_drop_setup()
 powerup_grab()
 {
 	self endon ("powerup_timedout");
-	self endon ("powerup_grabbed");
 
 	while (isdefined(self))
 	{
@@ -627,8 +626,6 @@ powerup_grab()
 
 				playsoundatposition("powerup_grabbed", self.origin);
 				self stoploopsound();
-
-				wait 0.05;
 
 				self powerup_free();
 			}
