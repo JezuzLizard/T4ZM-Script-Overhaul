@@ -147,10 +147,7 @@ powerup_hud_monitor()
 			for ( powerup_hud_field_key_index = 0; powerup_hud_field_key_index < powerup_hud_field_keys.size; powerup_hud_field_key_index++ )
 			{
 				player = players[playerindex];
-/#
-				if ( isdefined( player.pers["isBot"] ) && player.pers["isBot"] )
-					continue;
-#/
+
 				if ( isdefined( level.powerup_player_valid ) )
 				{
 					if ( ![[ level.powerup_player_valid ]]( player ) )
@@ -628,6 +625,7 @@ powerup_grab()
 				self stoploopsound();
 
 				self powerup_free();
+				break;
 			}
 		}
 	}	
@@ -754,6 +752,8 @@ powerup_timeout()
 {
 	self endon ("powerup_grabbed");
 
+	self thread powerup_timeout_tracker();
+
 	wait 15;
 
 	for (i = 0; i < 40; i++)
@@ -785,6 +785,16 @@ powerup_timeout()
 	self notify( "powerup_timedout" );
 	level notify( "powerup_timedout", self );
 	self powerup_free();
+}
+
+powerup_timeout_tracker()
+{
+	self endon ("powerup_grabbed");
+	for ( i = 26.5; i >= 0; i -= 0.5 )
+	{
+		self.time_left_until_timeout = i;
+		wait 0.5;
+	}
 }
 
 powerup_free()
@@ -928,6 +938,7 @@ register_powerup_hud_player_info( powerup )
 	{
 		self.powerup_hud = [];
 	}
+
 	hudelem = newClientHudelem( self );
 	hudelem.foreground = true; 
 	hudelem.sort = 2; 

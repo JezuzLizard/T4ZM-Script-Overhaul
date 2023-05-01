@@ -832,6 +832,13 @@ onPlayerSpawned()
 				self.stats["perks"] = 0;
 				self.stats["headshots"] = 0;
 				self.stats["zombie_gibs"] = 0;
+				self.pers[ "kills" ] = 0;
+				self.pers[ "score" ] = 0;
+				self.pers[ "downs" ] = 0;
+				self.pers[ "revives" ] = 0;
+				self.pers[ "perks" ] = 0;
+				self.pers[ "headshots" ] = 0;
+				self.pers[ "zombie_gibs" ] = 0;
 			}
 		}
 	}

@@ -1998,7 +1998,7 @@ spawn_temp_entity_wrapper( entity_type, origin, spawnflags, script_name )
 {
 	check = entity_type == "script_model" || entity_type == "script_origin";
 
-	assert( !check, "Only entities of type script_model and script_origin are supported for this function" );
+	assert( check, "Only entities of type script_model and script_origin are supported for this function" );
 
 	if ( !check )
 	{

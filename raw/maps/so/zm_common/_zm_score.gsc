@@ -36,6 +36,7 @@ player_add_points( event, mod, hit_location ,is_dog)
 			}
 			//stats tracking
 			self.stats["kills"] = self.kill_tracker;
+			self.pers[ "kills" ] = self.kill_tracker;
 
 			if( mod == "MOD_MELEE" && self hasperk( "specialty_altmelee" ) )
 			{	
@@ -69,6 +70,7 @@ player_add_points( event, mod, hit_location ,is_dog)
 	self.score_total += points;
 	//stat tracking
 	self.stats["score"] = self.score_total;
+	self.pers[ "score" ] = self.score_total;
 
 	self set_player_score_hud(); 
 //	self thread play_killstreak_vo();

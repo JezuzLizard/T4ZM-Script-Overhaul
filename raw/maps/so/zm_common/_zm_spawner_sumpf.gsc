@@ -1348,6 +1348,8 @@ zombie_gib_on_damage()
 			//stats tracking
 			attacker.stats["headshots"] = attacker.headshot_count;
 			attacker.stats["zombie_gibs"]++;
+			attacker.pers[ "headshots" ] = attacker.headshot_count;
+			attacker.pers[ "zombie_gibs" ]++;
 
 			continue;
 		}
@@ -1526,6 +1528,7 @@ zombie_gib_on_damage()
 
 				//stat tracking
 				attacker.stats["zombie_gibs"]++;
+				attacker.pers[ "zombie_gibs" ]++;
 			}
 		}
 	}

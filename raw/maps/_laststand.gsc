@@ -92,6 +92,7 @@ PlayerLastStand( eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sH
 	self.downs++;
 	//stat tracking
 	self.stats["downs"] = self.downs;
+	self.pers[ "downs" ] = self.downs;
 	dvarName = "player" + self GetEntityNumber() + "downs";
 	setdvar( dvarName, self.downs );
 	
@@ -561,6 +562,10 @@ revive_give_back_weapons( gun )
 
 can_revive( revivee )
 {
+	//Handle disconnects
+	if ( !isDefined( revivee ) )
+		return false;
+
 	if ( !isAlive( self ) )
 		return false;
 
@@ -760,6 +765,7 @@ revive_success( reviver )
 	reviver.revives++;
 	//stat tracking
 	reviver.stats["revives"] = reviver.revives;
+	reviver.pers[ "revives" ] = reviver.revives;
 	
 	// CODER MOD: TOMMY K - 07/30/08
 	reviver thread maps\_arcademode::arcadeMode_player_revive();
@@ -780,7 +786,11 @@ revive_success( reviver )
 	self.ignoreme = false;
 	
 	self thread say_revived_vo();
-	
+
+	if ( isDefined( reviver.on_revive_success_func ) )
+	{
+		reviver [[ self.on_revive_success_func ]]( self );
+	}
 }
 
 

@@ -249,6 +249,7 @@ vending_trigger_post_think( player, perk, cost )
 
 	//stat tracking
 	player.stats["perks"]++;
+	player.pers[ "perks" ]++;
 
 	//player iprintln( "Bought Perk: " + perk );
 	bbPrint( "zombie_uses: playername %s playerscore %d round %d cost %d name %s x %f y %f z %f type perk",
