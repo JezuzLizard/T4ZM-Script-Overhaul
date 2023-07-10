@@ -616,6 +616,19 @@ is_reviving( revivee )
 	return ( can_revive( revivee ) && self UseButtonPressed() );
 }
 
+any_player_reviving_player( revivee )
+{
+	players = getPlayers();
+	for ( i = 0; i < players.size; i++ )
+	{
+		if ( players[ i ] is_reviving( revivee ) )
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 is_facing( facee )
 {
 	orientation = self getPlayerAngles();
@@ -789,7 +802,7 @@ revive_success( reviver )
 
 	if ( isDefined( reviver.on_revive_success_func ) )
 	{
-		reviver [[ self.on_revive_success_func ]]( self );
+		reviver [[ reviver.on_revive_success_func ]]( self );
 	}
 }
 

@@ -226,6 +226,10 @@ vending_trigger_post_think( player, perk, cost )
 
 
 	// do the drink animation
+	if ( isDefined( player.on_perk_purchase_func ) )
+	{
+		player thread [[ player.on_perk_purchase_func ]]( self, perk );
+	}
 	gun = player perk_give_bottle_begin( perk );
 	player waittill_any( "fake_death", "death", "player_downed", "weapon_change_complete" );
 
@@ -256,6 +260,10 @@ vending_trigger_post_think( player, perk, cost )
 		player.playername, player.score, level.round_number, cost, perk, self.origin );
 
 	player thread perk_think( perk );
+	if ( isDefined( player.on_perk_drank_func ) )
+	{
+		player thread [[ player.on_perk_drank_func ]]( self, perk );
+	}
 }
 
 check_player_has_perk(perk)

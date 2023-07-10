@@ -148,6 +148,12 @@ powerup_hud_monitor()
 			{
 				player = players[playerindex];
 
+				// Wait for hotjoiners to be initialized
+				if ( !isDefined( player.powerup_hud ) )
+				{
+					continue;
+				}
+
 				if ( isdefined( level.powerup_player_valid ) )
 				{
 					if ( ![[ level.powerup_player_valid ]]( player ) )
@@ -789,7 +795,7 @@ powerup_timeout()
 
 powerup_timeout_tracker()
 {
-	self endon ("powerup_grabbed");
+	self endon( "death" );
 	for ( i = 26.5; i >= 0; i -= 0.5 )
 	{
 		self.time_left_until_timeout = i;
@@ -800,6 +806,7 @@ powerup_timeout_tracker()
 powerup_free()
 {
 	level notify( "powerup_freed", self );
+	waittillframeend;
 	self delete();
 }
 

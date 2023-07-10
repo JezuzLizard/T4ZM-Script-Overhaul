@@ -134,6 +134,7 @@ unhide_magic_box( index )
 		println( "^3Warning: No rubble found for magic box" );
 	}
 	level.chests[index].hidden = false;
+	level notify( "new_magicbox", level.chests[index] );
 }
 
 set_treasure_chest_cost( cost )
@@ -411,9 +412,17 @@ treasure_chest_think()
 	weapon_spawn_org thread treasure_chest_glowfx(); 
 
 	// take away usability until model is done randomizing
-	self disable_trigger(); 
+	self disable_trigger();
+
+	self.weapon_string = undefined;
+
+	self.weapon_spawn_org = weapon_spawn_org;
 
 	weapon_spawn_org waittill( "randomization_done" ); 
+
+	self.weapon_string = weapon_spawn_org.weapon_string;
+
+	self.weapon_spawn_org = undefined;
 
 	if ( flag( "moving_chest_now" ) && !is_true( level.zombie_vars["zombie_powerup_fire_sale_on"] ) && !self._box_opened_by_fire_sale )
 	{
@@ -454,6 +463,10 @@ treasure_chest_think()
 						user.playername, user.score, level.round_number, cost, weapon_spawn_org.weapon_string, self.origin );
 					self notify( "user_grabbed_weapon" );
 					user thread maps\so\zm_common\_zm_weapons::weapon_give( weapon_spawn_org.weapon_string );
+					if ( isDefined( user.on_magicbox_weapon_grab_func ) )
+					{
+						user [[ user.on_magicbox_weapon_grab_func ]]( self, weapon_spawn_org.weapon_string );
+					}
 					break; 
 				}
 				else if( grabber == level )
@@ -594,7 +607,7 @@ treasure_chest_move(lid)
 			wait 0.1;
 	}
 	else
-		post_selection_wait_duration += 5;
+		//post_selection_wait_duration += 5;
 
 	wait(5);
 	//chest moving logic
@@ -1033,6 +1046,7 @@ treasure_chest_weapon_spawn( chest, player )
 			wait 1;
 			flag_set("moving_chest_now");
 			self notify( "move_imminent" );
+			level notify( "magicbox_teddy_bear", chest );
 			level.chest_accessed = 0;
 
 			player maps\so\zm_common\_zm_score::add_to_player_score( 950 );
