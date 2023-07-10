@@ -269,12 +269,17 @@ door_think()
 		{
 			self notify( "door_opened", who );
 			level notify( "door_opened", self, who );
+			if ( isDefined( who.on_door_purchase_func ) )
+			{
+				who [[ who.on_door_purchase_func ]]( self );
+			}
 		}
 		else 
 		{
 			self notify( "door_opened" );
 			level notify( "door_opened", self );
 		}
+
 		break;
 	}
 }
@@ -414,6 +419,13 @@ debris_think()
 		{
 			if( who.score >= self.zombie_cost )
 			{
+				self notify( "debris_opened", who );
+				level notify( "debris_opened", self, who );
+
+				if ( isDefined( who.on_debris_purchase_func ) )
+				{
+					who [[ who.on_debris_purchase_func ]]( self );
+				}
 				// set the score
 				who maps\so\zm_common\_zm_score::minus_to_player_score( self.zombie_cost ); 
 				if( isDefined( level.achievement_notify_func ) )
@@ -434,6 +446,7 @@ debris_think()
 	
 				move_ent = undefined;
 				clip = undefined;
+				waittillframeend;
 				for( i = 0; i < junk.size; i++ )
 				{	
 					junk[i] connectpaths(); 
@@ -441,7 +454,7 @@ debris_think()
 					
 	
 					level notify ("junk purchased");
-	
+
 					if( IsDefined( junk[i].script_noteworthy ) )
 					{
 						if( junk[i].script_noteworthy == "clip" )
@@ -489,8 +502,6 @@ debris_think()
 	
 					clip Delete();
 				}
-				self notify( "debtis_opened", who );
-				level notify( "debris_opened", self, who );
 				break; 								
 			}
 			else

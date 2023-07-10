@@ -125,6 +125,7 @@ vending_upgrade()
 			player thread maps\so\zm_common\_zm_audio::play_no_money_perk_dialog();
 			continue;
 		}
+		self.packapunch_user = player;
 		player maps\so\zm_common\_zm_score::minus_to_player_score( cost ); 
 		self maps\so\zm_common\_zm_utility::achievement_notify("perk_used");
 		sound = "bottle_dispense3d";
@@ -159,7 +160,8 @@ vending_upgrade()
 		self enable_trigger();
 		self SetHintString( &"ZOMBIE_GET_UPGRADED" );
 		self setvisibletoplayer( player );
-		
+		self notify( "pap_pickup_ready" );
+		self.packapunch_weapon_spawn_time = getTime();
 		self thread wait_for_player_to_take( player, current_weapon, packa_timer );
 		self thread wait_for_timeout( packa_timer );
 		
@@ -169,6 +171,8 @@ vending_upgrade()
 		weaponmodel delete();
 		self SetHintString( level._custom_packapunch.hint );
 		self setvisibletoall();
+		self.packapunch_user = undefined;
+		self.packapunch_weapon_spawn_time = undefined;
 	}
 }
 

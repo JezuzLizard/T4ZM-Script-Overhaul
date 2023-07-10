@@ -231,7 +231,7 @@ vending_trigger_post_think( player, perk, cost )
 		player thread [[ player.on_perk_purchase_func ]]( self, perk );
 	}
 	gun = player perk_give_bottle_begin( perk );
-	player waittill_any( "fake_death", "death", "player_downed", "weapon_change_complete" );
+	player waittill_any( "fake_death", "player_downed", "weapon_change_complete" );
 
 	// restore player controls and movement
 	player perk_give_bottle_end( gun, perk );
@@ -274,41 +274,29 @@ check_player_has_perk(perk)
 			return;
 		}
 #/
-
+		self.player_visibility = [];
 		dist = 128 * 128;
 		while(true)
 		{
 			players = getPlayers();
-			for( i = 0; i < players.size; i++ )
+			for ( i = 0; i < players.size; i++ )
 			{
-				if(DistanceSquared( players[i].origin, self.origin ) < dist)
+				player_entnum = players[ i ] getEntityNumber();
+				self.player_visibility[ player_entnum + "" ] = true;
+				if ( distancesquared( players[ i ].origin, self.origin ) < dist )
 				{
-					if(!players[i] hasperk(perk) && !(players[i] in_revive_trigger()))
+					if ( !players[ i ] hasperk( perk ) && !players[i] in_revive_trigger()  )
 					{
-						//PI CHANGE: this change makes it so that if there are multiple players within the trigger for the perk machine, the hint string is still 
-						//                   visible to all of them, rather than the last player this check is done for
-						if (IsDefined(level.script) && level.script == "nazi_zombie_theater")
-							self setinvisibletoplayer(players[i], false);
-						else
-							self setvisibletoplayer(players[i]);
-						//END PI CHANGE
-						//iprintlnbold("turn it off to player");
+						self setinvisibletoplayer( players[ i ], false );
+						self.player_visibility[ player_entnum + "" ] = false;
+						continue;
+					}
 
-					}
-					else
-					{
-						self SetInvisibleToPlayer(players[i]);
-						//iprintlnbold(players[i].health);
-					}
+					self setinvisibletoplayer( players[ i ], true );
 				}
-
-
 			}
-
 			wait(0.1);
-
 		}
-
 }
 
 vending_set_hintstring( perk )
@@ -334,7 +322,7 @@ perk_think( perk )
 		}
 #/
 
-	self waittill_any( "fake_death", "death", "player_downed" );
+	self waittill_any( "fake_death", "player_downed" );
 
 	if ( array_validate( level._custom_perks ) && isdefined( level._custom_perks[perk] ) && isdefined( level._custom_perks[perk].player_thread_take ) )
 		self thread [[ level._custom_perks[perk].player_thread_take ]]();
@@ -469,7 +457,6 @@ perk_give_bottle_end( gun, perk )
 
 perk_vo(type)
 {
-	self endon("death");
 	self endon("disconnect");
 
 	index = maps\so\zm_common\_zm_weapons::get_player_index(self);
@@ -884,7 +871,7 @@ spawn_and_link_packapunch_kvps()
 		}
 		trigger = spawn( "trigger_radius", level._custom_packapunch.origin + ( 0, 0, 30 ), 0, 20, 70 );
 		trigger.script_noteworthy = "specialty_weapupgrade";
-		trigger.targetname = "zombie_vending";
+		trigger.targetname = "zombie_vending_upgrade";
 		trigger.target = "vending_" + level._custom_packapunch.alias;
 
 		machine = spawn( "script_model", level._custom_packapunch.origin );
