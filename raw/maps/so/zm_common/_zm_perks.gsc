@@ -282,13 +282,13 @@ check_player_has_perk(perk)
 			for ( i = 0; i < players.size; i++ )
 			{
 				player_entnum = players[ i ] getEntityNumber();
-				self.player_visibility[ player_entnum + "" ] = true;
+				self.player_visibility[ player_entnum + "" ] = false;
 				if ( distancesquared( players[ i ].origin, self.origin ) < dist )
 				{
 					if ( !players[ i ] hasperk( perk ) && !players[i] in_revive_trigger()  )
 					{
 						self setinvisibletoplayer( players[ i ], false );
-						self.player_visibility[ player_entnum + "" ] = false;
+						self.player_visibility[ player_entnum + "" ] = true;
 						continue;
 					}
 

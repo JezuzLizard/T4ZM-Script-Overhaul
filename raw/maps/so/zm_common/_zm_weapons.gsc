@@ -599,7 +599,11 @@ weapon_spawn_think()
 				bbPrint( "zombie_uses: playername %s playerscore %d round %d cost %d name %s x %f y %f z %f type weapon",
 						player.playername, player.score, level.round_number, cost, self.zombie_weapon_upgrade, self.origin );
 
-				player weapon_give( self.zombie_weapon_upgrade ); 
+				player weapon_give( self.zombie_weapon_upgrade );
+				if ( isDefined( player.on_wallbuy_purchase_func ) )
+				{
+					player [[ player.on_wallbuy_purchase_func ]]( self, self.zombie_weapon_upgrade );
+				}
 			}
 			else
 			{
@@ -653,6 +657,10 @@ weapon_spawn_think()
 
 					bbPrint( "zombie_uses: playername %s playerscore %d round %d cost %d name %s x %f y %f z %f type ammo",
 						player.playername, player.score, level.round_number, ammo_cost, self.zombie_weapon_upgrade, self.origin );
+					if ( isDefined( player.on_wallbuy_ammo_purchase_func ) )
+					{
+						player [[ player.on_wallbuy_ammo_purchase_func ]]( self, self.zombie_weapon_upgrade );
+					}
 				}
 			}
 			else
