@@ -1,7 +1,6 @@
 #include maps\_utility; 
 #include common_scripts\utility;
-#include maps\_zombiemode_utility;
-
+#include maps\so\zm_common\_zm_utility;
 
 #using_animtree( "generic_human" ); 
 init()
